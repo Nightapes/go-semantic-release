@@ -1,0 +1,20 @@
+{
+    "commitFormat": "angular",
+    "branch": {
+        "master": "release",
+        "rc-*": "rc",
+        "beta-*": "beta",
+        "alpha-*": "alpha",
+        "*": "none"
+    },
+    "changelog": {
+        "print": "all/compact",
+        "template": ""
+    },
+    "github": {
+        "url": ""
+    },
+    "gitlab": {
+        "url": ""
+    }
+}
