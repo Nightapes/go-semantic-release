@@ -4,6 +4,11 @@ language: go
 go:
   - 1.12.x
 
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $HOME/gopath/pkg/mod
+
 services:
 - docker
 
