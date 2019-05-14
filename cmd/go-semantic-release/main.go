@@ -6,100 +6,39 @@ import (
 
 	"github.com/Nightapes/go-semantic-release/pkg/semanticrelease"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/urfave/cli.v1" // imports as package "cli"
+	"gopkg.in/alecthomas/kingpin.v2"
+)
+
+var (
+	app      = kingpin.New("go-semantic-release", "A command-line for releasing software")
+	loglevel = app.Flag("loglevel", "Set loglevel.").Default("error").HintOptions("error", "warning", "info", "debug").Short('l').String()
+
+	nextCommand    = app.Command("next", "Print next version")
+	nextRepository = nextCommand.Flag("repository", "Path to repository").String()
+
+	setCommand    = app.Command("set", "Set version for current build.")
+	setRepository = setCommand.Flag("repository", "Path to repository").String()
+	setVersion    = setCommand.Arg("version", "semver version").Required().String()
 )
 
 func main() {
-	app := cli.NewApp()
+	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
+	case nextCommand.FullCommand():
+		setLoglevel(*loglevel)
+		err := semanticrelease.GetNextVersion(*nextRepository)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "loglevel",
-			Value: "error",
-			Usage: "Set loglevel 'LEVEL",
-		},
+	case setCommand.FullCommand():
+		setLoglevel(*loglevel)
+		log.Infof("Version %s", *setVersion)
+		err := semanticrelease.SetVersion(*setVersion, *setRepository)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
-	app.Commands = []cli.Command{
-		{
-			Name:    "version",
-			Aliases: []string{"v"},
-			Usage:   "version commands",
-			Subcommands: []cli.Command{
-				{
-					Name:  "set",
-					Usage: "set version `VERSION`",
-					Action: func(c *cli.Context) error {
-						setLoglevel(c.GlobalString("loglevel"))
-						path := c.String("path")
-						version := c.Args().First()
-						log.Infof("Version %s", version)
-						return semanticrelease.SetVersion(version, path)
-					},
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "config, c",
-							Value: "release-config.json",
-							Usage: "Load release configuration from `FILE`",
-						},
-						cli.StringFlag{
-							Name:  "path, p",
-							Usage: "`PATH` to repro ",
-						},
-					},
-				},
-				{
-					Name:  "next",
-					Usage: "get next `VERSION` or the set one ",
-					Action: func(c *cli.Context) error {
-						setLoglevel(c.GlobalString("loglevel"))
-						path := c.String("path")
-						return semanticrelease.GetNextVersion(path)
-					},
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "config, c",
-							Value: "release-config.json",
-							Usage: "Load release configuration from `FILE`",
-						},
-						cli.StringFlag{
-							Name:  "path, p",
-							Usage: "`PATH` to repro ",
-						},
-					},
-				},
-			},
-		},
-		{
-			Name:    "release",
-			Aliases: []string{},
-			Usage:   "make release",
-			Action: func(c *cli.Context) error {
-				return nil
-			},
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "config, c",
-					Value: "release-config.json",
-					Usage: "Load release configuration from `FILE`",
-				},
-			},
-		},
-		{
-			Name:    "init",
-			Aliases: []string{},
-			Usage:   "create config",
-			Action: func(c *cli.Context) error {
-				return nil
-			},
-		},
-	}
-
-	//gitutil.GetCommits(folder)
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func setLoglevel(level string) {
