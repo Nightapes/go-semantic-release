@@ -20,7 +20,7 @@ before_script:
   - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
 
 script:
-  - golangci-lint run 
+  - golangci-lint run --golint.min-confidence 0 --exclude-use-default=no
   - go test -v ./...
   - go build -o build/go-semantic-release ./cmd/go-semantic-release/
   - GOOS=windows GOARCH=386 go build -o build/go-semantic-release.exe ./cmd/go-semantic-release/

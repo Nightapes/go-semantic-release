@@ -1,3 +1,4 @@
+// Package gitutil provides helper methods for git
 package gitutil
 
 import (
@@ -10,29 +11,33 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
+// Commit struct
 type Commit struct {
 	Message string
 	Author  string
 	Hash    string
 }
 
-type GitUtils struct {
+// GitUtil struct
+type GitUtil struct {
 	Repository *git.Repository
 }
 
-func New(folder string) (*GitUtils, error) {
+// New GitUtil struct and open git repository
+func New(folder string) (*GitUtil, error) {
 	r, err := git.PlainOpen(folder)
 	if err != nil {
 		return nil, err
 	}
-	utils := &GitUtils{
+	utils := &GitUtil{
 		Repository: r,
 	}
 	return utils, nil
 
 }
 
-func (g *GitUtils) GetHash() (string, error) {
+// GetHash from git HEAD
+func (g *GitUtil) GetHash() (string, error) {
 	ref, err := g.Repository.Head()
 	if err != nil {
 		return "", err
@@ -40,20 +45,22 @@ func (g *GitUtils) GetHash() (string, error) {
 	return ref.Hash().String(), nil
 }
 
-func (g *GitUtils) GetBranch() (string, error) {
+// GetBranch from git HEAD
+func (g *GitUtil) GetBranch() (string, error) {
 	ref, err := g.Repository.Head()
 	if err != nil {
 		return "", err
 	}
 
 	if !ref.Name().IsBranch() {
-		return "", fmt.Errorf("No branch found, found %s, please checkout a branch (git checkout <BRANCH>)", ref.Name().String())
+		return "", fmt.Errorf("no branch found, found %s, please checkout a branch (git checkout <BRANCH>)", ref.Name().String())
 	}
 
 	return ref.Name().Short(), nil
 }
 
-func (g *GitUtils) GetLastVersion() (*semver.Version, string, error) {
+// GetLastVersion from git tags
+func (g *GitUtil) GetLastVersion() (*semver.Version, string, error) {
 
 	log.Debugf("GetLastVersion")
 
@@ -103,7 +110,8 @@ func (g *GitUtils) GetLastVersion() (*semver.Version, string, error) {
 	return tags[0], tagObject.Target.String(), nil
 }
 
-func (g *GitUtils) GetCommits(lastTagHash string) ([]Commit, error) {
+// GetCommits from git hash to HEAD
+func (g *GitUtil) GetCommits(lastTagHash string) ([]Commit, error) {
 
 	log.Printf("Read head")
 	ref, err := g.Repository.Head()
@@ -136,5 +144,5 @@ func (g *GitUtils) GetCommits(lastTagHash string) ([]Commit, error) {
 		return nil
 	})
 
-	return commits, nil
+	return commits, err
 }

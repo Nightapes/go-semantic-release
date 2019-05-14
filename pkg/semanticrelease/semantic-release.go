@@ -1,3 +1,4 @@
+// Package semanticrelease provides public methods to include in own code
 package semanticrelease
 
 import (
@@ -10,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// GetNextVersion from .version or calculate new
+// GetNextVersion from .version or calculate new from commits
 func GetNextVersion(repro string) error {
 	util, err := gitutil.New(repro)
 	if err != nil {
@@ -38,8 +39,11 @@ func GetNextVersion(repro string) error {
 
 	if lastVersion == nil {
 		defaultVersion, _ := semver.NewVersion("1.0.0")
-		SetVersion(defaultVersion.String(), repro)
-		fmt.Printf(defaultVersion.String())
+		err := SetVersion(defaultVersion.String(), repro)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%s", defaultVersion.String())
 		return nil
 	}
 
@@ -64,12 +68,16 @@ func GetNextVersion(repro string) error {
 		newVersion = lastVersion.IncPatch()
 	}
 
-	SetVersion(newVersion.String(), repro)
-	fmt.Printf(newVersion.String())
+	err = SetVersion(newVersion.String(), repro)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%s", newVersion.String())
 
 	return err
 }
 
+//SetVersion for git repository
 func SetVersion(version string, repro string) error {
 
 	util, err := gitutil.New(repro)
@@ -108,7 +116,4 @@ func SetVersion(version string, repro string) error {
 	}
 
 	return storage.Write(newVersionContent)
-}
-
-func Release() {
 }

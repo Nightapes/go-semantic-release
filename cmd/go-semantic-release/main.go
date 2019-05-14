@@ -1,3 +1,4 @@
+// Package main as start point for go build
 package main
 
 import (

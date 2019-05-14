@@ -1,3 +1,4 @@
+// Package storage helper for saving/reading version file
 package storage
 
 import (
