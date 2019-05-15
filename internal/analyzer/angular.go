@@ -1,3 +1,4 @@
+// Package analyzer provides different commit analyzer
 package analyzer
 
 import (
@@ -7,13 +8,13 @@ import (
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
 )
 
-type Angular struct {
+type angular struct {
 	rules []Rules
 	regex string
 }
 
-func NewAngular() *Angular {
-	return &Angular{
+func newAngular() *angular {
+	return &angular{
 		regex: `(TAG)(?:\((.*)\))?: (.*)`,
 		rules: []Rules{
 			{
@@ -31,11 +32,11 @@ func NewAngular() *Angular {
 	}
 }
 
-func (a *Angular) GetRules() []Rules {
+func (a *angular) getRules() []Rules {
 	return a.rules
 }
 
-func (a *Angular) Analyze(commit gitutil.Commit, tag string) (AnalyzedCommit, bool) {
+func (a *angular) analyze(commit gitutil.Commit, tag string) (AnalyzedCommit, bool) {
 
 	analyzed := AnalyzedCommit{
 		Commit: commit,
