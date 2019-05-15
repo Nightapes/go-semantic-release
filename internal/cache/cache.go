@@ -1,5 +1,5 @@
-// Package storage helper for saving/reading version file
-package storage
+// Package cache helper for cache version
+package cache
 
 import (
 	"io/ioutil"

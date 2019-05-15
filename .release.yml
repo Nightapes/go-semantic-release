@@ -1,0 +1,15 @@
+commitFormat: angular
+branch:
+  master: release
+  travis: rc
+  beta: beta
+  alpha: alpha
+changelog:
+  print: all/compact
+  template: ''
+  templatePath: ''
+release: 'github'
+github:
+  url: ''
+gitlab:
+  url: ''
