@@ -20,13 +20,16 @@ func newAngular() *angular {
 			{
 				Tag:     "feat",
 				Release: "minor",
+				Enabled: true,
 			},
 			{
 				Tag:     "fix",
 				Release: "patch",
+				Enabled: true,
 			}, {
 				Tag:     "perf",
 				Release: "patch",
+				Enabled: true,
 			},
 		},
 	}

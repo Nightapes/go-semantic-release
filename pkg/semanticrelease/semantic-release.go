@@ -3,16 +3,31 @@ package semanticrelease
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/Nightapes/go-semantic-release/internal/analyzer"
+	"github.com/Nightapes/go-semantic-release/internal/cache"
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
-	"github.com/Nightapes/go-semantic-release/internal/storage"
+	"github.com/Nightapes/go-semantic-release/pkg/config"
 	log "github.com/sirupsen/logrus"
 )
 
+// SemanticRelease struct
+type SemanticRelease struct {
+	config *config.ReleaseConfig
+}
+
+// New SemanticRelease struct
+func New(c *config.ReleaseConfig) *SemanticRelease {
+	return &SemanticRelease{
+		config: c,
+	}
+}
+
 // GetNextVersion from .version or calculate new from commits
-func GetNextVersion(repro string) error {
+func (s *SemanticRelease) GetNextVersion(repro string, force bool) error {
 	util, err := gitutil.New(repro)
 	if err != nil {
 		return err
@@ -23,14 +38,16 @@ func GetNextVersion(repro string) error {
 		return err
 	}
 
-	content, err := storage.Read()
+	log.Debugf("Ignore .version file if exits, %t", force)
+	if !force {
+		content, err := cache.Read()
 
-	if err == nil && content.Commit == hash {
-		fmt.Printf(content.NextVersion)
-		return nil
+		if err == nil && content.Commit == hash {
+			fmt.Printf(content.NextVersion)
+			return nil
+		}
+		log.Debugf("Mismatch git and version file  %s - %s", content.Commit, hash)
 	}
-
-	log.Debugf("Mismatch git and version file  %s - %s", content.Commit, hash)
 
 	lastVersion, lastVersionHash, err := util.GetLastVersion()
 	if err != nil {
@@ -39,7 +56,7 @@ func GetNextVersion(repro string) error {
 
 	if lastVersion == nil {
 		defaultVersion, _ := semver.NewVersion("1.0.0")
-		err := SetVersion(defaultVersion.String(), repro)
+		err := s.SetVersion(defaultVersion.String(), repro)
 		if err != nil {
 			return err
 		}
@@ -59,16 +76,50 @@ func GetNextVersion(repro string) error {
 
 	var newVersion semver.Version
 
-	if len(result["major"]) > 0 {
-		newVersion = lastVersion.IncMajor()
-		return nil
-	} else if len(result["minor"]) > 0 {
-		newVersion = lastVersion.IncMinor()
-	} else if len(result["patch"]) > 0 {
-		newVersion = lastVersion.IncPatch()
+	currentBranch, err := util.GetBranch()
+	if err != nil {
+		return err
+	}
+	newVersion = *lastVersion
+	if lastVersion.Prerelease() == "" {
+		if len(result["major"]) > 0 {
+			newVersion = lastVersion.IncMajor()
+		} else if len(result["minor"]) > 0 {
+			newVersion = lastVersion.IncMinor()
+		} else if len(result["patch"]) > 0 {
+			newVersion = lastVersion.IncPatch()
+		}
 	}
 
-	err = SetVersion(newVersion.String(), repro)
+	log.Debugf("Test %+v", s.config)
+	for branch, releaseType := range s.config.Branch {
+		if currentBranch == branch || strings.HasPrefix(currentBranch, branch) {
+			log.Debugf("Found branch config for branch %s with release type %s", currentBranch, releaseType)
+			switch releaseType {
+			case "rc":
+				if newVersion.Prerelease() == "" || !strings.HasPrefix(newVersion.Prerelease(), "rc") {
+					newVersion, _ = newVersion.SetPrerelease("rc.0")
+				} else {
+					parts := strings.Split(newVersion.Prerelease(), ".")
+					if len(parts) == 2 {
+						i, err := strconv.Atoi(parts[1])
+						if err != nil {
+							newVersion, _ = newVersion.SetPrerelease("rc.0")
+							log.Warnf("Could not parse release tag %s, use version %s", newVersion.Prerelease(), newVersion.String())
+						} else {
+							newVersion, _ = newVersion.SetPrerelease("rc." + strconv.Itoa((i + 1)))
+						}
+					} else {
+						newVersion, _ = newVersion.SetPrerelease("rc.0")
+						log.Warnf("Could not parse release tag %s, use version %s", newVersion.Prerelease(), newVersion.String())
+					}
+				}
+			}
+
+		}
+	}
+
+	err = s.SetVersion(newVersion.String(), repro)
 	if err != nil {
 		return err
 	}
@@ -78,7 +129,7 @@ func GetNextVersion(repro string) error {
 }
 
 //SetVersion for git repository
-func SetVersion(version string, repro string) error {
+func (s *SemanticRelease) SetVersion(version string, repro string) error {
 
 	util, err := gitutil.New(repro)
 	if err != nil {
@@ -100,7 +151,7 @@ func SetVersion(version string, repro string) error {
 		return err
 	}
 
-	newVersionContent := storage.VersionFileContent{
+	newVersionContent := cache.VersionFileContent{
 		Commit:      hash,
 		NextVersion: newVersion.String(),
 		Branch:      branch,
@@ -115,5 +166,5 @@ func SetVersion(version string, repro string) error {
 		newVersionContent.Version = lastVersion.String()
 	}
 
-	return storage.Write(newVersionContent)
+	return cache.Write(newVersionContent)
 }

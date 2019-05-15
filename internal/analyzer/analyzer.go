@@ -15,6 +15,7 @@ type Analyzer struct {
 type Rules struct {
 	Tag     string
 	Release string
+	Enabled bool
 }
 
 type analyzeCommit interface {
