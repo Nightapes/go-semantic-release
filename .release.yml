@@ -1,9 +1,9 @@
 commitFormat: angular
 branch:
   master: release
-  travis: rc
-  beta: beta
-  alpha: alpha
+  sd: rc
+  sds: beta
+  travis: alpha
 changelog:
   print: all/compact
   template: ''

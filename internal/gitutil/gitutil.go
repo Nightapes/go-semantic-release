@@ -8,6 +8,7 @@ import (
 	"github.com/Masterminds/semver"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
@@ -62,23 +63,27 @@ func (g *GitUtil) GetBranch() (string, error) {
 // GetLastVersion from git tags
 func (g *GitUtil) GetLastVersion() (*semver.Version, string, error) {
 
-	log.Debugf("GetLastVersion")
+	var tags []*semver.Version
 
-	tagObjects, err := g.Repository.TagObjects()
+	gitTags, err := g.Repository.Tags()
+
 	if err != nil {
 		return nil, "", err
 	}
 
-	var tags []*semver.Version
-
-	err = tagObjects.ForEach(func(t *object.Tag) error {
-		v, err := semver.NewVersion(t.Name)
-
-		if err != nil {
-			log.Debugf("Tag %s is not a valid version, skip", t.Name)
+	err = gitTags.ForEach(func(p *plumbing.Reference) error {
+		v, err := semver.NewVersion(p.Name().Short())
+		log.Tracef("%+v", p.Name().Short())
+		if err == nil {
+			_, err := g.Repository.TagObject(p.Hash())
+			if err == nil {
+				log.Debugf("Add tag %s", p.Name().Short())
+				tags = append(tags, v)
+			} else {
+				log.Debugf("Found tag %s, but is not annotated, skip", err.Error())
+			}
 		} else {
-			log.Debugf("Add tag %s", t.Name)
-			tags = append(tags, v)
+			log.Debugf("Tag %s is not a valid version, skip", p.Name().Short())
 		}
 		return nil
 	})
@@ -113,7 +118,6 @@ func (g *GitUtil) GetLastVersion() (*semver.Version, string, error) {
 // GetCommits from git hash to HEAD
 func (g *GitUtil) GetCommits(lastTagHash string) ([]Commit, error) {
 
-	log.Printf("Read head")
 	ref, err := g.Repository.Head()
 	if err != nil {
 		return nil, err
@@ -129,7 +133,7 @@ func (g *GitUtil) GetCommits(lastTagHash string) ([]Commit, error) {
 
 	err = cIter.ForEach(func(c *object.Commit) error {
 		if c.Hash.String() == lastTagHash {
-			log.Infof("%s == %s", c.Hash.String(), lastTagHash)
+			log.Debugf("Found commit with hash %s, will stop here", c.Hash.String())
 			foundEnd = true
 		}
 

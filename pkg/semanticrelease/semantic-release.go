@@ -43,6 +43,7 @@ func (s *SemanticRelease) GetNextVersion(repro string, force bool) error {
 		content, err := cache.Read()
 
 		if err == nil && content.Commit == hash {
+			log.Infof("Found cache, will return cached version %s", content.NextVersion)
 			fmt.Printf(content.NextVersion)
 			return nil
 		}
@@ -53,15 +54,13 @@ func (s *SemanticRelease) GetNextVersion(repro string, force bool) error {
 	if err != nil {
 		return err
 	}
+	var newVersion semver.Version
 
 	if lastVersion == nil {
 		defaultVersion, _ := semver.NewVersion("1.0.0")
-		err := s.SetVersion(defaultVersion.String(), repro)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("%s", defaultVersion.String())
-		return nil
+		newVersion = *defaultVersion
+	} else {
+		newVersion = *lastVersion
 	}
 
 	commits, err := util.GetCommits(lastVersionHash)
@@ -74,52 +73,31 @@ func (s *SemanticRelease) GetNextVersion(repro string, force bool) error {
 	a := analyzer.New("angular")
 	result := a.Analyze(commits)
 
-	var newVersion semver.Version
-
 	currentBranch, err := util.GetBranch()
 	if err != nil {
 		return err
 	}
-	newVersion = *lastVersion
-	if lastVersion.Prerelease() == "" {
-		if len(result["major"]) > 0 {
-			newVersion = lastVersion.IncMajor()
-		} else if len(result["minor"]) > 0 {
-			newVersion = lastVersion.IncMinor()
-		} else if len(result["patch"]) > 0 {
-			newVersion = lastVersion.IncPatch()
-		}
-	}
 
-	log.Debugf("Test %+v", s.config)
 	for branch, releaseType := range s.config.Branch {
 		if currentBranch == branch || strings.HasPrefix(currentBranch, branch) {
 			log.Debugf("Found branch config for branch %s with release type %s", currentBranch, releaseType)
 			switch releaseType {
-			case "rc":
-				if newVersion.Prerelease() == "" || !strings.HasPrefix(newVersion.Prerelease(), "rc") {
-					newVersion, _ = newVersion.SetPrerelease("rc.0")
-				} else {
-					parts := strings.Split(newVersion.Prerelease(), ".")
-					if len(parts) == 2 {
-						i, err := strconv.Atoi(parts[1])
-						if err != nil {
-							newVersion, _ = newVersion.SetPrerelease("rc.0")
-							log.Warnf("Could not parse release tag %s, use version %s", newVersion.Prerelease(), newVersion.String())
-						} else {
-							newVersion, _ = newVersion.SetPrerelease("rc." + strconv.Itoa((i + 1)))
-						}
-					} else {
-						newVersion, _ = newVersion.SetPrerelease("rc.0")
-						log.Warnf("Could not parse release tag %s, use version %s", newVersion.Prerelease(), newVersion.String())
-					}
+			case "rc", "beta", "alpha":
+				newVersion = incPrerelease(releaseType, newVersion)
+			case "release":
+				if len(result["major"]) > 0 {
+					newVersion = newVersion.IncMajor()
+				} else if len(result["minor"]) > 0 {
+					newVersion = newVersion.IncMinor()
+				} else if len(result["patch"]) > 0 {
+					newVersion = newVersion.IncPatch()
 				}
 			}
-
 		}
 	}
 
-	err = s.SetVersion(newVersion.String(), repro)
+	log.Infof("New version %s -> %s", lastVersion.String(), newVersion.String())
+	err = saveToCache(util, lastVersion, &newVersion)
 	if err != nil {
 		return err
 	}
@@ -141,6 +119,16 @@ func (s *SemanticRelease) SetVersion(version string, repro string) error {
 		return err
 	}
 
+	lastVersion, _, err := util.GetLastVersion()
+	if err != nil {
+		return err
+	}
+
+	return saveToCache(util, lastVersion, newVersion)
+}
+
+func saveToCache(util *gitutil.GitUtil, lastVersion *semver.Version, nextVersion *semver.Version) error {
+
 	hash, err := util.GetHash()
 	if err != nil {
 		return err
@@ -153,18 +141,37 @@ func (s *SemanticRelease) SetVersion(version string, repro string) error {
 
 	newVersionContent := cache.VersionFileContent{
 		Commit:      hash,
-		NextVersion: newVersion.String(),
+		NextVersion: nextVersion.String(),
 		Branch:      branch,
-	}
-
-	lastVersion, _, err := util.GetLastVersion()
-	if err != nil {
-		return err
 	}
 
 	if lastVersion != nil {
 		newVersionContent.Version = lastVersion.String()
 	}
 
+	log.Debugf("Save %s with hash %s to cache", nextVersion.String(), hash)
 	return cache.Write(newVersionContent)
+}
+
+func incPrerelease(preReleaseType string, version semver.Version) semver.Version {
+	defaultPrerelease := preReleaseType + ".0"
+	if version.Prerelease() == "" || !strings.HasPrefix(version.Prerelease(), preReleaseType) {
+		version, _ = version.SetPrerelease(defaultPrerelease)
+	} else {
+		parts := strings.Split(version.Prerelease(), ".")
+		if len(parts) == 2 {
+			i, err := strconv.Atoi(parts[1])
+			if err != nil {
+				version, _ = version.SetPrerelease(defaultPrerelease)
+				log.Warnf("Could not parse release tag %s, use version %s", version.Prerelease(), version.String())
+			} else {
+				version, _ = version.SetPrerelease(preReleaseType + "." + strconv.Itoa((i + 1)))
+			}
+		} else {
+			version, _ = version.SetPrerelease(defaultPrerelease)
+			log.Warnf("Could not parse release tag %s, use version %s", version.Prerelease(), version.String())
+		}
+	}
+
+	return version
 }

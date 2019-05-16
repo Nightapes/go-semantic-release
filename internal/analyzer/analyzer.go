@@ -13,13 +13,13 @@ type Analyzer struct {
 
 //Rules for commits
 type Rules struct {
-	Tag     string
-	Release string
-	Enabled bool
+	Tag       string
+	Release   string
+	Changelog bool
 }
 
 type analyzeCommit interface {
-	analyze(commit gitutil.Commit, tag string) (AnalyzedCommit, bool)
+	analyze(commit gitutil.Commit, tag string) (AnalyzedCommit, bool, error)
 	getRules() []Rules
 }
 
@@ -29,6 +29,7 @@ type AnalyzedCommit struct {
 	ParsedMessage               string
 	Scope                       string
 	ParsedBreakingChangeMessage string
+	Tag                         string
 }
 
 //New Analyzer struct for given commit format
@@ -45,7 +46,7 @@ func (a *Analyzer) Analyze(commits []gitutil.Commit) map[string][]AnalyzedCommit
 	var commitAnalayzer analyzeCommit
 	switch a.CommitFormat {
 	case "angular":
-		log.Infof("analyze angular format")
+		log.Debugf("Commit format set to angular")
 		commitAnalayzer = newAngular()
 	}
 
@@ -53,18 +54,24 @@ func (a *Analyzer) Analyze(commits []gitutil.Commit) map[string][]AnalyzedCommit
 	analyzedCommits["major"] = make([]AnalyzedCommit, 0)
 	analyzedCommits["minor"] = make([]AnalyzedCommit, 0)
 	analyzedCommits["patch"] = make([]AnalyzedCommit, 0)
+	analyzedCommits["none"] = make([]AnalyzedCommit, 0)
 
 	for _, commit := range commits {
 		for _, rule := range commitAnalayzer.getRules() {
-			analyzedCommit, hasBreakingChange := commitAnalayzer.analyze(commit, rule.Tag)
-			if hasBreakingChange {
-				analyzedCommits["major"] = append(analyzedCommits["major"], analyzedCommit)
-			} else {
-				analyzedCommits[rule.Release] = append(analyzedCommits[rule.Release], analyzedCommit)
+			analyzedCommit, hasBreakingChange, err := commitAnalayzer.analyze(commit, rule.Tag)
+			if err == nil {
+				if hasBreakingChange {
+					analyzedCommits["major"] = append(analyzedCommits["major"], analyzedCommit)
+				} else {
+					analyzedCommits[rule.Release] = append(analyzedCommits[rule.Release], analyzedCommit)
+				}
+				break
 			}
 
 		}
 	}
+
+	log.Debugf("Analyzed commits: major=%d minor=%d patch=%d none=%d", len(analyzedCommits["major"]), len(analyzedCommits["minor"]), len(analyzedCommits["patch"]), len(analyzedCommits["none"]))
 
 	return analyzedCommits
 }
