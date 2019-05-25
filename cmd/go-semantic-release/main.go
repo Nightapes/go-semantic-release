@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/Nightapes/go-semantic-release/pkg/config"
@@ -24,6 +25,11 @@ var (
 	setRepository = setCommand.Flag("repository", "Path to repository").String()
 	setConfigPath = setCommand.Flag("config", "Path to config file").Default(".release.yml").String()
 	setVersion    = setCommand.Arg("version", "semver version").Required().String()
+
+	getChangelog           = app.Command("changelog", "Print changelog.")
+	getChangelogRepository = getChangelog.Flag("repository", "Path to repository").String()
+	getChangelogConfigPath = getChangelog.Flag("config", "Path to config file").Default(".release.yml").String()
+	getChangelogFile       = getChangelog.Flag("file", "save changelog to file").Default("CHANGELOG.md").String()
 )
 
 func main() {
@@ -32,16 +38,24 @@ func main() {
 	case nextCommand.FullCommand():
 		setLoglevel(*loglevel)
 		s := semanticrelease.New(readConfig(nextConfigPath))
-		err := s.GetNextVersion(*nextRepository, *nextForce)
+		version, err := s.GetNextVersion(*nextRepository, *nextForce)
 		if err != nil {
 			log.Fatal(err)
 		}
+		fmt.Println(version)
 
 	case setCommand.FullCommand():
 		setLoglevel(*loglevel)
 		log.Infof("Version %s", *setVersion)
 		s := semanticrelease.New(readConfig(setConfigPath))
 		err := s.SetVersion(*setVersion, *setRepository)
+		if err != nil {
+			log.Fatal(err)
+		}
+	case getChangelog.FullCommand():
+		setLoglevel(*loglevel)
+		s := semanticrelease.New(readConfig(getChangelogConfigPath))
+		err := s.GetChangelog(*getChangelogRepository, *getChangelogFile)
 		if err != nil {
 			log.Fatal(err)
 		}

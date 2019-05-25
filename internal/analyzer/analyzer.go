@@ -3,24 +3,27 @@ package analyzer
 
 import (
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
+	"github.com/Nightapes/go-semantic-release/pkg/config"
 	log "github.com/sirupsen/logrus"
 )
 
 //Analyzer struct
 type Analyzer struct {
 	CommitFormat string
+	Config       config.ChangelogConfig
 }
 
-//Rules for commits
-type Rules struct {
+//Rule for commits
+type Rule struct {
 	Tag       string
+	TagString string
 	Release   string
 	Changelog bool
 }
 
 type analyzeCommit interface {
-	analyze(commit gitutil.Commit, tag string) (AnalyzedCommit, bool, error)
-	getRules() []Rules
+	analyze(commit gitutil.Commit, tag Rule) (AnalyzedCommit, bool, error)
+	getRules() []Rule
 }
 
 //AnalyzedCommit struct
@@ -30,12 +33,15 @@ type AnalyzedCommit struct {
 	Scope                       string
 	ParsedBreakingChangeMessage string
 	Tag                         string
+	TagString                   string
+	Print                       bool
 }
 
 //New Analyzer struct for given commit format
-func New(format string) *Analyzer {
+func New(format string, config config.ChangelogConfig) *Analyzer {
 	return &Analyzer{
 		CommitFormat: format,
+		Config:       config,
 	}
 
 }
@@ -58,8 +64,13 @@ func (a *Analyzer) Analyze(commits []gitutil.Commit) map[string][]AnalyzedCommit
 
 	for _, commit := range commits {
 		for _, rule := range commitAnalayzer.getRules() {
-			analyzedCommit, hasBreakingChange, err := commitAnalayzer.analyze(commit, rule.Tag)
+			analyzedCommit, hasBreakingChange, err := commitAnalayzer.analyze(commit, rule)
 			if err == nil {
+				if a.Config.PrintAll {
+					analyzedCommit.Print = true
+				} else {
+					analyzedCommit.Print = rule.Changelog
+				}
 				if hasBreakingChange {
 					analyzedCommits["major"] = append(analyzedCommits["major"], analyzedCommit)
 				} else {

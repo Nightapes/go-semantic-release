@@ -12,50 +12,59 @@ import (
 )
 
 type angular struct {
-	rules []Rules
+	rules []Rule
 	regex string
 }
 
 func newAngular() *angular {
 	return &angular{
 		regex: `(TAG)(?:\((.*)\))?: (.*)`,
-		rules: []Rules{
+		rules: []Rule{
 			{
 				Tag:       "feat",
+				TagString: "Features",
 				Release:   "minor",
 				Changelog: true,
 			},
 			{
 				Tag:       "fix",
+				TagString: "Bug fixes",
 				Release:   "patch",
 				Changelog: true,
 			}, {
 				Tag:       "perf",
+				TagString: "Performance improvments",
 				Release:   "patch",
 				Changelog: true,
 			}, {
 				Tag:       "docs",
+				TagString: "Documentation changes",
 				Release:   "none",
 				Changelog: false,
 			},
 			{
 				Tag:       "style",
+				TagString: "Style",
 				Release:   "none",
 				Changelog: false,
 			}, {
 				Tag:       "refactor",
+				TagString: "Code refactor",
 				Release:   "none",
 				Changelog: false,
 			}, {
 				Tag:       "test",
+				TagString: "Testing",
 				Release:   "none",
 				Changelog: false,
 			}, {
 				Tag:       "chore",
+				TagString: "Changes to the build process or auxiliary tools and libraries such as documentation generation",
 				Release:   "none",
 				Changelog: false,
 			}, {
 				Tag:       "build",
+				TagString: "Changes to ci config",
 				Release:   "none",
 				Changelog: false,
 			},
@@ -63,21 +72,23 @@ func newAngular() *angular {
 	}
 }
 
-func (a *angular) getRules() []Rules {
+func (a *angular) getRules() []Rule {
 	return a.rules
 }
 
-func (a *angular) analyze(commit gitutil.Commit, tag string) (AnalyzedCommit, bool, error) {
+func (a *angular) analyze(commit gitutil.Commit, rule Rule) (AnalyzedCommit, bool, error) {
 
 	analyzed := AnalyzedCommit{
-		Commit: commit,
-		Tag:    tag,
+		Commit:    commit,
+		Tag:       rule.Tag,
+		TagString: rule.TagString,
 	}
 
-	re := regexp.MustCompile(strings.Replace(a.regex, "TAG", tag, -1))
+	re := regexp.MustCompile(strings.Replace(a.regex, "TAG", rule.Tag, -1))
 	matches := re.FindAllStringSubmatch(commit.Message, -1)
 	if len(matches) >= 1 {
 		if len(matches[0]) >= 3 {
+
 			analyzed.Scope = matches[0][2]
 
 			message := strings.Join(matches[0][3:], "")
@@ -85,7 +96,7 @@ func (a *angular) analyze(commit gitutil.Commit, tag string) (AnalyzedCommit, bo
 
 			if len(splitted) == 1 {
 				analyzed.ParsedMessage = splitted[0]
-				log.Tracef("%s: found %s", commit.Message, tag)
+				log.Tracef("%s: found %s", commit.Message, rule.Tag)
 				return analyzed, false, nil
 			}
 			analyzed.ParsedMessage = splitted[0]
@@ -95,7 +106,7 @@ func (a *angular) analyze(commit gitutil.Commit, tag string) (AnalyzedCommit, bo
 
 		}
 	}
-	log.Tracef("%s does not match %s, skip", commit.Message, tag)
+	log.Tracef("%s does not match %s, skip", commit.Message, rule.Tag)
 	return analyzed, false, fmt.Errorf("Not found")
 
 }

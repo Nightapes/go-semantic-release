@@ -10,7 +10,7 @@ import (
 
 // ChangelogConfig struct
 type ChangelogConfig struct {
-	Print        string `yaml:"print,omitempty"`
+	PrintAll     bool   `yaml:"printAll,omitempty"`
 	Template     string `yaml:"template,omitempty"`
 	TemplatePath string `yaml:"templatePath,omitempty"`
 }
