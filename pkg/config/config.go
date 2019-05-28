@@ -25,6 +25,11 @@ type GitlabConfig struct {
 	URL string `yaml:"url"`
 }
 
+type Asset struct {
+	Name     string `yaml:"name"`
+	Compress bool   `yaml:"compress"`
+}
+
 // ReleaseConfig struct
 type ReleaseConfig struct {
 	CommitFormat string            `yaml:"commitFormat"`
@@ -33,6 +38,7 @@ type ReleaseConfig struct {
 	Release      string            `yaml:"release,omitempty"`
 	Github       map[string]string `yaml:"github"`
 	Gitlab       map[string]string `yaml:"gitlab"`
+	Assets       []Asset           `yaml:"assets"`
 }
 
 // Read ReleaseConfig

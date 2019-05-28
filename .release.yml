@@ -9,6 +9,9 @@ changelog:
   template: ''
   templatePath: ''
 release: 'github'
+assets:
+  - name:
+    compress:
 github:
   url: ''
 gitlab:
