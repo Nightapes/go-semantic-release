@@ -2,13 +2,14 @@
 package semanticrelease
 
 import (
-	"fmt"
+	"io/ioutil"
 	"strconv"
 	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/Nightapes/go-semantic-release/internal/analyzer"
 	"github.com/Nightapes/go-semantic-release/internal/cache"
+	"github.com/Nightapes/go-semantic-release/internal/changelog"
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	log "github.com/sirupsen/logrus"
@@ -27,15 +28,15 @@ func New(c *config.ReleaseConfig) *SemanticRelease {
 }
 
 // GetNextVersion from .version or calculate new from commits
-func (s *SemanticRelease) GetNextVersion(repro string, force bool) error {
+func (s *SemanticRelease) GetNextVersion(repro string, force bool) (string, error) {
 	util, err := gitutil.New(repro)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	hash, err := util.GetHash()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	log.Debugf("Ignore .version file if exits, %t", force)
@@ -43,89 +44,67 @@ func (s *SemanticRelease) GetNextVersion(repro string, force bool) error {
 		content, err := cache.Read()
 
 		if err == nil && content.Commit == hash {
-			fmt.Printf(content.NextVersion)
-			return nil
+			log.Infof("Found cache, will return cached version %s", content.NextVersion)
+			return content.NextVersion, err
 		}
 		log.Debugf("Mismatch git and version file  %s - %s", content.Commit, hash)
 	}
 
 	lastVersion, lastVersionHash, err := util.GetLastVersion()
 	if err != nil {
-		return err
+		return "", err
 	}
+	var newVersion semver.Version
 
 	if lastVersion == nil {
 		defaultVersion, _ := semver.NewVersion("1.0.0")
-		err := s.SetVersion(defaultVersion.String(), repro)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("%s", defaultVersion.String())
-		return nil
+		newVersion = *defaultVersion
+	} else {
+		newVersion = *lastVersion
 	}
 
 	commits, err := util.GetCommits(lastVersionHash)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	log.Debugf("Found %d commits till last release", len(commits))
 
-	a := analyzer.New("angular")
+	a := analyzer.New(s.config.CommitFormat, s.config.Changelog)
 	result := a.Analyze(commits)
-
-	var newVersion semver.Version
 
 	currentBranch, err := util.GetBranch()
 	if err != nil {
-		return err
-	}
-	newVersion = *lastVersion
-	if lastVersion.Prerelease() == "" {
-		if len(result["major"]) > 0 {
-			newVersion = lastVersion.IncMajor()
-		} else if len(result["minor"]) > 0 {
-			newVersion = lastVersion.IncMinor()
-		} else if len(result["patch"]) > 0 {
-			newVersion = lastVersion.IncPatch()
-		}
+		return "", err
 	}
 
-	log.Debugf("Test %+v", s.config)
 	for branch, releaseType := range s.config.Branch {
 		if currentBranch == branch || strings.HasPrefix(currentBranch, branch) {
 			log.Debugf("Found branch config for branch %s with release type %s", currentBranch, releaseType)
 			switch releaseType {
-			case "rc":
-				if newVersion.Prerelease() == "" || !strings.HasPrefix(newVersion.Prerelease(), "rc") {
-					newVersion, _ = newVersion.SetPrerelease("rc.0")
-				} else {
-					parts := strings.Split(newVersion.Prerelease(), ".")
-					if len(parts) == 2 {
-						i, err := strconv.Atoi(parts[1])
-						if err != nil {
-							newVersion, _ = newVersion.SetPrerelease("rc.0")
-							log.Warnf("Could not parse release tag %s, use version %s", newVersion.Prerelease(), newVersion.String())
-						} else {
-							newVersion, _ = newVersion.SetPrerelease("rc." + strconv.Itoa((i + 1)))
-						}
-					} else {
-						newVersion, _ = newVersion.SetPrerelease("rc.0")
-						log.Warnf("Could not parse release tag %s, use version %s", newVersion.Prerelease(), newVersion.String())
-					}
+			case "rc", "beta", "alpha":
+				newVersion = incPrerelease(releaseType, newVersion)
+			case "release":
+				if len(result["major"]) > 0 {
+					newVersion = newVersion.IncMajor()
+				} else if len(result["minor"]) > 0 {
+					newVersion = newVersion.IncMinor()
+				} else if len(result["patch"]) > 0 {
+					newVersion = newVersion.IncPatch()
 				}
 			}
-
 		}
 	}
 
-	err = s.SetVersion(newVersion.String(), repro)
+	log.Infof("New version %s -> %s", lastVersion.String(), newVersion.String())
+	err = saveToCache(util, lastVersion, &newVersion)
 	if err != nil {
-		return err
+		return "", err
 	}
-	fmt.Printf("%s", newVersion.String())
+	c := changelog.New(s.config)
+	c.GenerateChanglog(newVersion.String(), result)
 
-	return err
+	return newVersion.String(), err
 }
 
 //SetVersion for git repository
@@ -141,6 +120,16 @@ func (s *SemanticRelease) SetVersion(version string, repro string) error {
 		return err
 	}
 
+	lastVersion, _, err := util.GetLastVersion()
+	if err != nil {
+		return err
+	}
+
+	return saveToCache(util, lastVersion, newVersion)
+}
+
+func saveToCache(util *gitutil.GitUtil, lastVersion *semver.Version, nextVersion *semver.Version) error {
+
 	hash, err := util.GetHash()
 	if err != nil {
 		return err
@@ -153,18 +142,72 @@ func (s *SemanticRelease) SetVersion(version string, repro string) error {
 
 	newVersionContent := cache.VersionFileContent{
 		Commit:      hash,
-		NextVersion: newVersion.String(),
+		NextVersion: nextVersion.String(),
 		Branch:      branch,
-	}
-
-	lastVersion, _, err := util.GetLastVersion()
-	if err != nil {
-		return err
 	}
 
 	if lastVersion != nil {
 		newVersionContent.Version = lastVersion.String()
 	}
 
+	log.Debugf("Save %s with hash %s to cache", nextVersion.String(), hash)
 	return cache.Write(newVersionContent)
+}
+
+func incPrerelease(preReleaseType string, version semver.Version) semver.Version {
+	defaultPrerelease := preReleaseType + ".0"
+	if version.Prerelease() == "" || !strings.HasPrefix(version.Prerelease(), preReleaseType) {
+		version, _ = version.SetPrerelease(defaultPrerelease)
+	} else {
+		parts := strings.Split(version.Prerelease(), ".")
+		if len(parts) == 2 {
+			i, err := strconv.Atoi(parts[1])
+			if err != nil {
+				version, _ = version.SetPrerelease(defaultPrerelease)
+				log.Warnf("Could not parse release tag %s, use version %s", version.Prerelease(), version.String())
+			} else {
+				version, _ = version.SetPrerelease(preReleaseType + "." + strconv.Itoa((i + 1)))
+			}
+		} else {
+			version, _ = version.SetPrerelease(defaultPrerelease)
+			log.Warnf("Could not parse release tag %s, use version %s", version.Prerelease(), version.String())
+		}
+	}
+
+	return version
+}
+
+// GetChangelog from last version till now
+func (s *SemanticRelease) GetChangelog(repro, file string) error {
+	nextVersion, err := s.GetNextVersion(repro, false)
+	if err != nil {
+		log.Debugf("Could not get next version")
+		return err
+	}
+
+	util, err := gitutil.New(repro)
+	if err != nil {
+		return err
+	}
+
+	_, lastVersionHash, err := util.GetLastVersion()
+	if err != nil {
+		return err
+	}
+
+	commits, err := util.GetCommits(lastVersionHash)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Found %d commits till last release", len(commits))
+
+	a := analyzer.New(s.config.CommitFormat, s.config.Changelog)
+	result := a.Analyze(commits)
+
+	c := changelog.New(s.config)
+	_, content, err := c.GenerateChanglog(nextVersion, result)
+
+	return ioutil.WriteFile(file, []byte(content), 0644)
+
 }

@@ -1,11 +1,11 @@
 commitFormat: angular
 branch:
   master: release
-  travis: rc
+  rc: rc
   beta: beta
   alpha: alpha
 changelog:
-  print: all/compact
+  printAll: false
   template: ''
   templatePath: ''
 release: 'github'
