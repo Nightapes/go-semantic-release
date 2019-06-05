@@ -1,29 +1,23 @@
 package releaser
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
-	"io/ioutil"
-	"strings"
+	"github.com/google/go-github/v25/github"
+	"net/http"
+	"os"
 )
 
 // GITHUB identifer for github interface
 const GITHUB = "github"
-const githubCreateRleasURL = "https://api.github.com/repos"
-const githubUploadAssetURL = "https://uploads.github.com"
 
 // GitHubReleaser type struct
 type GitHubReleaser struct {
-	repositoryURL  string
-	authToken      string
-	assets         []config.Asset
-	Version        string `json:"tag_name"`
-	Branch         string `json:"target_commitish"`
-	ReleaseName    string `json:"name"`
-	ReleaseMessage string `json:"body"`
-	Draft          bool   `json:"draft,omitempty"`
-	Prerelease     bool   `json:"prerelease,omitempty"`
+	config  *config.ReleaseConfig
+	client  *github.Client
+	context context.Context
+	release *github.RepositoryRelease
 }
 
 type gitHubCreateReleaseResponse struct {
@@ -33,50 +27,57 @@ type gitHubCreateReleaseResponse struct {
 
 // NewGitHubReleaser initialize a new GitHubRelease
 func NewGitHubReleaser(c *config.ReleaseConfig) *GitHubReleaser {
+	ctx := context.Background()
+	httpClient := createHTTPClient(ctx, c.Github.AccessToken)
+
 	return &GitHubReleaser{
-		repositoryURL: c.Github["url"],
-		authToken:     c.Github["authToken"],
-		assets:        c.Assets,
+		config:  c,
+		client:  github.NewClient(httpClient),
+		context: ctx,
 	}
 }
 
 // CreateRelease creates release on remote
-func (g *GitHubReleaser) CreateRelease(releaseName, releaseMessage, branch, version string) error {
-	g.ReleaseName = releaseName
-	g.ReleaseMessage = releaseMessage
-	g.Branch = branch
-	g.Version = version
+func (g GitHubReleaser) CreateRelease(tag, releaseName, releaseMessage, targetBranch string) error {
 
-	repositoryURI := strings.TrimLeft(g.repositoryURL, "/")
-	jsonRelease, err := json.Marshal(g)
+	release, resp, err := g.client.Repositories.CreateRelease(g.context, g.config.Github.User, g.config.Github.URL, &github.RepositoryRelease{
+		TagName:         &tag,
+		TargetCommitish: &targetBranch,
+		Name:            &releaseName,
+		Body:            &releaseMessage,
+		Draft:           &g.config.IsDraft,
+		Prerelease:      &g.config.IsPreRelease,
+	})
 
 	if err != nil {
-		return fmt.Errorf("releaser: github: could not marshal GitHubReleaser struct. Error: %s", err.Error())
+		return fmt.Errorf("releaser: github: Could not create release: %v", err)
 	}
 
-	tempDir, err := ioutil.TempDir(".", "tempZipAssets")
-	if err != nil {
-		return fmt.Errorf("releaser: github: Could not create a temp directory. Error: %s", err.Error())
-	}
-	assetList, err := prepareAssets(tempDir, g.assets)
-	if err != nil {
-		return err
+	if resp.StatusCode >= http.StatusBadRequest {
+		return fmt.Errorf("releaser: github: Could not create release: response statuscode: %s", resp.Status)
 	}
 
-	response, err := makeReleaseRequest(githubCreateRleasURL+repositoryURI, g.authToken, jsonRelease)
-	if err != nil {
-		return err
-	}
+	g.release = release
+	return nil
 
-	releaseInfo := gitHubCreateReleaseResponse{}
-	if err := json.Unmarshal(response, &releaseInfo); err != nil {
-		return err
-	}
+}
 
-	// tbd build new upload url
-	if err := uploadReleaseAssets(releaseInfo.AssetUploadURL, g.authToken, assetList); err != nil {
-		return err
-	}
+// UploadAssets uploads specified assets
+func (g GitHubReleaser) UploadAssets(assets []config.Asset) error {
+	for _, asset := range assets {
+		file, err := os.Open(asset.Name)
+		if err != nil {
+			return err
+		}
 
+		_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.Github.User, g.config.Github.URL, *g.release.ID, &github.UploadOptions{Name: asset.Name}, file)
+		if err != nil {
+			return err
+		}
+
+		if resp.StatusCode >= http.StatusBadRequest {
+			return fmt.Errorf("releaser: github: Could not create release: response statuscode: %s", resp.Status)
+		}
+	}
 	return nil
 }

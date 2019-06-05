@@ -1,12 +1,12 @@
 package releaser
 
 import (
-	"archive/zip"
-	"bytes"
+	"context"
 	"fmt"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
-	"io/ioutil"
+	"golang.org/x/oauth2"
 	"net/http"
+	"os"
 )
 
 // Releasers struct type
@@ -16,7 +16,8 @@ type Releasers struct {
 
 // Releaser interface for providers
 type Releaser interface {
-	CreateRelease(releaseName, releaseMessage string) error
+	CreateRelease(tag, releaseName, releaseMessage, targetBranch string) error
+	UploadAssets(assets []config.Asset) error
 }
 
 // New initialize a Relerser
@@ -37,78 +38,29 @@ func (r *Releasers) GetReleaser(releaserType string) (Releaser, error) {
 
 // tbd. http helper function
 
-func makeReleaseRequest(url, authToken string, jsonRelease []byte) ([]byte, error) {
-	request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(jsonRelease))
-	request.Header.Set("Authorization", authToken)
-	request.Header.Set("content-type", "application/json")
+func createHTTPClient(ctx context.Context, token string) *http.Client {
+	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
+		AccessToken: token},
+	)
 
-	client := http.Client{}
-	defer client.CloseIdleConnections()
+	client := oauth2.NewClient(ctx, tokenSource)
 
-	response, err := client.Do(request)
-
-	if err != nil {
-		return []byte{}, err
-
-	}
-	bodyContent, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode >= http.StatusMultipleChoices {
-		return []byte{}, fmt.Errorf("Could not create new release. HTTP %d: %s", response.StatusCode, string(bodyContent))
-	}
-
-	return bodyContent, nil
+	return client
 }
 
-func uploadReleaseAssets(url, authToken string, assets []string) error {
-	body := []byte{}
-	request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
+func checkIfAssetsExists(assets []config.Asset) error {
+	var missingAssets []string
+	for _, asset := range assets {
 
-	request.Header.Set("Authorization", authToken)
-	client := http.Client{}
-	defer client.CloseIdleConnections()
-
-	response, err := client.Do(request)
-
-	if err != nil {
-		return err
-
+		if _, err := os.Stat(asset.Name); err != nil {
+			missingAssets = append(missingAssets, asset.Name)
+		}
 	}
-	bodyContent, _ := ioutil.ReadAll(response.Body)
 
-	if response.StatusCode >= http.StatusMultipleChoices {
-		return fmt.Errorf("Could not create new release. HTTP %d: %s", response.StatusCode, string(bodyContent))
+	if len(missingAssets) != 0 {
+		return fmt.Errorf("Could not find specified Asset: %+v ", assets)
 	}
 
 	return nil
-}
 
-func prepareAssets(tempDir string, asset []config.Asset) ([]string, error) {
-	buf := new(bytes.Buffer)
-	tempAssets := []string{}
-	for _, asset := range asset {
-		if asset.Compress {
-			fileContent, err := ioutil.ReadFile(asset.Name)
-			if err != nil {
-				return []string{}, err
-			}
-
-			w := zip.NewWriter(buf)
-			zip, err := w.Create(tempDir + asset.Name)
-
-			if err != nil {
-				return []string{}, err
-			}
-
-			_, err = zip.Write(fileContent)
-			if err != nil {
-				return []string{}, err
-			}
-			tempAssets = append(tempAssets, tempDir+asset.Name)
-
-		} else {
-			tempAssets = append(tempAssets, asset.Name)
-		}
-	}
-	return tempAssets, nil
 }
