@@ -17,12 +17,16 @@ type ChangelogConfig struct {
 
 // GithubConfig struct
 type GithubConfig struct {
-	URL string `yaml:"url"`
+	URL         string `yaml:"url"`
+	User        string `yaml:"user"`
+	AccessToken string `yaml:"accessToken"`
 }
 
 // GitlabConfig struct
 type GitlabConfig struct {
-	URL string `yaml:"url"`
+	URL         string `yaml:"url"`
+	User        string `yaml:"user"`
+	AccessToken string `yaml:"accessToken"`
 }
 
 type Asset struct {
@@ -32,13 +36,14 @@ type Asset struct {
 
 // ReleaseConfig struct
 type ReleaseConfig struct {
-	CommitFormat string            `yaml:"commitFormat"`
-	Branch       map[string]string `yaml:"branch"`
-	Changelog    ChangelogConfig   `yaml:"changelog,omitempty"`
-	Release      string            `yaml:"release,omitempty"`
-	Github       map[string]string `yaml:"github"`
-	Gitlab       map[string]string `yaml:"gitlab"`
-	Assets       []Asset           `yaml:"assets"`
+	CommitFormat          string            `yaml:"commitFormat"`
+	Branch                map[string]string `yaml:"branch"`
+	Changelog             ChangelogConfig   `yaml:"changelog,omitempty"`
+	Release               string            `yaml:"release,omitempty"`
+	Github                GitlabConfig      `yaml:"github, omitempty"`
+	Gitlab                GitlabConfig      `yaml:"gitlab, omitempty"`
+	Assets                []Asset           `yaml:"assets"`
+	IsPreRelease, IsDraft bool
 }
 
 // Read ReleaseConfig
@@ -57,5 +62,7 @@ func Read(configPath string) (*ReleaseConfig, error) {
 
 	log.Debugf("Found config %+v", releaseConfig)
 
-	return &releaseConfig, nil
+	return &ReleaseConfig{
+		IsPreRelease: false,
+		IsDraft:      false}, nil
 }
