@@ -59,6 +59,7 @@ func (s *SemanticRelease) GetNextVersion(repro string, force bool) (string, erro
 	if lastVersion == nil {
 		defaultVersion, _ := semver.NewVersion("1.0.0")
 		newVersion = *defaultVersion
+		lastVersion = defaultVersion
 	} else {
 		newVersion = *lastVersion
 	}
@@ -70,7 +71,10 @@ func (s *SemanticRelease) GetNextVersion(repro string, force bool) (string, erro
 
 	log.Debugf("Found %d commits till last release", len(commits))
 
-	a := analyzer.New(s.config.CommitFormat, s.config.Changelog)
+	a, err := analyzer.New(s.config.CommitFormat, s.config.Changelog)
+	if err != nil {
+		return "", err
+	}
 	result := a.Analyze(commits)
 
 	currentBranch, err := util.GetBranch()
@@ -101,8 +105,8 @@ func (s *SemanticRelease) GetNextVersion(repro string, force bool) (string, erro
 	if err != nil {
 		return "", err
 	}
-	c := changelog.New(s.config)
-	c.GenerateChanglog(newVersion.String(), result)
+	c := changelog.New(s.config, a.GetRules())
+	c.GenerateChanglog(newVersion.String(), "https://github.com/Nightapes/go-semantic-release/commit/{{hash}}", result)
 
 	return newVersion.String(), err
 }
@@ -202,12 +206,17 @@ func (s *SemanticRelease) GetChangelog(repro, file string) error {
 
 	log.Debugf("Found %d commits till last release", len(commits))
 
-	a := analyzer.New(s.config.CommitFormat, s.config.Changelog)
+	a, err := analyzer.New(s.config.CommitFormat, s.config.Changelog)
+	if err != nil {
+		return err
+	}
 	result := a.Analyze(commits)
 
-	c := changelog.New(s.config)
-	_, content, err := c.GenerateChanglog(nextVersion, result)
-
+	c := changelog.New(s.config, a.GetRules())
+	_, content, err := c.GenerateChanglog(nextVersion, "https://github.com/Nightapes/go-semantic-release/commit/{{hash}}", result)
+	if err != nil {
+		return err
+	}
 	return ioutil.WriteFile(file, []byte(content), 0644)
 
 }

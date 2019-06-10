@@ -2,6 +2,8 @@
 package analyzer
 
 import (
+	"fmt"
+
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	log "github.com/sirupsen/logrus"
@@ -9,8 +11,8 @@ import (
 
 //Analyzer struct
 type Analyzer struct {
-	CommitFormat string
-	Config       config.ChangelogConfig
+	analyzeCommit analyzeCommit
+	Config        config.ChangelogConfig
 }
 
 //Rule for commits
@@ -38,23 +40,29 @@ type AnalyzedCommit struct {
 }
 
 //New Analyzer struct for given commit format
-func New(format string, config config.ChangelogConfig) *Analyzer {
-	return &Analyzer{
-		CommitFormat: format,
-		Config:       config,
+func New(format string, config config.ChangelogConfig) (*Analyzer, error) {
+	analyzer := &Analyzer{
+		Config: config,
 	}
 
+	switch format {
+	case "angular":
+		log.Debugf("Commit format set to angular")
+		analyzer.analyzeCommit = newAngular()
+	default:
+		return nil, fmt.Errorf("Invalid commit format: %s", format)
+	}
+	return analyzer, nil
+
+}
+
+// GetRules from current mode
+func (a *Analyzer) GetRules() []Rule {
+	return a.analyzeCommit.getRules()
 }
 
 // Analyze commits and return commits splitted by major,minor,patch
 func (a *Analyzer) Analyze(commits []gitutil.Commit) map[string][]AnalyzedCommit {
-
-	var commitAnalayzer analyzeCommit
-	switch a.CommitFormat {
-	case "angular":
-		log.Debugf("Commit format set to angular")
-		commitAnalayzer = newAngular()
-	}
 
 	analyzedCommits := make(map[string][]AnalyzedCommit)
 	analyzedCommits["major"] = make([]AnalyzedCommit, 0)
@@ -63,8 +71,8 @@ func (a *Analyzer) Analyze(commits []gitutil.Commit) map[string][]AnalyzedCommit
 	analyzedCommits["none"] = make([]AnalyzedCommit, 0)
 
 	for _, commit := range commits {
-		for _, rule := range commitAnalayzer.getRules() {
-			analyzedCommit, hasBreakingChange, err := commitAnalayzer.analyze(commit, rule)
+		for _, rule := range a.analyzeCommit.getRules() {
+			analyzedCommit, hasBreakingChange, err := a.analyzeCommit.analyze(commit, rule)
 			if err == nil {
 				if a.Config.PrintAll {
 					analyzedCommit.Print = true
