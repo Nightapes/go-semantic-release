@@ -213,7 +213,7 @@ func (s *SemanticRelease) GetChangelog(repro, file string) error {
 	result := a.Analyze(commits)
 
 	c := changelog.New(s.config, a.GetRules())
-	_, content, err := c.GenerateChanglog(nextVersion, "https://github.com/Nightapes/go-semantic-release/commit/{{hash}}", result)
+	_, content, err := c.GenerateChanglog(nextVersion, s.config.GitProvider.URL+"{{hash}}", result)
 	if err != nil {
 		return err
 	}
