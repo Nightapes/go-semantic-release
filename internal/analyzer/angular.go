@@ -64,7 +64,7 @@ func newAngular() *angular {
 				Changelog: false,
 			}, {
 				Tag:       "build",
-				TagString: "Changes to ci config",
+				TagString: "Changes to CI/CD",
 				Release:   "none",
 				Changelog: false,
 			},

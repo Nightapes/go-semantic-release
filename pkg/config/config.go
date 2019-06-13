@@ -40,8 +40,8 @@ type ReleaseConfig struct {
 	Branch                map[string]string `yaml:"branch"`
 	Changelog             ChangelogConfig   `yaml:"changelog,omitempty"`
 	Release               string            `yaml:"release,omitempty"`
-	Github                GitlabConfig      `yaml:"github, omitempty"`
-	Gitlab                GitlabConfig      `yaml:"gitlab, omitempty"`
+	Github                GitlabConfig      `yaml:"github,omitempty"`
+	Gitlab                GitlabConfig      `yaml:"gitlab,omitempty"`
 	Assets                []Asset           `yaml:"assets"`
 	IsPreRelease, IsDraft bool
 }
@@ -62,7 +62,5 @@ func Read(configPath string) (*ReleaseConfig, error) {
 
 	log.Debugf("Found config %+v", releaseConfig)
 
-	return &ReleaseConfig{
-		IsPreRelease: false,
-		IsDraft:      false}, nil
+	return &releaseConfig, nil
 }
