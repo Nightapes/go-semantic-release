@@ -29,6 +29,7 @@ type GitProvider struct {
 	AccessToken string
 }
 
+//Asset type struct
 type Asset struct {
 	Name     string `yaml:"name"`
 	Compress bool   `yaml:"compress"`
