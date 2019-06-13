@@ -81,6 +81,8 @@ func checkProvider(config ReleaseConfig) (ReleaseConfig, error) {
 			return ReleaseConfig{}, fmt.Errorf("config: Can not find environment variable %s", token)
 		}
 		config.GitProvider.AccessToken = token
+	} else {
+		log.Debugln("No provider is set, will continue")
 	}
 	return config, nil
 }
