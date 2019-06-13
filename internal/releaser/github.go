@@ -28,7 +28,7 @@ type gitHubCreateReleaseResponse struct {
 // NewGitHubReleaser initialize a new GitHubRelease
 func NewGitHubReleaser(c *config.ReleaseConfig) *GitHubReleaser {
 	ctx := context.Background()
-	httpClient := createHTTPClient(ctx, c.Github.AccessToken)
+	httpClient := createHTTPClient(ctx, c.GitProvider.AccessToken)
 
 	return &GitHubReleaser{
 		config:  c,
@@ -40,7 +40,7 @@ func NewGitHubReleaser(c *config.ReleaseConfig) *GitHubReleaser {
 // CreateRelease creates release on remote
 func (g GitHubReleaser) CreateRelease(tag, releaseName, releaseMessage, targetBranch string) error {
 
-	release, resp, err := g.client.Repositories.CreateRelease(g.context, g.config.Github.User, g.config.Github.URL, &github.RepositoryRelease{
+	release, resp, err := g.client.Repositories.CreateRelease(g.context, g.config.GitProvider.User, g.config.GitProvider.Repo, &github.RepositoryRelease{
 		TagName:         &tag,
 		TargetCommitish: &targetBranch,
 		Name:            &releaseName,
@@ -70,7 +70,7 @@ func (g GitHubReleaser) UploadAssets(assets []config.Asset) error {
 			return err
 		}
 
-		_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.Github.User, g.config.Github.URL, *g.release.ID, &github.UploadOptions{Name: asset.Name}, file)
+		_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.GitProvider.User, g.config.GitProvider.Repo, *g.release.ID, &github.UploadOptions{Name: asset.Name}, file)
 		if err != nil {
 			return err
 		}
