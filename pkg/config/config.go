@@ -2,11 +2,17 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
+	"os"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
+
+// List of all supported git providers
+var gitPorviders = map[string]string{"GitHub": "", "GitLab": ""}
 
 // ChangelogConfig struct
 type ChangelogConfig struct {
@@ -15,15 +21,9 @@ type ChangelogConfig struct {
 	TemplatePath string `yaml:"templatePath,omitempty"`
 }
 
-// GithubConfig struct
-type GithubConfig struct {
-	URL         string `yaml:"url"`
-	User        string `yaml:"user"`
-	AccessToken string `yaml:"accessToken"`
-}
-
-// GitlabConfig struct
-type GitlabConfig struct {
+// GitProvider struct
+type GitProvider struct {
+	Name        string `yaml:"name"`
 	URL         string `yaml:"url"`
 	User        string `yaml:"user"`
 	AccessToken string `yaml:"accessToken"`
@@ -40,8 +40,7 @@ type ReleaseConfig struct {
 	Branch                map[string]string `yaml:"branch"`
 	Changelog             ChangelogConfig   `yaml:"changelog,omitempty"`
 	Release               string            `yaml:"release,omitempty"`
-	Github                GitlabConfig      `yaml:"github,omitempty"`
-	Gitlab                GitlabConfig      `yaml:"gitlab,omitempty"`
+	GitProvider           GitProvider       `yaml:"provider,omitempty"`
 	Assets                []Asset           `yaml:"assets"`
 	IsPreRelease, IsDraft bool
 }
@@ -62,5 +61,25 @@ func Read(configPath string) (*ReleaseConfig, error) {
 
 	log.Debugf("Found config %+v", releaseConfig)
 
+	releaseConfig, err = checkProvider(releaseConfig)
+	if err != nil {
+		return &ReleaseConfig{}, err
+	}
 	return &releaseConfig, nil
+}
+
+func checkProvider(config ReleaseConfig) (ReleaseConfig, error) {
+	if config.GitProvider != (GitProvider{}) {
+		if _, ok := gitPorviders[config.GitProvider.Name]; !ok {
+			return ReleaseConfig{}, fmt.Errorf("config: provider: configured provider %s is not supported", config.GitProvider.Name)
+		}
+		envName := fmt.Sprintf("%s_ACCESS_TOKEN", strings.ToUpper(config.GitProvider.Name))
+
+		token, isSet := os.LookupEnv(envName)
+		if !isSet {
+			return ReleaseConfig{}, fmt.Errorf("config: Can not find environment variable %s", token)
+		}
+		config.GitProvider.AccessToken = token
+	}
+	return config, nil
 }

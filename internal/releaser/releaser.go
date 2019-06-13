@@ -28,12 +28,12 @@ func New(c *config.ReleaseConfig) *Releasers {
 }
 
 //GetReleaser returns an initialized releaser
-func (r *Releasers) GetReleaser(releaserType string) (Releaser, error) {
-	switch releaserType {
+func (r *Releasers) GetReleaser() (Releaser, error) {
+	switch r.config.GitProvider.Name {
 	case GITHUB:
 		return NewGitHubReleaser(r.config), nil
 	}
-	return nil, fmt.Errorf("Could not initialize a releaser from this type: %s", releaserType)
+	return nil, fmt.Errorf("Could not initialize a releaser from this type: %s", r.config.GitProvider.Name)
 }
 
 // tbd. http helper function

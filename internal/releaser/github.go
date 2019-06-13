@@ -10,7 +10,7 @@ import (
 )
 
 // GITHUB identifer for github interface
-const GITHUB = "github"
+const GITHUB = "GitHub"
 
 // GitHubReleaser type struct
 type GitHubReleaser struct {
