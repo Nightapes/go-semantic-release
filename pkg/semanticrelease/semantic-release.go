@@ -2,6 +2,7 @@
 package semanticrelease
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/Nightapes/go-semantic-release/internal/cache"
 	"github.com/Nightapes/go-semantic-release/internal/changelog"
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
+	"github.com/Nightapes/go-semantic-release/internal/releaser"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	log "github.com/sirupsen/logrus"
 )
@@ -182,41 +184,74 @@ func incPrerelease(preReleaseType string, version semver.Version) semver.Version
 }
 
 // GetChangelog from last version till now
-func (s *SemanticRelease) GetChangelog(repro, file string) error {
+func (s *SemanticRelease) GetChangelog(repro string) (string, error) {
 	nextVersion, err := s.GetNextVersion(repro, false)
 	if err != nil {
 		log.Debugf("Could not get next version")
-		return err
+		return "", err
 	}
 
 	util, err := gitutil.New(repro)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	_, lastVersionHash, err := util.GetLastVersion()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	commits, err := util.GetCommits(lastVersionHash)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	log.Debugf("Found %d commits till last release", len(commits))
 
 	a, err := analyzer.New(s.config.CommitFormat, s.config.Changelog)
 	if err != nil {
-		return err
+		return "", err
 	}
 	result := a.Analyze(commits)
 
 	c := changelog.New(s.config, a.GetRules())
-	_, content, err := c.GenerateChanglog(nextVersion, s.config.GitProvider.URL+"{{hash}}", result)
+	_, content, err := c.GenerateChanglog(nextVersion, s.config.GetRepositoryURL()+"{{hash}}", result)
+	if err != nil {
+		return "", err
+	}
+	return content, nil
+
+}
+
+// WriteChangeLog wirtes changelog content to the given file
+func (s *SemanticRelease) WriteChangeLog(changelogContent, file string) error {
+	return ioutil.WriteFile(file, []byte(changelogContent), 0644)
+}
+
+// Release pusblish release to provider
+func (s *SemanticRelease) Release(repo string) error {
+	nextVersion, err := s.GetNextVersion(repo, false)
+	if err != nil {
+		log.Debugf("Could not get next version")
+		return err
+	}
+
+	changelog, err := s.GetChangelog(repo)
+	if err != nil {
+		log.Debugf("Could not get changelog")
+		return err
+	}
+
+	releaseTitle := fmt.Sprintf("%s v%s", s.config.ReleaseTitle, nextVersion)
+
+	releaser, err := releaser.New(s.config).GetReleaser()
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(file, []byte(content), 0644)
 
+	if err = releaser.CreateRelease(nextVersion, releaseTitle, changelog, "master"); err != nil {
+		return err
+	}
+
+	return nil
 }

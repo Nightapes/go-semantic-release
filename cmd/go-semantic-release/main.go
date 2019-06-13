@@ -43,6 +43,9 @@ func main() {
 			log.Fatal(err)
 		}
 		fmt.Println(version)
+		if err = s.Release(*nextRepository); err != nil {
+			log.Fatal(err)
+		}
 
 	case setCommand.FullCommand():
 		setLoglevel(*loglevel)
@@ -52,11 +55,17 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		if err = s.Release(*setRepository); err != nil {
+			log.Fatal(err)
+		}
 	case getChangelog.FullCommand():
 		setLoglevel(*loglevel)
 		s := semanticrelease.New(readConfig(getChangelogConfigPath))
-		err := s.GetChangelog(*getChangelogRepository, *getChangelogFile)
+		changelog, err := s.GetChangelog(*getChangelogRepository)
 		if err != nil {
+			log.Fatal(err)
+		}
+		if err = s.WriteChangeLog(changelog, *getChangelogFile); err != nil {
 			log.Fatal(err)
 		}
 	}
