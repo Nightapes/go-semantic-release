@@ -1,4 +1,5 @@
 commitFormat: angular
+title: "testr release"
 branch:
   master: release
   rc: rc
@@ -13,6 +14,7 @@ assets:
   - name:
     compress:
 provider:
-  name: ""
-  url: ""
+  name: "GitHub"
+  repo: ""
   user: ""
+  customURL: ""
