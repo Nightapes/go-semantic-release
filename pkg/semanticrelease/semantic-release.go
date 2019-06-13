@@ -30,8 +30,8 @@ func New(c *config.ReleaseConfig) *SemanticRelease {
 }
 
 // GetNextVersion from .version or calculate new from commits
-func (s *SemanticRelease) GetNextVersion(repro string, force bool) (string, error) {
-	util, err := gitutil.New(repro)
+func (s *SemanticRelease) GetNextVersion(repo string, force bool) (string, error) {
+	util, err := gitutil.New(repo)
 	if err != nil {
 		return "", err
 	}
@@ -114,9 +114,9 @@ func (s *SemanticRelease) GetNextVersion(repro string, force bool) (string, erro
 }
 
 //SetVersion for git repository
-func (s *SemanticRelease) SetVersion(version string, repro string) error {
+func (s *SemanticRelease) SetVersion(version string, repo string) error {
 
-	util, err := gitutil.New(repro)
+	util, err := gitutil.New(repo)
 	if err != nil {
 		return err
 	}
@@ -184,14 +184,14 @@ func incPrerelease(preReleaseType string, version semver.Version) semver.Version
 }
 
 // GetChangelog from last version till now
-func (s *SemanticRelease) GetChangelog(repro string) (string, error) {
-	nextVersion, err := s.GetNextVersion(repro, false)
+func (s *SemanticRelease) GetChangelog(repo string) (string, error) {
+	nextVersion, err := s.GetNextVersion(repo, false)
 	if err != nil {
 		log.Debugf("Could not get next version")
 		return "", err
 	}
 
-	util, err := gitutil.New(repro)
+	util, err := gitutil.New(repo)
 	if err != nil {
 		return "", err
 	}
@@ -230,6 +230,17 @@ func (s *SemanticRelease) WriteChangeLog(changelogContent, file string) error {
 
 // Release pusblish release to provider
 func (s *SemanticRelease) Release(repo string) error {
+	util, err := gitutil.New(repo)
+	if err != nil {
+		return err
+	}
+	currentBranch, err := util.GetBranch()
+
+	if _, ok := s.config.Branch[currentBranch]; !ok {
+		log.Debugf("Will not perform a new release. Current %s branch is not configured in release config", currentBranch)
+		return nil
+	}
+
 	nextVersion, err := s.GetNextVersion(repo, false)
 	if err != nil {
 		log.Debugf("Could not get next version")
