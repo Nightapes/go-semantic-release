@@ -12,7 +12,7 @@ release: 'github'
 assets:
   - name:
     compress:
-github:
-  url: ''
-gitlab:
-  url: ''
+provider:
+  name: ""
+  url: ""
+  user: ""

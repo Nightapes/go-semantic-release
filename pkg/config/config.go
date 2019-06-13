@@ -26,7 +26,7 @@ type GitProvider struct {
 	Name        string `yaml:"name"`
 	URL         string `yaml:"url"`
 	User        string `yaml:"user"`
-	AccessToken string `yaml:"accessToken"`
+	AccessToken string
 }
 
 type Asset struct {
