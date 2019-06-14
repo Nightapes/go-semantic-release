@@ -91,7 +91,7 @@ func checkProvider(config ReleaseConfig) (ReleaseConfig, error) {
 
 // GetRepositoryURL returns the repo FQDN
 func (c *ReleaseConfig) GetRepositoryURL() string {
-	if c.GitProvider.customProviderURL == "" {
+	if c.GitProvider.customProviderURL != "" {
 		return fmt.Sprintf("%s/%s/%s/", c.GitProvider.customProviderURL, c.GitProvider.User, c.GitProvider.Repo)
 	} else {
 		return fmt.Sprintf("%s/%s/%s/", gitProviders[c.GitProvider.Name], c.GitProvider.User, c.GitProvider.Repo)
