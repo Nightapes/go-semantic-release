@@ -107,9 +107,6 @@ func (s *SemanticRelease) GetNextVersion(repo string, force bool) (string, error
 	if err != nil {
 		return "", err
 	}
-	c := changelog.New(s.config, a.GetRules())
-	c.GenerateChanglog(newVersion.String(), "https://github.com/Nightapes/go-semantic-release/commit/{{hash}}", result)
-
 	return newVersion.String(), err
 }
 
@@ -215,7 +212,7 @@ func (s *SemanticRelease) GetChangelog(repo string) (string, error) {
 	result := a.Analyze(commits)
 
 	c := changelog.New(s.config, a.GetRules())
-	_, content, err := c.GenerateChanglog(nextVersion, s.config.GetRepositoryURL()+"{{hash}}", result)
+	_, content, err := c.GenerateChanglog(nextVersion, s.config.GetRepositoryURL()+"/commit/{{hash}}", result)
 	if err != nil {
 		return "", err
 	}
