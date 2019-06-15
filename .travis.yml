@@ -3,7 +3,7 @@ dist: xenial
 language: go
 go:
   - 1.12.x
-gobuild_args: -x -ldflags
+go_import_path: github.com/nightapes/go-semantic-release
 cache:
   directories:
     - $HOME/.cache/go-build
