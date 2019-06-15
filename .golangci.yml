@@ -5,7 +5,7 @@ linters-settings:
   golint:
     min-confidence: 0
 issues:
-  exclude-use-default: false
+  exclude-use-default: true
 linters:
   enable:
       - golint

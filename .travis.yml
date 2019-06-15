@@ -3,7 +3,7 @@ dist: xenial
 language: go
 go:
   - 1.12.x
-
+gobuild_args: -x -ldflags
 cache:
   directories:
     - $HOME/.cache/go-build

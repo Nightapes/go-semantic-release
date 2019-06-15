@@ -207,6 +207,9 @@ func (s *SemanticRelease) WriteChangeLog(changelogContent, file string) error {
 // Release pusblish release to provider
 func (s *SemanticRelease) Release(force bool) error {
 	currentBranch, err := s.gitutil.GetBranch()
+	if err != nil {
+		return err
+	}
 
 	if _, ok := s.config.Branch[currentBranch]; !ok {
 		log.Debugf("Will not perform a new release. Current %s branch is not configured in release config", currentBranch)

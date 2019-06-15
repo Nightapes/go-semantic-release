@@ -8,14 +8,14 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// VersionFileContent struct
+// ReleaseVersion struct
 type ReleaseVersion struct {
 	Last   ReleaseVersionEntry `yaml:"last"`
 	Next   ReleaseVersionEntry `yaml:"next"`
 	Branch string              `yaml:"branch"`
 }
 
-//VersionFileEntry struct
+//ReleaseVersionEntry struct
 type ReleaseVersionEntry struct {
 	Commit  string `yaml:"commit"`
 	Version string `yaml:"version"`

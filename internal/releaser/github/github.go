@@ -17,8 +17,8 @@ import (
 // GITHUB identifer for github interface
 const GITHUB = "github"
 
-// GitHubReleaser type struct
-type GitHubReleaser struct {
+// Client type struct
+type Client struct {
 	config  *config.GitHubProvider
 	client  *github.Client
 	context context.Context
@@ -28,7 +28,7 @@ type GitHubReleaser struct {
 }
 
 // New initialize a new GitHubRelease
-func New(c *config.GitHubProvider) (*GitHubReleaser, error) {
+func New(c *config.GitHubProvider) (*Client, error) {
 	ctx := context.Background()
 	httpClient := util.CreateBearerHTTPClient(ctx, c.AccessToken)
 
@@ -41,7 +41,7 @@ func New(c *config.GitHubProvider) (*GitHubReleaser, error) {
 		client, err = github.NewEnterpriseClient(c.CustomURL, c.CustomURL+"/api/v3/", httpClient)
 		baseURL = c.CustomURL
 	}
-	return &GitHubReleaser{
+	return &Client{
 		config:  c,
 		client:  client,
 		context: ctx,
@@ -50,30 +50,30 @@ func New(c *config.GitHubProvider) (*GitHubReleaser, error) {
 }
 
 //GetCommitURL for github
-func (g GitHubReleaser) GetCommitURL() string {
+func (g Client) GetCommitURL() string {
 	return fmt.Sprintf("%s/%s/%s/commit/{{hash}}", g.baseURL, g.config.User, g.config.Repo)
 }
 
 //GetCompareURL for github
-func (g GitHubReleaser) GetCompareURL(oldVersion, newVersion string) string {
+func (g Client) GetCompareURL(oldVersion, newVersion string) string {
 	return fmt.Sprintf("%s/%s/%s/compare/%s...%s", g.baseURL, g.config.User, g.config.Repo, oldVersion, newVersion)
 }
 
 //ValidateConfig for github
-func (g GitHubReleaser) ValidateConfig() error {
+func (g Client) ValidateConfig() error {
 
 	if g.config.Repo == "" {
-		return fmt.Errorf("Github Repro is not set")
+		return fmt.Errorf("github Repro is not set")
 	}
 
 	if g.config.User == "" {
-		return fmt.Errorf("Github User is not set")
+		return fmt.Errorf("github User is not set")
 	}
 
 	envName := fmt.Sprintf("%s_ACCESS_TOKEN", strings.ToUpper(GITHUB))
 	token, isSet := os.LookupEnv(envName)
 	if !isSet {
-		return fmt.Errorf("Can not find environment variable %s", envName)
+		return fmt.Errorf("can not find environment variable %s", envName)
 	}
 	g.token = token
 	return nil
@@ -81,7 +81,7 @@ func (g GitHubReleaser) ValidateConfig() error {
 }
 
 // CreateRelease creates release on remote
-func (g GitHubReleaser) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
+func (g Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
 	tag := releaseVersion.Next.Version.String()
 	prerelease := releaseVersion.Next.Version.Prerelease() != ""
@@ -95,11 +95,11 @@ func (g GitHubReleaser) CreateRelease(releaseVersion *shared.ReleaseVersion, gen
 	})
 
 	if err != nil {
-		return fmt.Errorf("Could not create release: %v", err)
+		return fmt.Errorf("could not create release: %v", err)
 	}
 
 	if resp.StatusCode >= http.StatusBadRequest {
-		return fmt.Errorf("Could not create release: response statuscode: %s", resp.Status)
+		return fmt.Errorf("could not create release: response statuscode: %s", resp.Status)
 	}
 
 	g.release = release
@@ -108,7 +108,7 @@ func (g GitHubReleaser) CreateRelease(releaseVersion *shared.ReleaseVersion, gen
 }
 
 // UploadAssets uploads specified assets
-func (g GitHubReleaser) UploadAssets(assets []config.Asset) error {
+func (g Client) UploadAssets(assets []config.Asset) error {
 	for _, asset := range assets {
 		file, err := os.Open(asset.Name)
 		if err != nil {

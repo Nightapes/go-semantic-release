@@ -107,6 +107,6 @@ func (a *angular) analyze(commit gitutil.Commit, rule Rule) (AnalyzedCommit, boo
 		}
 	}
 	log.Tracef("%s does not match %s, skip", commit.Message, rule.Tag)
-	return analyzed, false, fmt.Errorf("Not found")
+	return analyzed, false, fmt.Errorf("not found")
 
 }
