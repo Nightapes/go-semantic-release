@@ -1,12 +1,13 @@
 package releaser
 
 import (
-	"context"
 	"fmt"
-	"github.com/Nightapes/go-semantic-release/pkg/config"
-	"golang.org/x/oauth2"
-	"net/http"
 	"os"
+
+	"github.com/Nightapes/go-semantic-release/internal/releaser/github"
+	"github.com/Nightapes/go-semantic-release/internal/shared"
+
+	"github.com/Nightapes/go-semantic-release/pkg/config"
 )
 
 // Releasers struct type
@@ -16,8 +17,11 @@ type Releasers struct {
 
 // Releaser interface for providers
 type Releaser interface {
-	CreateRelease(tag, releaseName, releaseMessage, targetBranch string) error
+	ValidateConfig() error
+	CreateRelease(*shared.ReleaseVersion, *shared.GeneratedChangelog) error
 	UploadAssets(assets []config.Asset) error
+	GetCommitURL() string
+	GetCompareURL(oldVersion, newVersion string) string
 }
 
 // New initialize a Relerser
@@ -29,23 +33,11 @@ func New(c *config.ReleaseConfig) *Releasers {
 
 //GetReleaser returns an initialized releaser
 func (r *Releasers) GetReleaser() (Releaser, error) {
-	switch r.config.GitProvider.Name {
-	case GITHUB:
-		return NewGitHubReleaser(r.config), nil
+	switch r.config.Release {
+	case github.GITHUB:
+		return github.New(&r.config.GitHubProvider)
 	}
-	return nil, fmt.Errorf("Could not initialize a releaser from this type: %s", r.config.GitProvider.Name)
-}
-
-// tbd. http helper function
-
-func createHTTPClient(ctx context.Context, token string) *http.Client {
-	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
-		AccessToken: token},
-	)
-
-	client := oauth2.NewClient(ctx, tokenSource)
-
-	return client
+	return nil, fmt.Errorf("Could not initialize a releaser from this type: %s", r.config.Release)
 }
 
 func checkIfAssetsExists(assets []config.Asset) error {

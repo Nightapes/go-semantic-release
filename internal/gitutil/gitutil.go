@@ -136,7 +136,7 @@ func (g *GitUtil) GetCommits(lastTagHash string) ([]Commit, error) {
 			log.Debugf("Found commit with hash %s, will stop here", c.Hash.String())
 			foundEnd = true
 		}
-
+		log.Tracef("Found commit with hash %s", c.Hash.String())
 		if !foundEnd {
 			commit := Commit{
 				Message: c.Message,

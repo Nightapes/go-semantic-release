@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Nightapes/go-semantic-release/internal/analyzer"
+	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 
 	log "github.com/sirupsen/logrus"
@@ -49,7 +50,7 @@ func New(config *config.ReleaseConfig, rules []analyzer.Rule) *Changelog {
 }
 
 // GenerateChanglog from given commits
-func (c *Changelog) GenerateChanglog(version, url string, analyzedCommits map[string][]analyzer.AnalyzedCommit) (string, string, error) {
+func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConfig, analyzedCommits map[string][]analyzer.AnalyzedCommit) (*shared.GeneratedChangelog, error) {
 
 	commitsPerScope := map[string][]analyzer.AnalyzedCommit{}
 	order := make([]string, 0)
@@ -73,22 +74,22 @@ func (c *Changelog) GenerateChanglog(version, url string, analyzedCommits map[st
 	}
 
 	changelogContent := changelogContent{
-		Version:  version,
+		Version:  templateConfig.Version,
 		Commits:  commitsPerScope,
 		Now:      time.Now(),
 		Backtick: "`",
 		Order:    order,
-		HasURL:   url != "",
-		URL:      url,
+		HasURL:   templateConfig.CommitURL != "",
+		URL:      templateConfig.CommitURL,
 	}
 
 	title, err := generateTemplate(defaultChangelogTitle, changelogContent)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 	content, err := generateTemplate(defaultChangelog, changelogContent)
 
-	return title, content, err
+	return &shared.GeneratedChangelog{Title: title, Content: content}, err
 }
 
 func generateTemplate(text string, values changelogContent) (string, error) {
