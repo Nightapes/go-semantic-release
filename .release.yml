@@ -5,6 +5,7 @@ branch:
   rc: rc
   beta: beta
   alpha: alpha
+  add_git_releases: alpha
 changelog:
   printAll: false
   template: ''
@@ -13,8 +14,7 @@ release: 'github'
 assets:
   - name:
     compress:
-provider:
-  name: "GitHub"
-  repo: ""
-  user: ""
-  customURL: ""
+github:
+  repo: "go-semantic-release"
+  user: "nightapes"
+  customUrl: ""

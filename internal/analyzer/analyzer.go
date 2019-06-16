@@ -50,7 +50,7 @@ func New(format string, config config.ChangelogConfig) (*Analyzer, error) {
 		log.Debugf("Commit format set to angular")
 		analyzer.analyzeCommit = newAngular()
 	default:
-		return nil, fmt.Errorf("Invalid commit format: %s", format)
+		return nil, fmt.Errorf("invalid commit format: %s", format)
 	}
 	return analyzer, nil
 

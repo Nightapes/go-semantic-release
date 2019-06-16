@@ -3,40 +3,49 @@ package cache
 
 import (
 	"io/ioutil"
+	"path"
 
 	"gopkg.in/yaml.v2"
 )
 
-// VersionFileContent struct
-type VersionFileContent struct {
-	Version     string `yaml:"version"`
-	NextVersion string `yaml:"nextVersion"`
-	Commit      string `yaml:"commit"`
-	Branch      string `yaml:"branch"`
+// ReleaseVersion struct
+type ReleaseVersion struct {
+	Last   ReleaseVersionEntry `yaml:"last"`
+	Next   ReleaseVersionEntry `yaml:"next"`
+	Branch string              `yaml:"branch"`
+}
+
+//ReleaseVersionEntry struct
+type ReleaseVersionEntry struct {
+	Commit  string `yaml:"commit"`
+	Version string `yaml:"version"`
 }
 
 // Write version into .version
-func Write(versionFileContent VersionFileContent) error {
+func Write(repository string, versionFileContent ReleaseVersion) error {
+	completePath := path.Join(path.Dir(repository), ".version")
+
 	data, err := yaml.Marshal(&versionFileContent)
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(".version", data, 0644)
+	return ioutil.WriteFile(completePath, data, 0644)
 }
 
 // Read version into .version
-func Read() (*VersionFileContent, error) {
+func Read(repository string) (*ReleaseVersion, error) {
+	completePath := path.Join(path.Dir(repository), ".version")
 
-	content, err := ioutil.ReadFile(".version")
+	content, err := ioutil.ReadFile(completePath)
 	if err != nil {
-		return &VersionFileContent{}, err
+		return &ReleaseVersion{}, err
 	}
 
-	var versionFileContent VersionFileContent
+	var versionFileContent ReleaseVersion
 	err = yaml.Unmarshal(content, &versionFileContent)
 	if err != nil {
-		return &VersionFileContent{}, err
+		return &ReleaseVersion{}, err
 	}
 
 	return &versionFileContent, nil
