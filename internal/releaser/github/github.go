@@ -29,16 +29,22 @@ type Client struct {
 
 // New initialize a new GitHubRelease
 func New(c *config.GitHubProvider) (*Client, error) {
+	var err error
+
+	if c.AccessToken, err = util.GetAccessToken(GITHUB); err != nil {
+		return &Client{}, err
+	}
 	ctx := context.Background()
 	httpClient := util.CreateBearerHTTPClient(ctx, c.AccessToken)
 
 	var client *github.Client
-	var err error
 	baseURL := "https://github.com"
 	if c.CustomURL == "" {
 		client = github.NewClient(httpClient)
 	} else {
-		client, err = github.NewEnterpriseClient(c.CustomURL, c.CustomURL+"/api/v3/", httpClient)
+		if client, err = github.NewEnterpriseClient(c.CustomURL, c.CustomURL+"/api/v3/", httpClient); err != nil {
+			return &Client{}, err
+		}
 		baseURL = c.CustomURL
 	}
 	return &Client{
