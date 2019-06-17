@@ -7,6 +7,7 @@ import (
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 
 	"github.com/Nightapes/go-semantic-release/pkg/config"
+	log "github.com/sirupsen/logrus"
 )
 
 // Releasers struct type
@@ -34,6 +35,7 @@ func New(c *config.ReleaseConfig) *Releasers {
 func (r *Releasers) GetReleaser() (Releaser, error) {
 	switch r.config.Release {
 	case github.GITHUB:
+		log.Debugf("initialize new %s-provider", github.GITHUB)
 		return github.New(&r.config.GitHubProvider)
 	}
 	return nil, fmt.Errorf("could not initialize a releaser from this type: %s", r.config.Release)

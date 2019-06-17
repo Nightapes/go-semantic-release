@@ -12,6 +12,7 @@ import (
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 
 	"github.com/google/go-github/v25/github"
+	log "github.com/sirupsen/logrus"
 )
 
 // GITHUB identifer for github interface
@@ -67,6 +68,7 @@ func (g Client) GetCompareURL(oldVersion, newVersion string) string {
 
 //ValidateConfig for github
 func (g Client) ValidateConfig() error {
+	log.Debugf("validate GitHub provider config")
 
 	if g.config.Repo == "" {
 		return fmt.Errorf("github Repro is not set")
@@ -90,6 +92,7 @@ func (g Client) ValidateConfig() error {
 func (g Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
 	tag := releaseVersion.Next.Version.String()
+	log.Debugf("create relase with for version %s", tag)
 	prerelease := releaseVersion.Next.Version.Prerelease() != ""
 	release, resp, err := g.client.Repositories.CreateRelease(g.context, g.config.User, g.config.Repo, &github.RepositoryRelease{
 		TagName:         &tag,
@@ -105,10 +108,13 @@ func (g Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedCh
 	}
 
 	if resp.StatusCode >= http.StatusBadRequest {
-		return fmt.Errorf("could not create release: response statuscode: %s", resp.Status)
+		return fmt.Errorf("ould not create release: response statuscode: %s", resp.Status)
 	}
+	log.Infof("Crated release")
 
 	g.release = release
+	log.Debugf("Release repsone: %+v", *release)
+
 	return nil
 
 }
