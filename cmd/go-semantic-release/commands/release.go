@@ -7,6 +7,8 @@ import (
 
 func init() {
 	rootCmd.AddCommand(releaseCmd)
+	releaseCmd.Flags().BoolP("force", "f", false, "")
+
 }
 
 var releaseCmd = &cobra.Command{
