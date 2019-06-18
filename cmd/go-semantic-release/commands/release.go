@@ -7,8 +7,6 @@ import (
 
 func init() {
 	rootCmd.AddCommand(releaseCmd)
-	releaseCmd.Flags().BoolP("force", "f", false, "")
-
 }
 
 var releaseCmd = &cobra.Command{
@@ -25,7 +23,7 @@ var releaseCmd = &cobra.Command{
 			return err
 		}
 
-		force, err := cmd.Flags().GetBool("force")
+		force, err := cmd.Flags().GetBool("no-cache")
 		if err != nil {
 			return err
 		}

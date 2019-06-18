@@ -127,7 +127,7 @@ func (g Client) UploadAssets(assets []config.Asset) error {
 			return err
 		}
 
-		_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.User, g.config.Repo, *g.release.ID, &github.UploadOptions{Name: asset.Name}, file)
+		_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.User, g.config.Repo, *g.release.ID, &github.UploadOptions{Name: file.Name()}, file)
 		if err != nil {
 			return err
 		}

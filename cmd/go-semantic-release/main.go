@@ -4,6 +4,8 @@ import (
 	"github.com/Nightapes/go-semantic-release/cmd/go-semantic-release/commands"
 )
 
+var version string
+
 func main() {
-	commands.Execute()
+	commands.Execute(version)
 }
