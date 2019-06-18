@@ -1,5 +1,8 @@
 dist: xenial
 
+git:
+  depth: false
+
 language: go
 go:
   - 1.12.x
@@ -23,7 +26,6 @@ before_script:
 
 script:
   - golangci-lint run ./...
-  - git checkout master
   - go test -v ./...
   - go build -o build/go-semantic-release-temp ./cmd/go-semantic-release/
   - echo "Building version `./build/go-semantic-release-temp next`"

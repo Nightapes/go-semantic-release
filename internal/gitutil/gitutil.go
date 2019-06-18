@@ -54,9 +54,29 @@ func (g *GitUtil) GetBranch() (string, error) {
 	}
 
 	if !ref.Name().IsBranch() {
-		return "", fmt.Errorf("no branch found, found %s, please checkout a branch (git checkout <BRANCH>)", ref.Name().String())
-	}
+		branches, err := g.Repository.Branches()
+		if err != nil {
+			return "", err
+		}
 
+		var currentBranch string
+		found := branches.ForEach(func(p *plumbing.Reference) error {
+
+			if p.Name().IsBranch() && p.Name().Short() != "origin" {
+				currentBranch = p.Name().Short()
+				return fmt.Errorf("break")
+			}
+			return nil
+		})
+
+		if found != nil {
+			log.Debugf("Found branch from HEAD %s", currentBranch)
+			return currentBranch, nil
+		}
+
+		return "", fmt.Errorf("no branch found, found %s, please checkout a branch (git checkout -b <BRANCH>)", ref.Name().String())
+	}
+	log.Debugf("Found branch %s", ref.Name().Short())
 	return ref.Name().Short(), nil
 }
 
