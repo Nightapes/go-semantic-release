@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/Nightapes/go-semantic-release/internal/releaser/util"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
@@ -78,12 +77,6 @@ func (g Client) ValidateConfig() error {
 		return fmt.Errorf("github User is not set")
 	}
 
-	envName := fmt.Sprintf("%s_ACCESS_TOKEN", strings.ToUpper(GITHUB))
-	token, isSet := os.LookupEnv(envName)
-	if !isSet {
-		return fmt.Errorf("can not find environment variable %s", envName)
-	}
-	g.token = token
 	return nil
 
 }
@@ -104,11 +97,11 @@ func (g Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedCh
 	})
 
 	if err != nil {
-		return fmt.Errorf("could not create release: %v", err)
+		return fmt.Errorf("Could not create release: %v", err)
 	}
 
 	if resp.StatusCode >= http.StatusBadRequest {
-		return fmt.Errorf("ould not create release: response statuscode: %s", resp.Status)
+		return fmt.Errorf("Could not create release: response statuscode: %s", resp.Status)
 	}
 	log.Infof("Crated release")
 
