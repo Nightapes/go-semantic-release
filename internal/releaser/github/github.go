@@ -24,7 +24,6 @@ type Client struct {
 	context context.Context
 	release *github.RepositoryRelease
 	baseURL string
-	token   string
 }
 
 // New initialize a new GitHubRelease
@@ -97,11 +96,11 @@ func (g Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedCh
 	})
 
 	if err != nil {
-		return fmt.Errorf("Could not create release: %v", err)
+		return fmt.Errorf("could not create release: %v", err)
 	}
 
 	if resp.StatusCode >= http.StatusBadRequest {
-		return fmt.Errorf("Could not create release: response statuscode: %s", resp.Status)
+		return fmt.Errorf("could not create release: response statuscode: %s", resp.Status)
 	}
 	log.Infof("Crated release")
 
