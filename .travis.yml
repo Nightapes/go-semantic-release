@@ -27,11 +27,14 @@ before_script:
 script:
   - golangci-lint run ./...
   - go test -v ./...
-  - echo "Building version `./go-semantic-release next`"
   - go build -o build/go-semantic-release-temp ./cmd/go-semantic-release/
-  - go build -o build/go-semantic-release ./cmd/go-semantic-release/ -ldflags "-X main.version `./go-semantic-release next`"
-  - GOOS=windows GOARCH=386 go build -o build/go-semantic-release.exe  -ldflags "-X main.version `./go-semantic-release next`" ./cmd/go-semantic-release/
-  
+  - echo "Building version `./build/go-semantic-release-temp next`"
+  - go build -o build/go-semantic-release  -ldflags "-X main.version=`./go-semantic-release next`" ./cmd/go-semantic-release/
+  - GOOS=windows GOARCH=386 go build -o build/go-semantic-release.exe  -ldflags "-X main.version=`./go-semantic-release next`" ./cmd/go-semantic-release/
+
+after_success
+  - ./build/go-semantic-release-temp release
+
 branches:
   except:
     - /^v\d+\.\d+\.\d+$/
