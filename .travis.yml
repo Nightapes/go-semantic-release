@@ -15,9 +15,6 @@ services:
 notifications:
   email: false
 
-git:
-  depth: 1
-
 env:
   - GO111MODULE=on
 
@@ -26,6 +23,7 @@ before_script:
 
 script:
   - golangci-lint run ./...
+  - git checkout master
   - go test -v ./...
   - go build -o build/go-semantic-release-temp ./cmd/go-semantic-release/
   - echo "Building version `./build/go-semantic-release-temp next`"
