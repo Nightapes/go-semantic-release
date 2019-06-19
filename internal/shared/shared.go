@@ -13,8 +13,9 @@ type ReleaseVersion struct {
 
 //ReleaseVersionEntry struct
 type ReleaseVersionEntry struct {
-	Commit  string
-	Version *semver.Version
+	Commit string
+	Draft  bool
+	*semver.Version
 }
 
 //GeneratedChangelog struct
@@ -23,7 +24,7 @@ type GeneratedChangelog struct {
 	Content string
 }
 
-//GenerateChangelogConfig struct
+//ChangelogTemplateConfig struct
 type ChangelogTemplateConfig struct {
 	CommitURL  string
 	CompareURL string

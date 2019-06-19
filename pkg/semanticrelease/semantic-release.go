@@ -100,7 +100,7 @@ func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, er
 		return nil, err
 	}
 	result := a.Analyze(commits)
-
+	var isDraft bool = false
 	for branch, releaseType := range s.config.Branch {
 		if currentBranch == branch || strings.HasPrefix(currentBranch, branch) {
 			log.Debugf("Found branch config for branch %s with release type %s", currentBranch, releaseType)
@@ -115,6 +115,9 @@ func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, er
 				} else if len(result["patch"]) > 0 {
 					newVersion = newVersion.IncPatch()
 				}
+				if len(result["draft"]) > 0 {
+					isDraft = true
+				}
 			}
 		}
 	}
@@ -123,6 +126,7 @@ func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, er
 		Next: shared.ReleaseVersionEntry{
 			Commit:  hash,
 			Version: &newVersion,
+			Draft:   isDraft,
 		},
 		Last: shared.ReleaseVersionEntry{
 			Commit:  lastVersionHash,

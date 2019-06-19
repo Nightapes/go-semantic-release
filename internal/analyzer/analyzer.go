@@ -24,7 +24,7 @@ type Rule struct {
 }
 
 type analyzeCommit interface {
-	analyze(commit gitutil.Commit, tag Rule) (AnalyzedCommit, bool, error)
+	analyze(commit gitutil.Commit, tag Rule) (AnalyzedCommit, bool, bool, error)
 	getRules() []Rule
 }
 
@@ -34,6 +34,7 @@ type AnalyzedCommit struct {
 	ParsedMessage               string
 	Scope                       string
 	ParsedBreakingChangeMessage string
+	ParsedDraftMessage          string
 	Tag                         string
 	TagString                   string
 	Print                       bool
@@ -68,11 +69,12 @@ func (a *Analyzer) Analyze(commits []gitutil.Commit) map[string][]AnalyzedCommit
 	analyzedCommits["major"] = make([]AnalyzedCommit, 0)
 	analyzedCommits["minor"] = make([]AnalyzedCommit, 0)
 	analyzedCommits["patch"] = make([]AnalyzedCommit, 0)
+	analyzedCommits["draft"] = make([]AnalyzedCommit, 0)
 	analyzedCommits["none"] = make([]AnalyzedCommit, 0)
 
 	for _, commit := range commits {
 		for _, rule := range a.analyzeCommit.getRules() {
-			analyzedCommit, hasBreakingChange, err := a.analyzeCommit.analyze(commit, rule)
+			analyzedCommit, hasBreakingChange, isDraft, err := a.analyzeCommit.analyze(commit, rule)
 			if err == nil {
 				if a.Config.PrintAll {
 					analyzedCommit.Print = true
@@ -81,6 +83,8 @@ func (a *Analyzer) Analyze(commits []gitutil.Commit) map[string][]AnalyzedCommit
 				}
 				if hasBreakingChange {
 					analyzedCommits["major"] = append(analyzedCommits["major"], analyzedCommit)
+				} else if isDraft {
+					analyzedCommits["draft"] = append(analyzedCommits["draft"], analyzedCommit)
 				} else {
 					analyzedCommits[rule.Release] = append(analyzedCommits[rule.Release], analyzedCommit)
 				}

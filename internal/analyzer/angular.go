@@ -76,7 +76,7 @@ func (a *angular) getRules() []Rule {
 	return a.rules
 }
 
-func (a *angular) analyze(commit gitutil.Commit, rule Rule) (AnalyzedCommit, bool, error) {
+func (a *angular) analyze(commit gitutil.Commit, rule Rule) (AnalyzedCommit, bool, bool, error) {
 
 	analyzed := AnalyzedCommit{
 		Commit:    commit,
@@ -92,21 +92,35 @@ func (a *angular) analyze(commit gitutil.Commit, rule Rule) (AnalyzedCommit, boo
 			analyzed.Scope = matches[0][2]
 
 			message := strings.Join(matches[0][3:], "")
-			splitted := strings.SplitN(message, "BREAKING CHANGE:", 1)
+			breakingChange := strings.SplitN(message, "BREAKING CHANGE:", 1)
+			draft := strings.SplitN(message, "DRAFT:", 1)
 
-			if len(splitted) == 1 {
-				analyzed.ParsedMessage = splitted[0]
+			if len(breakingChange) == 1 && len(draft) == 1 {
+				analyzed.ParsedMessage = breakingChange[0]
 				log.Tracef("%s: found %s", commit.Message, rule.Tag)
-				return analyzed, false, nil
+				return analyzed, false, false, nil
+
 			}
-			analyzed.ParsedMessage = splitted[0]
-			analyzed.ParsedBreakingChangeMessage = splitted[1]
-			log.Tracef(" %s, BREAKING CHANGE found", commit.Message)
-			return analyzed, true, nil
+
+			if len(breakingChange) > 1 {
+
+				analyzed.ParsedMessage = breakingChange[0]
+				analyzed.ParsedBreakingChangeMessage = breakingChange[1]
+
+				log.Tracef(" %s, BREAKING CHANGE found", commit.Message)
+
+				return analyzed, true, false, nil
+
+			} else if len(draft) > 1 {
+				analyzed.ParsedMessage = draft[0]
+				analyzed.ParsedDraftMessage = draft[1]
+				log.Tracef(" %s, DRAFT found", commit.Message)
+
+			}
 
 		}
 	}
 	log.Tracef("%s does not match %s, skip", commit.Message, rule.Tag)
-	return analyzed, false, fmt.Errorf("not found")
+	return analyzed, false, false, fmt.Errorf("not found")
 
 }
