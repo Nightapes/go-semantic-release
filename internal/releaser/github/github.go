@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/Nightapes/go-semantic-release/internal/releaser/util"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
@@ -109,19 +110,17 @@ func (g Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedCh
 	})
 
 	if err != nil {
-		return fmt.Errorf("could not create release: %v", err)
+		if !strings.Contains(err.Error(), "already_exists") && resp.StatusCode >= http.StatusUnprocessableEntity {
+			return fmt.Errorf("could not create release: %v", err)
+		}
+		log.Infof("A release with tag %s already exits, will not perform a release or update", tag)
+	} else {
+		g.release = release
+		log.Debugf("Release repsone: %+v", *release)
+		log.Infof("Crated release")
 	}
-
-	if resp.StatusCode >= http.StatusBadRequest {
-		return fmt.Errorf("could not create release: response statuscode: %s", resp.Status)
-	}
-	log.Infof("Crated release")
-
-	g.release = release
-	log.Debugf("Release repsone: %+v", *release)
 
 	return nil
-
 }
 
 // UploadAssets uploads specified assets
