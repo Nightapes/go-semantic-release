@@ -242,6 +242,8 @@ func (s *SemanticRelease) Release(force bool) error {
 		return err
 	}
 
+	releaser.SetReleaseType(releaseVersion)
+
 	if err = releaser.CreateRelease(releaseVersion, generatedChanglog); err != nil {
 		return err
 	}
