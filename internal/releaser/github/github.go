@@ -68,7 +68,7 @@ func (g Client) GetCompareURL(oldVersion, newVersion string) string {
 
 //SetReleaseType sets the provider release type
 func (g Client) SetReleaseType(releaseVersion *shared.ReleaseVersion) {
-	if !releaseVersion.Next.Draft {
+	if releaseVersion.Next.Draft {
 		log.Debugf("Set release as draft")
 		g.draft = true
 	}
