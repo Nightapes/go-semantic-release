@@ -105,9 +105,10 @@ func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, er
 		if currentBranch == branch || strings.HasPrefix(currentBranch, branch) {
 			log.Debugf("Found branch config for branch %s with release type %s", currentBranch, releaseType)
 			switch releaseType {
-			case "rc", "beta", "alpha":
-				newVersion = s.incPrerelease(releaseType, newVersion)
+			case "beta", "alpha":
 				isDraft = true
+			case "rc":
+				newVersion = s.incPrerelease(releaseType, newVersion)
 			case "release":
 				if len(result["major"]) > 0 {
 					newVersion = newVersion.IncMajor()
