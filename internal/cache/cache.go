@@ -13,6 +13,7 @@ type ReleaseVersion struct {
 	Last   ReleaseVersionEntry `yaml:"last"`
 	Next   ReleaseVersionEntry `yaml:"next"`
 	Branch string              `yaml:"branch"`
+	Draft  bool                `yaml:"draft"`
 }
 
 //ReleaseVersionEntry struct

@@ -20,12 +20,11 @@ const GITHUB = "github"
 
 // Client type struct
 type Client struct {
-	config            *config.GitHubProvider
-	client            *github.Client
-	context           context.Context
-	release           *github.RepositoryRelease
-	draft, prerelease bool
-	baseURL           string
+	config  *config.GitHubProvider
+	client  *github.Client
+	context context.Context
+	release *github.RepositoryRelease
+	baseURL string
 }
 
 // New initialize a new GitHubRelease
@@ -66,18 +65,6 @@ func (g Client) GetCompareURL(oldVersion, newVersion string) string {
 	return fmt.Sprintf("%s/%s/%s/compare/%s...%s", g.baseURL, g.config.User, g.config.Repo, oldVersion, newVersion)
 }
 
-//SetReleaseType sets the provider release type
-func (g Client) SetReleaseType(releaseVersion *shared.ReleaseVersion) {
-	if releaseVersion.Next.Draft {
-		log.Debugf("Set release as draft")
-		g.draft = true
-	}
-	if releaseVersion.Next.Prerelease() != "" {
-		log.Debugf("Set release as prerelease")
-		g.prerelease = true
-	}
-}
-
 //ValidateConfig for github
 func (g Client) ValidateConfig() error {
 	log.Debugf("validate GitHub provider config")
@@ -97,16 +84,18 @@ func (g Client) ValidateConfig() error {
 // CreateRelease creates release on remote
 func (g Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
-	tag := releaseVersion.Next.String()
+	tag := releaseVersion.Next.Version.String()
 	log.Debugf("create release witth version %s", tag)
+
+	prerelease := releaseVersion.Next.Version.Prerelease() != ""
 
 	release, resp, err := g.client.Repositories.CreateRelease(g.context, g.config.User, g.config.Repo, &github.RepositoryRelease{
 		TagName:         &tag,
 		TargetCommitish: &releaseVersion.Branch,
 		Name:            &generatedChangelog.Title,
 		Body:            &generatedChangelog.Content,
-		Draft:           &g.draft,
-		Prerelease:      &g.prerelease,
+		Draft:           &releaseVersion.Draft,
+		Prerelease:      &prerelease,
 	})
 
 	if err != nil {

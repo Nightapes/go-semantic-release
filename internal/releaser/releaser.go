@@ -22,7 +22,6 @@ type Releaser interface {
 	UploadAssets(assets []config.Asset) error
 	GetCommitURL() string
 	GetCompareURL(oldVersion, newVersion string) string
-	SetReleaseType(*shared.ReleaseVersion)
 }
 
 // New initialize a Relerser

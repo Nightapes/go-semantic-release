@@ -9,13 +9,13 @@ type ReleaseVersion struct {
 	Last   ReleaseVersionEntry
 	Next   ReleaseVersionEntry
 	Branch string
+	Draft  bool
 }
 
 //ReleaseVersionEntry struct
 type ReleaseVersionEntry struct {
-	Commit string
-	Draft  bool
-	*semver.Version
+	Commit  string
+	Version *semver.Version
 }
 
 //GeneratedChangelog struct
