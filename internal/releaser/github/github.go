@@ -115,18 +115,39 @@ func (g Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedCh
 // UploadAssets uploads specified assets
 func (g Client) UploadAssets(assets []config.Asset) error {
 	for _, asset := range assets {
-		file, err := os.Open(asset.Name)
-		if err != nil {
-			return err
-		}
+		if asset.Compress {
+			zipName, err := util.ZipFile(g.config.Repo, asset.Name)
+			if err != nil {
+				return err
+			}
 
-		_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.User, g.config.Repo, *g.release.ID, &github.UploadOptions{Name: file.Name()}, file)
-		if err != nil {
-			return err
-		}
+			file, err := os.Open(g.config.Repo + zipName)
+			defer file.Close()
 
-		if resp.StatusCode >= http.StatusBadRequest {
-			return fmt.Errorf("releaser: github: Could not create release: response statuscode: %s", resp.Status)
+			_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.User, g.config.Repo, *g.release.ID, &github.UploadOptions{Name: zipName}, file)
+			if err != nil {
+				return err
+			}
+
+			if resp.StatusCode >= http.StatusBadRequest {
+				return fmt.Errorf("releaser: github: Could not upload asset %s: %s", zipName, resp.Status)
+			}
+
+		} else {
+			file, err := os.Open(asset.Name)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+
+			_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.User, g.config.Repo, *g.release.ID, &github.UploadOptions{Name: file.Name()}, file)
+			if err != nil {
+				return err
+			}
+
+			if resp.StatusCode >= http.StatusBadRequest {
+				return fmt.Errorf("releaser: github: Could not upload asset %s: %s", file.Name(), resp.Status)
+			}
 		}
 	}
 	return nil

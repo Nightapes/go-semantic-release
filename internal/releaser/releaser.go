@@ -40,20 +40,3 @@ func (r *Releasers) GetReleaser() (Releaser, error) {
 	}
 	return nil, fmt.Errorf("could not initialize a releaser from this type: %s", r.config.Release)
 }
-
-// func checkIfAssetsExists(assets []config.Asset) error {
-// 	var missingAssets []string
-// 	for _, asset := range assets {
-
-// 		if _, err := os.Stat(asset.Name); err != nil {
-// 			missingAssets = append(missingAssets, asset.Name)
-// 		}
-// 	}
-
-// 	if len(missingAssets) != 0 {
-// 		return fmt.Errorf("could not find specified Asset: %+v ", assets)
-// 	}
-
-// 	return nil
-
-// }

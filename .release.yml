@@ -1,5 +1,5 @@
 commitFormat: angular
-title: "testr release"
+title: "go-semantic-release release"
 branch:
   master: release
   rc: rc

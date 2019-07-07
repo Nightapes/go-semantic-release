@@ -245,5 +245,9 @@ func (s *SemanticRelease) Release(force bool) error {
 		return err
 	}
 
+	if err = releaser.UploadAssets(s.config.Assets); err != nil {
+		return err
+	}
+
 	return nil
 }
