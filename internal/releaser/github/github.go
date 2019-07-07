@@ -122,6 +122,9 @@ func (g Client) UploadAssets(assets []config.Asset) error {
 			}
 
 			file, err := os.Open(g.config.Repo + zipName)
+			if err != nil {
+				return err
+			}
 			defer file.Close()
 
 			_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.User, g.config.Repo, *g.release.ID, &github.UploadOptions{Name: zipName}, file)
