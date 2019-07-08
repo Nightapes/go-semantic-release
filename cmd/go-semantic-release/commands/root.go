@@ -32,7 +32,11 @@ func Execute(version string) {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringP("repository", "r", "", "Path to repository")
+	currentDir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	rootCmd.PersistentFlags().StringP("repository", "r", currentDir, "Path to repository")
 	rootCmd.PersistentFlags().StringP("loglevel", "l", "error", "Set loglevel")
 	rootCmd.PersistentFlags().StringP("config", "c", ".release.yml", "Path to config file")
 	rootCmd.PersistentFlags().Bool("no-cache", false, "Ignore cache, don't use in ci build")
