@@ -19,7 +19,7 @@ type Releasers struct {
 type Releaser interface {
 	ValidateConfig() error
 	CreateRelease(*shared.ReleaseVersion, *shared.GeneratedChangelog) error
-	UploadAssets(assets []config.Asset) error
+	UploadAssets(repoDir string, assets []config.Asset) error
 	GetCommitURL() string
 	GetCompareURL(oldVersion, newVersion string) string
 }

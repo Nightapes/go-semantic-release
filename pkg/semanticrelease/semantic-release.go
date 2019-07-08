@@ -9,6 +9,7 @@ import (
 	"github.com/Nightapes/go-semantic-release/internal/changelog"
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
 	"github.com/Nightapes/go-semantic-release/internal/releaser"
+	"github.com/Nightapes/go-semantic-release/internal/releaser/util"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	log "github.com/sirupsen/logrus"
@@ -245,11 +246,21 @@ func (s *SemanticRelease) Release(force bool) error {
 		return err
 	}
 
-	if err = releaser.UploadAssets(s.config.Assets); err != nil {
+	if err = releaser.UploadAssets(s.repository, s.config.Assets); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+// ZipFiles zip files configured in release config
+func (s *SemanticRelease) ZipFiles() error {
+	for _, file := range s.config.Assets {
 		if file.Compress {
+			if _, err := util.PrepareAssets(s.repository, s.config.Assets); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
