@@ -251,3 +251,5 @@ func (s *SemanticRelease) Release(force bool) error {
 
 	return nil
 }
+
+		if file.Compress {

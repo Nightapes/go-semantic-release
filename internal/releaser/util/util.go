@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Nightapes/go-semantic-release/pkg/config"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -38,19 +39,41 @@ func GetAccessToken(providerName string) (string, error) {
 	return token, nil
 }
 
-// ZipFile compress given file in zip format
-func ZipFile(repository string, file string) (string, error) {
+// PrepareAssets prepare all files before uploading
+func PrepareAssets(repository string, assets []config.Asset) ([]*string, error) {
+	filesToUpload := []*string{}
+	for _, asset := range assets {
+		if asset.Compress {
+			log.Debugf("Asset %s will now be compressed", asset.Name)
+			log.Debugf("Repo url %s", repository)
+			zipNameWithPath, err := zipFile(repository, asset.Name)
+			if err != nil {
+				return filesToUpload, err
+			}
+			filesToUpload = append(filesToUpload, &zipNameWithPath)
+		} else {
+			tmpFileName := fmt.Sprintf("%s/%s", repository, asset.Name)
+			filesToUpload = append(filesToUpload, &tmpFileName)
+		}
+		log.Debugf("Add asset %s to files to upload", asset.Name)
+	}
+	return filesToUpload, nil
+}
 
-	zipFileName := fmt.Sprintf("%s/%s", strings.TrimSuffix(repository, "/"), file)
+// ZipFile compress given file in zip format
+func zipFile(repository string, file string) (string, error) {
+
+	zipFileName := fmt.Sprintf("%s/%s.zip", strings.TrimSuffix(repository, "/"), file)
 	zipFile, err := os.Create(zipFileName)
 
 	if err != nil {
 		return "", err
 	}
+	log.Debugf("Created zipfile %s", zipFile.Name())
 
 	defer zipFile.Close()
 
-	fileToZip, err := os.Open(file)
+	fileToZip, err := os.Open(repository + "/" + file)
 	if err != nil {
 		return "", err
 	}
@@ -62,6 +85,7 @@ func ZipFile(repository string, file string) (string, error) {
 	}
 
 	zipWriter := zip.NewWriter(zipFile)
+	defer zipWriter.Close()
 
 	fileToZipHeader, err := zip.FileInfoHeader(fileToZipInfo)
 	if err != nil {
