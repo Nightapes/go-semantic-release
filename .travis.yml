@@ -33,7 +33,7 @@ script:
   - GOOS=windows GOARCH=386 go build -o build/go-semantic-release.exe  -ldflags "-X main.version=`./go-semantic-release next`" ./cmd/go-semantic-release/
 
 after_success:
-  - ./build/go-semantic-release-temp release
+  - ./build/go-semantic-release-temp release --loglevel debug
 
 branches:
   except:
