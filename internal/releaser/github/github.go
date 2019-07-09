@@ -114,25 +114,27 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 
 // UploadAssets uploads specified assets
 func (g *Client) UploadAssets(repoDir string, assets []config.Asset) error {
-	filesToUpload, err := util.PrepareAssets(repoDir, assets)
-	if err != nil {
-		return err
-	}
-	for _, f := range filesToUpload {
-
-		file, err := os.Open(*f)
+	if g.release != nil {
+		filesToUpload, err := util.PrepareAssets(repoDir, assets)
 		if err != nil {
 			return err
 		}
-		fileInfo, _ := file.Stat()
+		for _, f := range filesToUpload {
 
-		_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.User, g.config.Repo, g.release.GetID(), &github.UploadOptions{Name: fileInfo.Name()}, file)
-		if err != nil {
-			return err
-		}
+			file, err := os.Open(*f)
+			if err != nil {
+				return err
+			}
+			fileInfo, _ := file.Stat()
 
-		if resp.StatusCode >= http.StatusBadRequest {
-			return fmt.Errorf("releaser: github: Could not upload asset %s: %s", file.Name(), resp.Status)
+			_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.User, g.config.Repo, g.release.GetID(), &github.UploadOptions{Name: fileInfo.Name()}, file)
+			if err != nil {
+				return err
+			}
+
+			if resp.StatusCode >= http.StatusBadRequest {
+				return fmt.Errorf("releaser: github: Could not upload asset %s: %s", file.Name(), resp.Status)
+			}
 		}
 	}
 	return nil
