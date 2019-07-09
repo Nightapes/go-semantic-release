@@ -56,17 +56,17 @@ func New(c *config.GitHubProvider) (*Client, error) {
 }
 
 //GetCommitURL for github
-func (g Client) GetCommitURL() string {
+func (g *Client) GetCommitURL() string {
 	return fmt.Sprintf("%s/%s/%s/commit/{{hash}}", g.baseURL, g.config.User, g.config.Repo)
 }
 
 //GetCompareURL for github
-func (g Client) GetCompareURL(oldVersion, newVersion string) string {
+func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 	return fmt.Sprintf("%s/%s/%s/compare/%s...%s", g.baseURL, g.config.User, g.config.Repo, oldVersion, newVersion)
 }
 
 //ValidateConfig for github
-func (g Client) ValidateConfig() error {
+func (g *Client) ValidateConfig() error {
 	log.Debugf("validate GitHub provider config")
 
 	if g.config.Repo == "" {
@@ -82,7 +82,7 @@ func (g Client) ValidateConfig() error {
 }
 
 // CreateRelease creates release on remote
-func (g Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
+func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
 	tag := releaseVersion.Next.Version.String()
 	log.Debugf("create release witth version %s", tag)
@@ -113,7 +113,7 @@ func (g Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedCh
 }
 
 // UploadAssets uploads specified assets
-func (g Client) UploadAssets(repoDir string, assets []config.Asset) error {
+func (g *Client) UploadAssets(repoDir string, assets []config.Asset) error {
 	filesToUpload, err := util.PrepareAssets(repoDir, assets)
 	if err != nil {
 		return err
@@ -124,10 +124,10 @@ func (g Client) UploadAssets(repoDir string, assets []config.Asset) error {
 		if err != nil {
 			return err
 		}
+		fileInfo, _ := file.Stat()
 
-		_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.User, g.config.Repo, *g.release.ID, &github.UploadOptions{Name: ""}, file)
+		_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.User, g.config.Repo, g.release.GetID(), &github.UploadOptions{Name: fileInfo.Name()}, file)
 		if err != nil {
-			log.Debug("lol")
 			return err
 		}
 
@@ -135,6 +135,5 @@ func (g Client) UploadAssets(repoDir string, assets []config.Asset) error {
 			return fmt.Errorf("releaser: github: Could not upload asset %s: %s", file.Name(), resp.Status)
 		}
 	}
-
 	return nil
 }
