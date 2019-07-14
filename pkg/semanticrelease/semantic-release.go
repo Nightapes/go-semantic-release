@@ -108,6 +108,7 @@ func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, er
 			switch releaseType {
 			case "beta", "alpha":
 				isDraft = true
+				newVersion = s.incPrerelease(releaseType, newVersion)
 			case "rc":
 				newVersion = s.incPrerelease(releaseType, newVersion)
 			case "release":
