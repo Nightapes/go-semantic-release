@@ -85,7 +85,7 @@ func (g *Client) ValidateConfig() error {
 func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
 	tag := releaseVersion.Next.Version.String()
-	log.Debugf("create release witth version %s", tag)
+	log.Debugf("create release with version %s", tag)
 
 	prerelease := releaseVersion.Next.Version.Prerelease() != ""
 
