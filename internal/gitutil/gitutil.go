@@ -100,7 +100,7 @@ func (g *GitUtil) GetLastVersion() (*semver.Version, string, error) {
 				log.Debugf("Add tag %s", p.Name().Short())
 				tags = append(tags, v)
 			} else {
-				log.Debugf("Found tag %s, but is not annotated, skip", err.Error())
+				log.Debugf("Found tag, but is not annotated, skip")
 			}
 		} else {
 			log.Debugf("Tag %s is not a valid version, skip", p.Name().Short())
