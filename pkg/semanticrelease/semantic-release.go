@@ -54,7 +54,7 @@ func New(c *config.ReleaseConfig, repository string) (*SemanticRelease, error) {
 
 // GetNextVersion from .version or calculate new from commits
 func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, error) {
-	provider, err := ci.GetCIProvider(s.gitutil)
+	provider, err := ci.GetCIProvider(s.gitutil, ci.ReadAllEnvs())
 
 	if err != nil {
 		fakeVersion, _ := semver.NewVersion("0.0.0-fake.0")
@@ -161,7 +161,7 @@ func (s *SemanticRelease) SetVersion(version string) error {
 		return err
 	}
 
-	provider, err := ci.GetCIProvider(s.gitutil)
+	provider, err := ci.GetCIProvider(s.gitutil, ci.ReadAllEnvs())
 
 	if err != nil {
 		return fmt.Errorf("will not set version. Could not find CI Provider, if running locally, set env CI=true")
@@ -217,7 +217,7 @@ func (s *SemanticRelease) WriteChangeLog(changelogContent, file string) error {
 // Release pusblish release to provider
 func (s *SemanticRelease) Release(force bool) error {
 
-	provider, err := ci.GetCIProvider(s.gitutil)
+	provider, err := ci.GetCIProvider(s.gitutil, ci.ReadAllEnvs())
 
 	if err != nil {
 		log.Debugf("Will not perform a new release. Could not find CI Provider")

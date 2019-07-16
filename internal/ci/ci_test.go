@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
-	"os"
 )
 
 func TestSum(t *testing.T) {
@@ -69,18 +68,9 @@ func TestSum(t *testing.T) {
 	}
 
 	for _, config := range testConfigs {
-
-		for key, value := range config.envs {
-			os.Setenv(key, value)
-		}
-
-		provider, err := ci.GetCIProvider(gitUtilInMemory)
+		provider, err := ci.GetCIProvider(gitUtilInMemory, config.envs)
 		assert.Equalf(t, config.hasError, err != nil, "Service %s should have error: %t -> %s", config.service, config.hasError, err)
 		assert.Equalf(t, config.result, provider, "Service %s should have provider", config.service)
-
-		for key, _ := range config.envs {
-			os.Unsetenv(key)
-		}
 	}
 
 }

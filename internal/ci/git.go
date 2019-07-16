@@ -3,7 +3,6 @@ package ci
 import (
 	"fmt"
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
-	"os"
 )
 
 //Git struct
@@ -12,9 +11,9 @@ type Git struct {
 }
 
 //Detect if on Git
-func (t Git) detect() (*ProviderConfig, error) {
+func (t Git) detect(envs map[string]string) (*ProviderConfig, error) {
 
-	if _, exists := os.LookupEnv("CI"); !exists {
+	if _, exists := envs["CI"]; !exists {
 		return nil, fmt.Errorf("running not git only")
 	}
 

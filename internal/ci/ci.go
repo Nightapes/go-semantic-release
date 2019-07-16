@@ -2,8 +2,11 @@ package ci
 
 import (
 	"fmt"
+
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
 	log "github.com/sirupsen/logrus"
+	"os"
+	"strings"
 )
 
 //ProviderConfig struct
@@ -21,11 +24,21 @@ type ProviderConfig struct {
 
 //Service interface
 type Service interface {
-	detect() (*ProviderConfig, error)
+	detect(envs map[string]string) (*ProviderConfig, error)
+}
+
+//ReadAllEnvs as a map
+func ReadAllEnvs() map[string]string {
+	envs := map[string]string{}
+	for _, pair := range os.Environ() {
+		splitted := strings.SplitN(pair, "=", 2)
+		envs[splitted[0]] = splitted[1]
+	}
+	return envs
 }
 
 //GetCIProvider get provider
-func GetCIProvider(gitUtil *gitutil.GitUtil) (*ProviderConfig, error) {
+func GetCIProvider(gitUtil *gitutil.GitUtil, envs map[string]string) (*ProviderConfig, error) {
 
 	services := []Service{
 		Travis{},
@@ -33,7 +46,7 @@ func GetCIProvider(gitUtil *gitutil.GitUtil) (*ProviderConfig, error) {
 	}
 
 	for _, service := range services {
-		config, err := service.detect()
+		config, err := service.detect(envs)
 		if err == nil {
 			log.Infof("Found CI: %s", config.Name)
 			return config, nil
