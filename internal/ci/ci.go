@@ -21,7 +21,7 @@ type ProviderConfig struct {
 
 //Service interface
 type Service interface {
-	Detect() (*ProviderConfig, error)
+	detect() (*ProviderConfig, error)
 }
 
 //GetCIProvider get provider
@@ -33,12 +33,12 @@ func GetCIProvider(gitUtil *gitutil.GitUtil) (*ProviderConfig, error) {
 	}
 
 	for _, service := range services {
-		config, err := service.Detect()
+		config, err := service.detect()
 		if err == nil {
 			log.Infof("Found CI: %s", config.Name)
 			return config, nil
 		}
-		log.Debugf("%s", err.Error())
+		log.Infof("%s", err.Error())
 	}
 	return nil, fmt.Errorf("could not find any CI, if running locally set env CI=true")
 }

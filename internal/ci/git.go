@@ -12,7 +12,7 @@ type Git struct {
 }
 
 //Detect if on Git
-func (t Git) Detect() (*ProviderConfig, error) {
+func (t Git) detect() (*ProviderConfig, error) {
 
 	if _, exists := os.LookupEnv("CI"); !exists {
 		return nil, fmt.Errorf("running not git only")
