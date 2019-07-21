@@ -28,7 +28,7 @@ func (t Git) detect(envs map[string]string) (*ProviderConfig, error) {
 	}
 
 	return &ProviderConfig{
-		Service: "Git",
+		Service: "git",
 		Name:    "Git only",
 		Commit:  hash,
 		Branch:  currentBranch,

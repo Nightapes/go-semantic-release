@@ -89,19 +89,19 @@ func (a *angular) analyze(commit gitutil.Commit, rule Rule) (AnalyzedCommit, boo
 	if len(matches) >= 1 {
 		if len(matches[0]) >= 3 {
 
-			analyzed.Scope = matches[0][2]
+			analyzed.Scope = Scope(matches[0][2])
 
 			message := strings.Join(matches[0][3:], "")
 			if !strings.Contains(message, "BREAKING CHANGE:") {
-				analyzed.ParsedMessage = message
+				analyzed.ParsedMessage = strings.Trim(message, " ")
 
 				log.Tracef("%s: found %s", commit.Message, rule.Tag)
 				return analyzed, false, nil
 			}
 			breakingChange := strings.SplitN(message, "BREAKING CHANGE:", 2)
 
-			analyzed.ParsedMessage = breakingChange[0]
-			analyzed.ParsedBreakingChangeMessage = breakingChange[1]
+			analyzed.ParsedMessage = strings.Trim(breakingChange[0], " ")
+			analyzed.ParsedBreakingChangeMessage = strings.Trim(breakingChange[1], " ")
 
 			log.Tracef(" %s, BREAKING CHANGE found", commit.Message)
 			return analyzed, true, nil

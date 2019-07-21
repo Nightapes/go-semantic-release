@@ -1,16 +1,49 @@
 package ci_test
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/Nightapes/go-semantic-release/internal/ci"
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/src-d/go-billy.v4/memfs"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
-func TestSum(t *testing.T) {
+func TestCi(t *testing.T) {
+
+	fs := memfs.New()
+
+	repository, err := git.Init(memory.NewStorage(), fs)
+	assert.NoError(t, err, "should open git repository")
+
+	file, err := fs.Create("README.md")
+	assert.NoError(t, err, "should create file")
+
+	w, err := repository.Worktree()
+	assert.NoError(t, err, "should get worktree")
+
+	w.Add(file.Name())
+
+	status, err := w.Status()
+	fmt.Println(status)
+
+	gitUtilInMemory := &gitutil.GitUtil{
+		Repository: repository,
+	}
+
+	newCommit, err := w.Commit("fix(test): add a commit", &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "John Doe",
+			Email: "john@doe.org",
+			When:  time.Now(),
+		},
+	})
+
 	testConfigs := []struct {
 		service  string
 		envs     map[string]string
@@ -23,14 +56,14 @@ func TestSum(t *testing.T) {
 			result:   nil,
 			hasError: true,
 		},
-		// {
-		// 	service: "Git",
-		// 	envs: map[string]string{
-		// 		"CI": "true",
-		// 	},
-		// 	result:   &ci.ProviderConfig{IsPR: true, PR: "10", PRBranch: "pr", Branch: "master", Tag: "TAG", Commit: "190bfd6aa60022afd0ef830342cfb07e33c45f37", BuildURL: "https://travis-ci.com/owner/repo/builds/1234", Service: "travis", Name: "Travis CI"},
-		// 	hasError: false,
-		// },
+		{
+			service: "Git",
+			envs: map[string]string{
+				"CI": "true",
+			},
+			result:   &ci.ProviderConfig{IsPR: false, PR: "", PRBranch: "", Branch: "master", Tag: "", Commit: newCommit.String(), BuildURL: "", Service: "git", Name: "Git only"},
+			hasError: false,
+		},
 		{
 			service: "Travis PR",
 			envs: map[string]string{
@@ -58,13 +91,6 @@ func TestSum(t *testing.T) {
 			result:   &ci.ProviderConfig{IsPR: false, PR: "", PRBranch: "", Branch: "master", Tag: "TAG", Commit: "190bfd6aa60022afd0ef830342cfb07e33c45f37", BuildURL: "https://travis-ci.com/owner/repo/builds/1234", Service: "travis", Name: "Travis CI"},
 			hasError: false,
 		},
-	}
-
-	repository, err := git.Init(memory.NewStorage(), nil)
-	assert.NoError(t, err, "should open git repository")
-
-	gitUtilInMemory := &gitutil.GitUtil{
-		Repository: repository,
 	}
 
 	for _, config := range testConfigs {

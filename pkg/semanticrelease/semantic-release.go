@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"github.com/Masterminds/semver"
 	"github.com/Nightapes/go-semantic-release/internal/analyzer"
@@ -199,7 +200,7 @@ func (s *SemanticRelease) GetChangelog(releaseVersion *shared.ReleaseVersion) (*
 
 	log.Debugf("Found %d commits till last release", len(commits))
 
-	c := changelog.New(s.config, s.analyzer.GetRules())
+	c := changelog.New(s.config, s.analyzer.GetRules(), time.Now())
 	return c.GenerateChanglog(shared.ChangelogTemplateConfig{
 		Version:    releaseVersion.Next.Version.String(),
 		Hash:       releaseVersion.Last.Commit,

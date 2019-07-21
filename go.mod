@@ -16,7 +16,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb // indirect
 	google.golang.org/appengine v1.6.1 // indirect
-	gopkg.in/src-d/go-billy.v4 v4.3.1 // indirect
+	gopkg.in/src-d/go-billy.v4 v4.3.1
 	gopkg.in/src-d/go-git.v4 v4.12.0
 	gopkg.in/yaml.v2 v2.2.2
 )

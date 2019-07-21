@@ -15,11 +15,17 @@ type Analyzer struct {
 	Config        config.ChangelogConfig
 }
 
+//Release types, like major
+type Release string
+
+//Scope of the commit, like feat, fix,..
+type Scope string
+
 //Rule for commits
 type Rule struct {
 	Tag       string
 	TagString string
-	Release   string
+	Release   Release
 	Changelog bool
 }
 
@@ -32,7 +38,7 @@ type analyzeCommit interface {
 type AnalyzedCommit struct {
 	Commit                      gitutil.Commit
 	ParsedMessage               string
-	Scope                       string
+	Scope                       Scope
 	ParsedBreakingChangeMessage string
 	Tag                         string
 	TagString                   string
@@ -62,9 +68,9 @@ func (a *Analyzer) GetRules() []Rule {
 }
 
 // Analyze commits and return commits splitted by major,minor,patch
-func (a *Analyzer) Analyze(commits []gitutil.Commit) map[string][]AnalyzedCommit {
+func (a *Analyzer) Analyze(commits []gitutil.Commit) map[Release][]AnalyzedCommit {
 
-	analyzedCommits := make(map[string][]AnalyzedCommit)
+	analyzedCommits := make(map[Release][]AnalyzedCommit)
 	analyzedCommits["major"] = make([]AnalyzedCommit, 0)
 	analyzedCommits["minor"] = make([]AnalyzedCommit, 0)
 	analyzedCommits["patch"] = make([]AnalyzedCommit, 0)

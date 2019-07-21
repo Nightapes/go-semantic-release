@@ -15,3 +15,4 @@ go-semantic-release
 .version
 .vscode/settings.json
 CHANGELOG.md
+cover.html
