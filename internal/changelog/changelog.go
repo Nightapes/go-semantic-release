@@ -15,6 +15,14 @@ import (
 
 const defaultChangelogTitle string = `v{{.Version}} ({{.Now.Format "2006-01-02"}})`
 const defaultChangelog string = `# v{{$.Version}} ({{.Now.Format "2006-01-02"}})
+{{ range $index,$commit := .BreakingChanges -}}
+{{ if eq $index 0 }}
+## BREAKING CHANGES
+{{ end}}
+* **{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}** {{$commit.ParsedBreakingChangeMessage}}  
+introduced by commit: 
+{{$commit.ParsedMessage}} {{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}}))  {{end}}
+{{ end -}}
 {{ range $key := .Order }}
 {{ $commits := index $.Commits $key}} {{if $commits -}}
 ### {{ $key }}
@@ -26,33 +34,37 @@ const defaultChangelog string = `# v{{$.Version}} ({{.Now.Format "2006-01-02"}})
 `
 
 type changelogContent struct {
-	Commits  map[string][]analyzer.AnalyzedCommit
-	Order    []string
-	Version  string
-	Now      time.Time
-	Backtick string
-	HasURL   bool
-	URL      string
+	Commits         map[string][]analyzer.AnalyzedCommit
+	BreakingChanges []analyzer.AnalyzedCommit
+	Order           []string
+	Version         string
+	Now             time.Time
+	Backtick        string
+	HasURL          bool
+	URL             string
 }
 
 //Changelog struct
 type Changelog struct {
-	config *config.ReleaseConfig
-	rules  []analyzer.Rule
+	config      *config.ReleaseConfig
+	rules       []analyzer.Rule
+	releaseTime time.Time
 }
 
 //New Changelog struct for generating changelog from commits
-func New(config *config.ReleaseConfig, rules []analyzer.Rule) *Changelog {
+func New(config *config.ReleaseConfig, rules []analyzer.Rule, releaseTime time.Time) *Changelog {
 	return &Changelog{
-		config: config,
-		rules:  rules,
+		config:      config,
+		rules:       rules,
+		releaseTime: releaseTime,
 	}
 }
 
 // GenerateChanglog from given commits
-func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConfig, analyzedCommits map[string][]analyzer.AnalyzedCommit) (*shared.GeneratedChangelog, error) {
+func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConfig, analyzedCommits map[analyzer.Release][]analyzer.AnalyzedCommit) (*shared.GeneratedChangelog, error) {
 
 	commitsPerScope := map[string][]analyzer.AnalyzedCommit{}
+	commitsBreakingChange := []analyzer.AnalyzedCommit{}
 	order := make([]string, 0)
 
 	for _, rule := range c.rules {
@@ -65,6 +77,10 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 	for _, commits := range analyzedCommits {
 		for _, commit := range commits {
 			if commit.Print {
+				if commit.ParsedBreakingChangeMessage != "" {
+					commitsBreakingChange = append(commitsBreakingChange, commit)
+					continue
+				}
 				if _, ok := commitsPerScope[commit.TagString]; !ok {
 					commitsPerScope[commit.TagString] = make([]analyzer.AnalyzedCommit, 0)
 				}
@@ -74,13 +90,14 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 	}
 
 	changelogContent := changelogContent{
-		Version:  templateConfig.Version,
-		Commits:  commitsPerScope,
-		Now:      time.Now(),
-		Backtick: "`",
-		Order:    order,
-		HasURL:   templateConfig.CommitURL != "",
-		URL:      templateConfig.CommitURL,
+		Version:         templateConfig.Version,
+		Commits:         commitsPerScope,
+		Now:             c.releaseTime,
+		BreakingChanges: commitsBreakingChange,
+		Backtick:        "`",
+		Order:           order,
+		HasURL:          templateConfig.CommitURL != "",
+		URL:             templateConfig.CommitURL,
 	}
 
 	title, err := generateTemplate(defaultChangelogTitle, changelogContent)
