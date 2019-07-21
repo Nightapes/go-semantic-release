@@ -25,7 +25,8 @@ func TestReadCacheInvalidContent(t *testing.T) {
 
 	completePath := path.Join(path.Dir(dir), ".version")
 	brokenContent := []byte("hello broken\ngo: lang\n")
-	ioutil.WriteFile(completePath, brokenContent, 0644)
+	err = ioutil.WriteFile(completePath, brokenContent, 0644)
+	assert.NoError(t, err)
 
 	_, readError := cache.Read(dir)
 	assert.Errorf(t, readError, "Should give error, when broken content")

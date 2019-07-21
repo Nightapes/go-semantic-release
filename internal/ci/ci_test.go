@@ -1,7 +1,6 @@
 package ci_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -27,10 +26,8 @@ func TestCi(t *testing.T) {
 	w, err := repository.Worktree()
 	assert.NoError(t, err, "should get worktree")
 
-	w.Add(file.Name())
-
-	status, err := w.Status()
-	fmt.Println(status)
+	_, err = w.Add(file.Name())
+	assert.NoError(t, err, "should add file")
 
 	gitUtilInMemory := &gitutil.GitUtil{
 		Repository: repository,
@@ -43,6 +40,7 @@ func TestCi(t *testing.T) {
 			When:  time.Now(),
 		},
 	})
+	assert.NoError(t, err, "should commit")
 
 	testConfigs := []struct {
 		service  string
