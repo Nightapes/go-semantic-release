@@ -93,15 +93,10 @@ func (g *GitUtil) GetLastVersion() (*semver.Version, string, error) {
 
 	err = gitTags.ForEach(func(p *plumbing.Reference) error {
 		v, err := semver.NewVersion(p.Name().Short())
-		log.Tracef("%+v", p.Name().Short())
+		log.Tracef("%+v with hash: %s", p.Target(), p.Hash())
+
 		if err == nil {
-			_, err := g.Repository.TagObject(p.Hash())
-			if err == nil {
-				log.Debugf("Add tag %s", p.Name().Short())
-				tags = append(tags, v)
-			} else {
-				log.Debugf("Found tag, but is not annotated, skip")
-			}
+			tags = append(tags, v)
 		} else {
 			log.Debugf("Tag %s is not a valid version, skip", p.Name().Short())
 		}
@@ -126,13 +121,8 @@ func (g *GitUtil) GetLastVersion() (*semver.Version, string, error) {
 		return nil, "", err
 	}
 
-	tagObject, err := g.Repository.TagObject(tag.Hash())
-	if err != nil {
-		return nil, "", err
-	}
-
-	log.Debugf("Found old hash %s", tagObject.Target.String())
-	return tags[0], tagObject.Target.String(), nil
+	log.Debugf("Found old hash %s", tag.Hash().String())
+	return tags[0], tag.Hash().String(), nil
 }
 
 // GetCommits from git hash to HEAD
@@ -155,9 +145,10 @@ func (g *GitUtil) GetCommits(lastTagHash string) ([]Commit, error) {
 		if c.Hash.String() == lastTagHash {
 			log.Debugf("Found commit with hash %s, will stop here", c.Hash.String())
 			foundEnd = true
+
 		}
-		log.Tracef("Found commit with hash %s", c.Hash.String())
 		if !foundEnd {
+			log.Tracef("Found commit with hash %s", c.Hash.String())
 			commit := Commit{
 				Message: c.Message,
 				Author:  c.Committer.Name,
