@@ -35,6 +35,8 @@ func GetAccessToken(providerName string) (string, error) {
 
 	if token, exists = os.LookupEnv(envName); !exists {
 		return "", fmt.Errorf("could not find %s in the enviroment variables. Please check if it is set", envName)
+	} else if token == "" {
+		return "", fmt.Errorf("token %s is set in environment variables but is empty", envName)
 	}
 	return token, nil
 }
