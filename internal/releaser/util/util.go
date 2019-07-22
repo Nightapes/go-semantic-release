@@ -46,7 +46,7 @@ func PrepareAssets(repository string, assets []config.Asset) ([]*string, error) 
 	filesToUpload := []*string{}
 	for _, asset := range assets {
 		if asset.Name == "" {
-			return nil, fmt.Errorf("Asset name declaration is empty, please check your configuration file")
+			return nil, fmt.Errorf("asset name declaration is empty, please check your configuration file")
 		} else if asset.Compress {
 			log.Debugf("Asset %s will now be compressed", asset.Name)
 			log.Debugf("Repo url %s", repository)

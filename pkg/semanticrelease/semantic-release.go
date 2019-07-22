@@ -8,6 +8,8 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/Nightapes/go-semantic-release/internal/analyzer"
+	"github.com/Nightapes/go-semantic-release/internal/cache"
+	"github.com/Nightapes/go-semantic-release/internal/calculator"
 	"github.com/Nightapes/go-semantic-release/internal/changelog"
 	"github.com/Nightapes/go-semantic-release/internal/ci"
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
@@ -23,6 +25,7 @@ type SemanticRelease struct {
 	config     *config.ReleaseConfig
 	gitutil    *gitutil.GitUtil
 	analyzer   *analyzer.Analyzer
+	calculator *calculator.Calculator
 	releaser   releaser.Releaser
 	repository string
 }
@@ -50,6 +53,7 @@ func New(c *config.ReleaseConfig, repository string) (*SemanticRelease, error) {
 		releaser:   releaser,
 		analyzer:   analyzer,
 		repository: repository,
+		calculator: calculator.New(),
 	}, nil
 }
 
@@ -70,12 +74,12 @@ func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, er
 
 	log.Debugf("Ignore .version file if exits, %t", force)
 	if !force {
-		releaseVersion, err := s.readFromCache(provider.Commit)
+		releaseVersion, err := cache.Read(s.repository)
 		if err != nil {
 			return nil, err
 		}
 
-		if releaseVersion != nil {
+		if releaseVersion.Next.Commit == provider.Commit && releaseVersion != nil {
 			return releaseVersion, nil
 		}
 	}
@@ -85,16 +89,12 @@ func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, er
 		return nil, err
 	}
 
-	var newVersion semver.Version
 	firstRelease := false
 
 	if lastVersion == nil {
 		defaultVersion, _ := semver.NewVersion("1.0.0")
-		newVersion = *defaultVersion
 		lastVersion = defaultVersion
 		firstRelease = true
-	} else {
-		newVersion = *lastVersion
 	}
 
 	commits, err := s.gitutil.GetCommits(lastVersionHash)
@@ -108,28 +108,14 @@ func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, er
 	if err != nil {
 		return nil, err
 	}
-	result := a.Analyze(commits)
+
 	isDraft := false
+	var newVersion semver.Version
 	for branch, releaseType := range s.config.Branch {
 		if provider.Branch == branch || strings.HasPrefix(provider.Branch, branch) {
 			log.Debugf("Found branch config for branch %s with release type %s", provider.Branch, releaseType)
-			switch releaseType {
-			case "beta", "alpha":
-				isDraft = true
-				newVersion = s.incPrerelease(releaseType, newVersion)
-			case "rc":
-				newVersion = s.incPrerelease(releaseType, newVersion)
-			case "release":
-				if !firstRelease {
-					if len(result["major"]) > 0 {
-						newVersion = newVersion.IncMajor()
-					} else if len(result["minor"]) > 0 {
-						newVersion = newVersion.IncMinor()
-					} else if len(result["patch"]) > 0 {
-						newVersion = newVersion.IncPatch()
-					}
-				}
-			}
+			newVersion, isDraft = s.calculator.CalculateNewVersion(a.Analyze(commits), lastVersion, releaseType, firstRelease)
+			break
 		}
 	}
 
@@ -147,7 +133,7 @@ func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, er
 	}
 
 	log.Infof("New version %s -> %s", lastVersion.String(), newVersion.String())
-	err = s.saveToCache(releaseVersion)
+	err = cache.Write(s.repository, releaseVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +162,7 @@ func (s *SemanticRelease) SetVersion(version string) error {
 		lastVersion, _ = semver.NewVersion("1.0.0")
 	}
 
-	return s.saveToCache(shared.ReleaseVersion{
+	return cache.Write(s.repository, shared.ReleaseVersion{
 		Next: shared.ReleaseVersionEntry{
 			Commit:  provider.Commit,
 			Version: newVersion,
