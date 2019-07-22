@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/Masterminds/semver v1.4.2
+	github.com/coreos/etcd v3.3.10+incompatible
 	github.com/gliderlabs/ssh v0.2.2 // indirect
 	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/google/go-github/v25 v25.1.3
