@@ -3,7 +3,9 @@ package cache_test
 import (
 	"testing"
 
+	"github.com/Masterminds/semver"
 	"github.com/Nightapes/go-semantic-release/internal/cache"
+	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
@@ -39,14 +41,14 @@ func TestWriteAndReadCache(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	content := cache.ReleaseVersion{
-		Last: cache.ReleaseVersionEntry{
+	content := shared.ReleaseVersion{
+		Last: shared.ReleaseVersionEntry{
 			Commit:  "12345",
-			Version: "1.0.0",
+			Version: createVersion("1.0.0"),
 		},
-		Next: cache.ReleaseVersionEntry{
+		Next: shared.ReleaseVersionEntry{
 			Commit:  "12346",
-			Version: "1.1.0",
+			Version: createVersion("1.1.0"),
 		},
 		Branch: "master",
 		Draft:  true,
@@ -59,13 +61,29 @@ func TestWriteAndReadCache(t *testing.T) {
 	result, readError := cache.Read(dir)
 	assert.NoErrorf(t, readError, "Should read file")
 
-	assert.Equal(t, &content, result)
+	assert.EqualValues(t, &content, result)
 
 }
 
 func TestWriteNotFound(t *testing.T) {
 
-	err := cache.Write("notfound/dir", cache.ReleaseVersion{})
+	err := cache.Write("notfound/dir", shared.ReleaseVersion{
+		Last: shared.ReleaseVersionEntry{
+			Commit:  "12345",
+			Version: createVersion("1.0.0"),
+		},
+		Next: shared.ReleaseVersionEntry{
+			Commit:  "12346",
+			Version: createVersion("1.1.0"),
+		},
+		Branch: "master",
+		Draft:  true,
+	})
 	assert.Errorf(t, err, "Write non exsiting file")
 
+}
+
+func createVersion(version string) *semver.Version {
+	ver, _ := semver.NewVersion(version)
+	return ver
 }
