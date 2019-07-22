@@ -45,7 +45,9 @@ func GetAccessToken(providerName string) (string, error) {
 func PrepareAssets(repository string, assets []config.Asset) ([]*string, error) {
 	filesToUpload := []*string{}
 	for _, asset := range assets {
-		if asset.Compress {
+		if asset.Name == "" {
+			return nil, fmt.Errorf("Asset name declaration is empty, please check your configuration file")
+		} else if asset.Compress {
 			log.Debugf("Asset %s will now be compressed", asset.Name)
 			log.Debugf("Repo url %s", repository)
 			zipNameWithPath, err := zipFile(repository, asset.Name)
@@ -65,6 +67,12 @@ func PrepareAssets(repository string, assets []config.Asset) ([]*string, error) 
 // ZipFile compress given file in zip format
 func zipFile(repository string, file string) (string, error) {
 
+	fileToZip, err := os.Open(repository + "/" + file)
+	if err != nil {
+		return "", err
+	}
+	defer fileToZip.Close()
+
 	zipFileName := fmt.Sprintf("%s/%s.zip", strings.TrimSuffix(repository, "/"), file)
 	zipFile, err := os.Create(zipFileName)
 
@@ -74,12 +82,6 @@ func zipFile(repository string, file string) (string, error) {
 	log.Debugf("Created zipfile %s", zipFile.Name())
 
 	defer zipFile.Close()
-
-	fileToZip, err := os.Open(repository + "/" + file)
-	if err != nil {
-		return "", err
-	}
-	defer fileToZip.Close()
 
 	fileToZipInfo, err := fileToZip.Stat()
 	if err != nil {
