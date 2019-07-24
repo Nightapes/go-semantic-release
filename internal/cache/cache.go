@@ -47,7 +47,7 @@ func Write(repository string, releaseVersion shared.ReleaseVersion) error {
 		return err
 	}
 
-	log.Debugf("Save %s with hash %s to cache", releaseVersion.Next.Version.String(), releaseVersion.Next.Commit)
+	log.Infof("Save %s with hash %s to cache", releaseVersion.Next.Version.String(), releaseVersion.Next.Commit)
 	return ioutil.WriteFile(completePath, data, 0644)
 }
 

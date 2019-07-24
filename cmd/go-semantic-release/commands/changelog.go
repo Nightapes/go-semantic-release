@@ -40,12 +40,18 @@ var changelogCmd = &cobra.Command{
 			return err
 		}
 
-		releaseVersion, err := s.GetNextVersion(force)
+		provider, err := s.GetCIProvider()
 		if err != nil {
 			return err
 		}
 
-		generatedChangelog, err := s.GetChangelog(releaseVersion)
+		releaseVersion, commits, err := s.GetNextVersion(provider, force)
+		if err != nil {
+			return err
+		}
+		log.Debugf("Found %d commits till last release", len(commits))
+
+		generatedChangelog, err := s.GetChangelog(commits, releaseVersion)
 		if err != nil {
 			return err
 		}

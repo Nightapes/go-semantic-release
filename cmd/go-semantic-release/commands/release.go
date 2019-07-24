@@ -32,6 +32,12 @@ var releaseCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		return s.Release(force)
+
+		provider, err := s.GetCIProvider()
+		if err != nil {
+			return err
+		}
+
+		return s.Release(provider, force)
 	},
 }

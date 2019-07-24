@@ -31,6 +31,11 @@ var setCmd = &cobra.Command{
 			return err
 		}
 
-		return s.SetVersion(args[0])
+		provider, err := s.GetCIProvider()
+		if err != nil {
+			return err
+		}
+
+		return s.SetVersion(provider, args[0])
 	},
 }

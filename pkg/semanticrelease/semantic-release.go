@@ -1,7 +1,6 @@
 package semanticrelease
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -57,36 +56,28 @@ func New(c *config.ReleaseConfig, repository string) (*SemanticRelease, error) {
 	}, nil
 }
 
+//GetCIProvider result with ci config
+func (s *SemanticRelease) GetCIProvider() (*ci.ProviderConfig, error) {
+	return ci.GetCIProvider(s.gitutil, ci.ReadAllEnvs())
+}
+
 // GetNextVersion from .version or calculate new from commits
-func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, error) {
-	provider, err := ci.GetCIProvider(s.gitutil, ci.ReadAllEnvs())
-
-	if err != nil {
-		fakeVersion, _ := semver.NewVersion("0.0.0-fake.0")
-		log.Warnf("Will not calculate version, set fake version. Could not find CI Provider, if running locally, set env CI=true")
-		return &shared.ReleaseVersion{
-			Next: shared.ReleaseVersionEntry{
-				Commit:  "",
-				Version: fakeVersion,
-			},
-		}, nil
-	}
-
+func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool) (*shared.ReleaseVersion, map[analyzer.Release][]analyzer.AnalyzedCommit, error) {
 	log.Debugf("Ignore .version file if exits, %t", force)
 	if !force {
 		releaseVersion, err := cache.Read(s.repository)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		if releaseVersion.Next.Commit == provider.Commit && releaseVersion != nil {
-			return releaseVersion, nil
+			return releaseVersion, nil, nil
 		}
 	}
 
 	lastVersion, lastVersionHash, err := s.gitutil.GetLastVersion()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	firstRelease := false
@@ -99,22 +90,19 @@ func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, er
 
 	commits, err := s.gitutil.GetCommits(lastVersionHash)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	log.Debugf("Found %d commits till last release", len(commits))
 
-	a, err := analyzer.New(s.config.CommitFormat, s.config.Changelog)
-	if err != nil {
-		return nil, err
-	}
+	analyzedCommits := s.analyzer.Analyze(commits)
 
 	isDraft := false
 	var newVersion semver.Version
 	for branch, releaseType := range s.config.Branch {
 		if provider.Branch == branch || strings.HasPrefix(provider.Branch, branch) {
 			log.Debugf("Found branch config for branch %s with release type %s", provider.Branch, releaseType)
-			newVersion, isDraft = s.calculator.CalculateNewVersion(a.Analyze(commits), lastVersion, releaseType, firstRelease)
+			newVersion, isDraft = s.calculator.CalculateNewVersion(analyzedCommits, lastVersion, releaseType, firstRelease)
 			break
 		}
 	}
@@ -135,23 +123,17 @@ func (s *SemanticRelease) GetNextVersion(force bool) (*shared.ReleaseVersion, er
 	log.Infof("New version %s -> %s", lastVersion.String(), newVersion.String())
 	err = cache.Write(s.repository, releaseVersion)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return &releaseVersion, err
+	return &releaseVersion, analyzedCommits, err
 }
 
 //SetVersion for git repository
-func (s *SemanticRelease) SetVersion(version string) error {
+func (s *SemanticRelease) SetVersion(provider *ci.ProviderConfig, version string) error {
 
 	newVersion, err := semver.NewVersion(version)
 	if err != nil {
 		return err
-	}
-
-	provider, err := ci.GetCIProvider(s.gitutil, ci.ReadAllEnvs())
-
-	if err != nil {
-		return fmt.Errorf("will not set version. Could not find CI Provider, if running locally, set env CI=true")
 	}
 
 	lastVersion, lastVersionHash, err := s.gitutil.GetLastVersion()
@@ -176,23 +158,14 @@ func (s *SemanticRelease) SetVersion(version string) error {
 }
 
 // GetChangelog from last version till now
-func (s *SemanticRelease) GetChangelog(releaseVersion *shared.ReleaseVersion) (*shared.GeneratedChangelog, error) {
-	commits, err := s.gitutil.GetCommits(releaseVersion.Last.Commit)
-	if err != nil {
-		return nil, err
-	}
-
-	result := s.analyzer.Analyze(commits)
-
-	log.Debugf("Found %d commits till last release", len(commits))
-
+func (s *SemanticRelease) GetChangelog(analyzedCommits map[analyzer.Release][]analyzer.AnalyzedCommit, releaseVersion *shared.ReleaseVersion) (*shared.GeneratedChangelog, error) {
 	c := changelog.New(s.config, s.analyzer.GetRules(), time.Now())
 	return c.GenerateChanglog(shared.ChangelogTemplateConfig{
 		Version:    releaseVersion.Next.Version.String(),
 		Hash:       releaseVersion.Last.Commit,
 		CommitURL:  s.releaser.GetCommitURL(),
 		CompareURL: s.releaser.GetCompareURL(releaseVersion.Last.Version.String(), releaseVersion.Next.Version.String()),
-	}, result)
+	}, analyzedCommits)
 
 }
 
@@ -202,14 +175,7 @@ func (s *SemanticRelease) WriteChangeLog(changelogContent, file string) error {
 }
 
 // Release pusblish release to provider
-func (s *SemanticRelease) Release(force bool) error {
-
-	provider, err := ci.GetCIProvider(s.gitutil, ci.ReadAllEnvs())
-
-	if err != nil {
-		log.Debugf("Will not perform a new release. Could not find CI Provider")
-		return nil
-	}
+func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error {
 
 	if provider.IsPR {
 		log.Debugf("Will not perform a new release. This is a pull request")
@@ -221,13 +187,18 @@ func (s *SemanticRelease) Release(force bool) error {
 		return nil
 	}
 
-	releaseVersion, err := s.GetNextVersion(force)
+	releaseVersion, analyzedCommits, err := s.GetNextVersion(provider, force)
 	if err != nil {
 		log.Debugf("Could not get next version")
 		return err
 	}
 
-	generatedChanglog, err := s.GetChangelog(releaseVersion)
+	if releaseVersion.Next.Version.Equal(releaseVersion.Next.Version) {
+		log.Infof("No new version, no release needed")
+		return nil
+	}
+
+	generatedChanglog, err := s.GetChangelog(analyzedCommits, releaseVersion)
 	if err != nil {
 		log.Debugf("Could not get changelog")
 		return err

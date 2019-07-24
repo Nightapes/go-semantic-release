@@ -2,8 +2,8 @@ package commands
 
 import (
 	"fmt"
-
 	"github.com/Nightapes/go-semantic-release/pkg/semanticrelease"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +35,15 @@ var nextCmd = &cobra.Command{
 			return err
 		}
 
-		releaseVersion, err := s.GetNextVersion(force)
+		provider, err := s.GetCIProvider()
+
+		if err != nil {
+			log.Infof("Will not calculate version, set fake version. Could not find CI Provider, if running locally, set env CI=true")
+			fmt.Println("0.0.0-fake.0")
+			return nil
+		}
+
+		releaseVersion, _, err := s.GetNextVersion(provider, force)
 		if err != nil {
 			return err
 		}

@@ -1,0 +1,112 @@
+package config_test
+
+import (
+	"testing"
+
+	"github.com/Nightapes/go-semantic-release/pkg/config"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"os"
+	"path"
+)
+
+func TestReadCacheNotFound(t *testing.T) {
+
+	_, err := config.Read("notfound/dir")
+	assert.Errorf(t, err, "Read non exsiting file")
+
+}
+
+func TestReadCacheInvalidContent(t *testing.T) {
+
+	dir, err := ioutil.TempDir("", "prefix")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	completePath := path.Join(path.Dir(dir), ".release.yml")
+	brokenContent := []byte("hello broken\ngo: lang\n")
+	err = ioutil.WriteFile(completePath, brokenContent, 0644)
+	assert.NoError(t, err)
+
+	_, readError := config.Read(completePath)
+	assert.Errorf(t, readError, "Should give error, when broken content")
+
+}
+
+func TestWriteAndReadCache(t *testing.T) {
+
+	dir, err := ioutil.TempDir("", "prefix")
+
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	completePath := path.Join(path.Dir(dir), ".release.yml")
+	content := []byte(`
+commitFormat: angular
+title: "go-semantic-release release"
+branch:
+  master: release
+  rc: rc
+  beta: beta
+  alpha: alpha
+  add_git_releases: alpha
+changelog:
+  printAll: false
+  template: ''
+  templatePath: ''
+release: 'github'
+assets:
+  - name: ./build/go-semantic-release
+    compress: false
+github:
+  repo: "go-semantic-release"
+  user: "nightapes"
+  customUrl: ""
+`)
+	err = ioutil.WriteFile(completePath, content, 0644)
+	assert.NoError(t, err)
+
+	result, readError := config.Read(completePath)
+	assert.NoErrorf(t, readError, "Should read file")
+
+	assert.EqualValues(t, &config.ReleaseConfig{
+		CommitFormat: "angular",
+		Branch:       map[string]string{"add_git_releases": "alpha", "alpha": "alpha", "beta": "beta", "master": "release", "rc": "rc"},
+		Changelog: config.ChangelogConfig{
+			PrintAll:     false,
+			Template:     "",
+			TemplatePath: ""},
+		Release: "github",
+		GitHubProvider: config.GitHubProvider{
+			Repo:        "go-semantic-release",
+			User:        "nightapes",
+			CustomURL:   "",
+			AccessToken: ""},
+		Assets: []config.Asset{
+			config.Asset{
+				Name:     "./build/go-semantic-release",
+				Compress: false}},
+		ReleaseTitle: "go-semantic-release release",
+		IsPreRelease: false,
+		IsDraft:      false,
+	}, result)
+
+}
+
+// func TestWriteNotFound(t *testing.T) {
+
+// 	err := cache.Write("notfound/dir", shared.ReleaseVersion{
+// 		Last: shared.ReleaseVersionEntry{
+// 			Commit:  "12345",
+// 			Version: createVersion("1.0.0"),
+// 		},
+// 		Next: shared.ReleaseVersionEntry{
+// 			Commit:  "12346",
+// 			Version: createVersion("1.1.0"),
+// 		},
+// 		Branch: "master",
+// 		Draft:  true,
+// 	})
+// 	assert.Errorf(t, err, "Write non exsiting file")
+
+// }

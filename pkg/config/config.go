@@ -55,7 +55,7 @@ func Read(configPath string) (*ReleaseConfig, error) {
 		return &ReleaseConfig{}, err
 	}
 
-	log.Debugf("Found config %+v", releaseConfig)
+	log.Tracef("Found config %+v", releaseConfig)
 
 	return &releaseConfig, nil
 }

@@ -51,7 +51,7 @@ func GetCIProvider(gitUtil *gitutil.GitUtil, envs map[string]string) (*ProviderC
 			log.Infof("Found CI: %s", config.Name)
 			return config, nil
 		}
-		log.Infof("%s", err.Error())
+		log.Debugf("%s", err.Error())
 	}
 	return nil, fmt.Errorf("could not find any CI, if running locally set env CI=true")
 }
