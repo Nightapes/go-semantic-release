@@ -1,114 +1,238 @@
 package semanticrelease
 
 import (
-	"fmt"
+	"io/ioutil"
+	"strings"
+	"time"
 
 	"github.com/Masterminds/semver"
 	"github.com/Nightapes/go-semantic-release/internal/analyzer"
+	"github.com/Nightapes/go-semantic-release/internal/cache"
+	"github.com/Nightapes/go-semantic-release/internal/calculator"
+	"github.com/Nightapes/go-semantic-release/internal/changelog"
+	"github.com/Nightapes/go-semantic-release/internal/ci"
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
-	"github.com/Nightapes/go-semantic-release/internal/storage"
+	"github.com/Nightapes/go-semantic-release/internal/releaser"
+	"github.com/Nightapes/go-semantic-release/internal/releaser/util"
+	"github.com/Nightapes/go-semantic-release/internal/shared"
+	"github.com/Nightapes/go-semantic-release/pkg/config"
 	log "github.com/sirupsen/logrus"
 )
 
-// GetNextVersion from .version or calculate new
-func GetNextVersion(repro string) error {
-	util, err := gitutil.New(repro)
+// SemanticRelease struct
+type SemanticRelease struct {
+	config     *config.ReleaseConfig
+	gitutil    *gitutil.GitUtil
+	analyzer   *analyzer.Analyzer
+	calculator *calculator.Calculator
+	releaser   releaser.Releaser
+	repository string
+}
+
+// New SemanticRelease struct
+func New(c *config.ReleaseConfig, repository string) (*SemanticRelease, error) {
+	util, err := gitutil.New(repository)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	hash, err := util.GetHash()
+	analyzer, err := analyzer.New(c.CommitFormat, c.Changelog)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	content, err := storage.Read()
-
-	if err == nil && content.Commit == hash {
-		fmt.Printf(content.NextVersion)
-		return nil
-	}
-
-	log.Debugf("Mismatch git and version file  %s - %s", content.Commit, hash)
-
-	lastVersion, lastVersionHash, err := util.GetLastVersion()
+	releaser, err := releaser.New(c).GetReleaser()
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	return &SemanticRelease{
+		config:     c,
+		gitutil:    util,
+		releaser:   releaser,
+		analyzer:   analyzer,
+		repository: repository,
+		calculator: calculator.New(),
+	}, nil
+}
+
+//GetCIProvider result with ci config
+func (s *SemanticRelease) GetCIProvider() (*ci.ProviderConfig, error) {
+	return ci.GetCIProvider(s.gitutil, ci.ReadAllEnvs())
+}
+
+// GetNextVersion from .version or calculate new from commits
+func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool) (*shared.ReleaseVersion, map[analyzer.Release][]analyzer.AnalyzedCommit, error) {
+	log.Debugf("Ignore .version file if exits, %t", force)
+	if !force {
+		releaseVersion, err := cache.Read(s.repository)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if releaseVersion.Next.Commit == provider.Commit && releaseVersion != nil {
+			return releaseVersion, nil, nil
+		}
+	}
+
+	lastVersion, lastVersionHash, err := s.gitutil.GetLastVersion()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	firstRelease := false
 
 	if lastVersion == nil {
 		defaultVersion, _ := semver.NewVersion("1.0.0")
-		SetVersion(defaultVersion.String(), repro)
-		fmt.Printf(defaultVersion.String())
-		return nil
+		lastVersion = defaultVersion
+		firstRelease = true
 	}
 
-	commits, err := util.GetCommits(lastVersionHash)
+	commits, err := s.gitutil.GetCommits(lastVersionHash)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	log.Debugf("Found %d commits till last release", len(commits))
 
-	a := analyzer.New("angular")
-	result := a.Analyze(commits)
+	analyzedCommits := s.analyzer.Analyze(commits)
 
+	isDraft := false
 	var newVersion semver.Version
-
-	if len(result["major"]) > 0 {
-		newVersion = lastVersion.IncMajor()
-		return nil
-	} else if len(result["minor"]) > 0 {
-		newVersion = lastVersion.IncMinor()
-	} else if len(result["patch"]) > 0 {
-		newVersion = lastVersion.IncPatch()
+	for branch, releaseType := range s.config.Branch {
+		if provider.Branch == branch || strings.HasPrefix(provider.Branch, branch) {
+			log.Debugf("Found branch config for branch %s with release type %s", provider.Branch, releaseType)
+			newVersion, isDraft = s.calculator.CalculateNewVersion(analyzedCommits, lastVersion, releaseType, firstRelease)
+			break
+		}
 	}
 
-	SetVersion(newVersion.String(), repro)
-	fmt.Printf(newVersion.String())
+	releaseVersion := shared.ReleaseVersion{
+		Next: shared.ReleaseVersionEntry{
+			Commit:  provider.Commit,
+			Version: &newVersion,
+		},
+		Last: shared.ReleaseVersionEntry{
+			Commit:  lastVersionHash,
+			Version: lastVersion,
+		},
+		Branch: provider.Branch,
+		Draft:  isDraft,
+	}
 
-	return err
+	log.Infof("New version %s -> %s", lastVersion.String(), newVersion.String())
+	err = cache.Write(s.repository, releaseVersion)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &releaseVersion, analyzedCommits, err
 }
 
-func SetVersion(version string, repro string) error {
-
-	util, err := gitutil.New(repro)
-	if err != nil {
-		return err
-	}
+//SetVersion for git repository
+func (s *SemanticRelease) SetVersion(provider *ci.ProviderConfig, version string) error {
 
 	newVersion, err := semver.NewVersion(version)
 	if err != nil {
 		return err
 	}
 
-	hash, err := util.GetHash()
+	lastVersion, lastVersionHash, err := s.gitutil.GetLastVersion()
 	if err != nil {
 		return err
 	}
-
-	branch, err := util.GetBranch()
-	if err != nil {
-		return err
+	if lastVersion == nil {
+		lastVersion, _ = semver.NewVersion("1.0.0")
 	}
 
-	newVersionContent := storage.VersionFileContent{
-		Commit:      hash,
-		NextVersion: newVersion.String(),
-		Branch:      branch,
-	}
-
-	lastVersion, _, err := util.GetLastVersion()
-	if err != nil {
-		return err
-	}
-
-	if lastVersion != nil {
-		newVersionContent.Version = lastVersion.String()
-	}
-
-	return storage.Write(newVersionContent)
+	return cache.Write(s.repository, shared.ReleaseVersion{
+		Next: shared.ReleaseVersionEntry{
+			Commit:  provider.Commit,
+			Version: newVersion,
+		},
+		Last: shared.ReleaseVersionEntry{
+			Commit:  lastVersionHash,
+			Version: lastVersion,
+		},
+		Branch: provider.Branch,
+	})
 }
 
-func Release() {
+// GetChangelog from last version till now
+func (s *SemanticRelease) GetChangelog(analyzedCommits map[analyzer.Release][]analyzer.AnalyzedCommit, releaseVersion *shared.ReleaseVersion) (*shared.GeneratedChangelog, error) {
+	c := changelog.New(s.config, s.analyzer.GetRules(), time.Now())
+	return c.GenerateChanglog(shared.ChangelogTemplateConfig{
+		Version:    releaseVersion.Next.Version.String(),
+		Hash:       releaseVersion.Last.Commit,
+		CommitURL:  s.releaser.GetCommitURL(),
+		CompareURL: s.releaser.GetCompareURL(releaseVersion.Last.Version.String(), releaseVersion.Next.Version.String()),
+	}, analyzedCommits)
+
+}
+
+// WriteChangeLog wirtes changelog content to the given file
+func (s *SemanticRelease) WriteChangeLog(changelogContent, file string) error {
+	return ioutil.WriteFile(file, []byte(changelogContent), 0644)
+}
+
+// Release pusblish release to provider
+func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error {
+
+	if provider.IsPR {
+		log.Debugf("Will not perform a new release. This is a pull request")
+		return nil
+	}
+
+	if _, ok := s.config.Branch[provider.Branch]; !ok {
+		log.Debugf("Will not perform a new release. Current %s branch is not configured in release config", provider.Branch)
+		return nil
+	}
+
+	releaseVersion, analyzedCommits, err := s.GetNextVersion(provider, force)
+	if err != nil {
+		log.Debugf("Could not get next version")
+		return err
+	}
+
+	if releaseVersion.Next.Version.Equal(releaseVersion.Next.Version) {
+		log.Infof("No new version, no release needed")
+		return nil
+	}
+
+	generatedChanglog, err := s.GetChangelog(analyzedCommits, releaseVersion)
+	if err != nil {
+		log.Debugf("Could not get changelog")
+		return err
+	}
+
+	releaser, err := releaser.New(s.config).GetReleaser()
+	if err != nil {
+		return err
+	}
+
+	err = releaser.ValidateConfig()
+	if err != nil {
+		return err
+	}
+
+	if err = releaser.CreateRelease(releaseVersion, generatedChanglog); err != nil {
+		return err
+	}
+
+	if err = releaser.UploadAssets(s.repository, s.config.Assets); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ZipFiles zip files configured in release config
+func (s *SemanticRelease) ZipFiles() error {
+	for _, file := range s.config.Assets {
+		if file.Compress {
+			if _, err := util.PrepareAssets(s.repository, s.config.Assets); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

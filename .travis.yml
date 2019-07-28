@@ -1,0 +1,40 @@
+dist: xenial
+
+git:
+  depth: false
+
+language: go
+go:
+  - 1.12.x
+go_import_path: github.com/nightapes/go-semantic-release
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $HOME/gopath/pkg/mod
+
+services:
+- docker
+
+notifications:
+  email: false
+
+env:
+  - GO111MODULE=on
+
+before_script:
+  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
+
+script:
+  - golangci-lint run ./...
+  - go test -v ./...
+  - go build -o build/go-semantic-release-temp ./cmd/go-semantic-release/
+  - echo "Building version `./build/go-semantic-release-temp next --loglevel debug --no-cache`"
+  - go build -o build/go-semantic-release  -ldflags "-X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
+  - GOOS=windows GOARCH=386 go build -o build/go-semantic-release.exe  -ldflags "-X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
+
+after_success:
+  - ./build/go-semantic-release-temp release --loglevel debug
+
+branches:
+  except:
+    - /^v\d+\.\d+\.\d+$/

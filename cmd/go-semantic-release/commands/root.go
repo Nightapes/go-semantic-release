@@ -1,0 +1,60 @@
+package commands
+
+import (
+	"os"
+
+	"github.com/Nightapes/go-semantic-release/pkg/config"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+)
+
+var rootCmd = &cobra.Command{
+	Use:   "go-semantic-release",
+	Short: "Make simple releases",
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		level, err := cmd.Flags().GetString("loglevel")
+		if err != nil {
+			return err
+		}
+		setLoglevel(level)
+		cmd.SilenceUsage = true
+		return nil
+	},
+}
+
+//Execute rootCmd
+func Execute(version string) {
+	rootCmd.Version = version
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
+}
+
+func init() {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	rootCmd.PersistentFlags().StringP("repository", "r", currentDir, "Path to repository")
+	rootCmd.PersistentFlags().StringP("loglevel", "l", "error", "Set loglevel")
+	rootCmd.PersistentFlags().StringP("config", "c", ".release.yml", "Path to config file")
+	rootCmd.PersistentFlags().Bool("no-cache", false, "Ignore cache, don't use in ci build")
+}
+
+func readConfig(file string) *config.ReleaseConfig {
+	releaseConfig, err := config.Read(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return releaseConfig
+}
+
+func setLoglevel(level string) {
+	parsed, err := log.ParseLevel(level)
+	if err != nil {
+		log.Errorf("Invalid loglevel %s", level)
+	} else {
+		log.SetLevel(parsed)
+	}
+
+}

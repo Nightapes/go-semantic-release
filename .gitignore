@@ -4,7 +4,9 @@
 *.dll
 *.so
 *.dylib
+go-semantic-release
 
+!cmd/go-semantic-release
 # Test binary, build with `go test -c`
 *.test
 
@@ -12,3 +14,5 @@
 *.out
 .version
 .vscode/settings.json
+CHANGELOG.md
+cover.html

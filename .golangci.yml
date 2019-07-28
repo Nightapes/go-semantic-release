@@ -1,0 +1,11 @@
+run:
+  tests: true
+
+linters-settings:
+  golint:
+    min-confidence: 0
+issues:
+  exclude-use-default: true
+linters:
+  enable:
+      - golint
