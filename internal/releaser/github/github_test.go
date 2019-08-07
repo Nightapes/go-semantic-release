@@ -130,7 +130,9 @@ func initHTTPServer(respCode int, body string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 
 		rw.Write([]byte(body))
-		rw.WriteHeader(500)
+		rw.Header().Set("Content-Type", "application/json")
+
+		rw.WriteHeader(respCode)
 	}))
 }
 
