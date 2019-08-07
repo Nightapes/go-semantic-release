@@ -29,6 +29,13 @@ type GitHubProvider struct {
 	AccessToken string
 }
 
+// GitLabProvider struct
+type GitLabProvider struct {
+	Repo        string `yaml:"repo"`
+	CustomURL   string `yaml:"customUrl,omitempty"`
+	AccessToken string
+}
+
 // ReleaseConfig struct
 type ReleaseConfig struct {
 	CommitFormat          string            `yaml:"commitFormat"`
@@ -36,6 +43,7 @@ type ReleaseConfig struct {
 	Changelog             ChangelogConfig   `yaml:"changelog,omitempty"`
 	Release               string            `yaml:"release,omitempty"`
 	GitHubProvider        GitHubProvider    `yaml:"github,omitempty"`
+	GitLabProvider        GitLabProvider    `yaml:"gitlab,omitempty"`
 	Assets                []Asset           `yaml:"assets"`
 	ReleaseTitle          string            `yaml:"title"`
 	IsPreRelease, IsDraft bool

@@ -193,8 +193,8 @@ func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error
 		return err
 	}
 
-	if releaseVersion.Next.Version.Equal(releaseVersion.Next.Version) {
-		log.Infof("No new version, no release needed")
+	if releaseVersion.Next.Version.Equal(releaseVersion.Last.Version) {
+		log.Infof("No new version, no release needed %s <> %s", releaseVersion.Next.Version.String(), releaseVersion.Last.Version.String())
 		return nil
 	}
 
