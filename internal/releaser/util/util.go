@@ -3,9 +3,11 @@ package util
 import (
 	"archive/zip"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -23,6 +25,27 @@ func CreateBearerHTTPClient(ctx context.Context, token string) *http.Client {
 	client := oauth2.NewClient(ctx, tokenSource)
 
 	return client
+}
+
+// AddHeaderTransport struct
+type AddHeaderTransport struct {
+	T     http.RoundTripper
+	key   string
+	value string
+}
+
+// RoundTrip add header
+func (adt *AddHeaderTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Add(adt.key, adt.value)
+	return adt.T.RoundTrip(req)
+}
+
+//NewAddHeaderTransport to add default header
+func NewAddHeaderTransport(T http.RoundTripper, key, value string) *AddHeaderTransport {
+	if T == nil {
+		T = http.DefaultTransport
+	}
+	return &AddHeaderTransport{T, key, value}
 }
 
 // GetAccessToken lookup for the providers accesstoken
@@ -108,4 +131,62 @@ func zipFile(repository string, file string) (string, error) {
 	}
 
 	return zipFileName, nil
+}
+
+// CheckURL if is valid
+func CheckURL(urlStr string) (string, error) {
+
+	if !strings.HasSuffix(urlStr, "/") {
+		urlStr += "/"
+	}
+
+	_, err := url.Parse(urlStr)
+	if err != nil {
+		return "", err
+	}
+
+	return urlStr, nil
+}
+
+//PathEscape to be url save
+func PathEscape(s string) string {
+	return strings.Replace(url.PathEscape(s), ".", "%2E", -1)
+}
+
+// Do request for client
+func Do(client *http.Client, req *http.Request, v interface{}) (*http.Response, error) {
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200, 201, 202, 204, 304:
+		if v != nil {
+			if w, ok := v.(io.Writer); ok {
+				_, err = io.Copy(w, resp.Body)
+			} else {
+				err = json.NewDecoder(resp.Body).Decode(v)
+			}
+		}
+	}
+
+	return resp, err
+}
+
+func IsValidResult(resp *http.Response) error {
+	switch resp.StatusCode {
+	case 200, 201, 202, 204, 304:
+		return nil
+	default:
+		return fmt.Errorf("%s %s: %d", resp.Request.Method, resp.Request.URL, resp.StatusCode)
+	}
+}
+
+func ShouldRetry(resp *http.Response) bool {
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return true
+	}
+	return false
 }
