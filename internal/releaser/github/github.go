@@ -100,9 +100,8 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 	if err != nil {
 		if !strings.Contains(err.Error(), "already_exists") {
 			return fmt.Errorf("could not create release: %v", err)
-		} else {
-			log.Infof("A release with tag %s already exits, will not perform a release or update", tag)
 		}
+		log.Infof("A release with tag %s already exits, will not perform a release or update", tag)
 	} else {
 		g.release = release
 		log.Debugf("Release repsone: %+v", *release)

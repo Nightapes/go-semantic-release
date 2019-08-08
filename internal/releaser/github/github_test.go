@@ -12,6 +12,7 @@ import (
 	"github.com/Nightapes/go-semantic-release/internal/releaser/github"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -95,7 +96,7 @@ var fourthsReleas = []testFourth{
 			Content: "content",
 		},
 		requestResponseBody: "{  \"url\": \"https://api.github.com/repos/octocat/Hello-World/releases/1\",  \"html_url\": \"https://github.com/octocat/Hello-World/releases/v1.0.0\",  \"assets_url\": \"https://api.github.com/repos/octocat/Hello-World/releases/1/assets\",  \"upload_url\": \"https://uploads.github.com/repos/octocat/Hello-World/releases/1/assets{?name,label}\",  \"tarball_url\": \"https://api.github.com/repos/octocat/Hello-World/tarball/v1.0.0\",  \"zipball_url\": \"https://api.github.com/repos/octocat/Hello-World/zipball/v1.0.0\",  \"id\": 1,  \"node_id\": \"MDc6UmVsZWFzZTE=\",  \"tag_name\": \"v1.0.0\",  \"target_commitish\": \"master\",  \"name\": \"v1.0.0\",  \"body\": \"Description of the release\",  \"draft\": false,  \"prerelease\": false,  \"created_at\": \"2013-02-27T19:35:32Z\",  \"published_at\": \"2013-02-27T19:35:32Z\",  \"author\": {    \"login\": \"octocat\",    \"id\": 1,    \"node_id\": \"MDQ6VXNlcjE=\",    \"avatar_url\": \"https://github.com/images/error/octocat_happy.gif\",    \"gravatar_id\": \"\",    \"url\": \"https://api.github.com/users/octocat\",    \"html_url\": \"https://github.com/octocat\",    \"followers_url\": \"https://api.github.com/users/octocat/followers\",    \"following_url\": \"https://api.github.com/users/octocat/following{/other_user}\",    \"gists_url\": \"https://api.github.com/users/octocat/gists{/gist_id}\",    \"starred_url\": \"https://api.github.com/users/octocat/starred{/owner}{/repo}\",    \"subscriptions_url\": \"https://api.github.com/users/octocat/subscriptions\",    \"organizations_url\": \"https://api.github.com/users/octocat/orgs\",    \"repos_url\": \"https://api.github.com/users/octocat/repos\",    \"events_url\": \"https://api.github.com/users/octocat/events{/privacy}\",    \"received_events_url\": \"https://api.github.com/users/octocat/received_events\",    \"type\": \"User\",    \"site_admin\": false  },  \"assets\": [  ]}",
-		requestResponseCode: 500,
+		requestResponseCode: 200,
 		valid:               true,
 	},
 	testFourth{
@@ -129,10 +130,13 @@ func initHTTPServer(respCode int, body string) *httptest.Server {
 
 	return httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 
-		rw.Write([]byte(body))
-		rw.Header().Set("Content-Type", "application/json")
+		log.Infof("Got call from %s %s", req.Method, req.URL.String())
 
 		rw.WriteHeader(respCode)
+		rw.Header().Set("Content-Type", "application/json")
+
+		rw.Write([]byte(body))
+
 	}))
 }
 
@@ -203,15 +207,8 @@ func TestCreateRelease(t *testing.T) {
 
 	for _, testObejct := range fourthsReleas {
 		if testObejct.valid {
-			server := initHTTPServer(testObejct.requestResponseCode, "")
+			server := initHTTPServer(testObejct.requestResponseCode, testObejct.requestResponseBody)
 			testObejct.config.CustomURL = server.URL
-			client, _ := github.New(&testObejct.config)
-
-			err := client.CreateRelease(testObejct.releaseVersion, testObejct.generatedChangelog)
-			assert.Equal(t, testObejct.valid, err == nil)
-
-		} else {
-			testObejct.config.CustomURL = "foo"
 			client, _ := github.New(&testObejct.config)
 
 			err := client.CreateRelease(testObejct.releaseVersion, testObejct.generatedChangelog)
@@ -219,6 +216,18 @@ func TestCreateRelease(t *testing.T) {
 				t.Log(err)
 			}
 			assert.Equal(t, testObejct.valid, err == nil)
+
+			server.Close()
+
+		} else {
+			testObejct.config.CustomURL = "http://foo"
+			client, _ := github.New(&testObejct.config)
+
+			err := client.CreateRelease(testObejct.releaseVersion, testObejct.generatedChangelog)
+			if err != nil {
+				t.Log(err)
+			}
+			assert.Error(t, err)
 		}
 	}
 	os.Unsetenv("GITHUB_ACCESS_TOKEN")
