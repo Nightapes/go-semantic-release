@@ -89,7 +89,7 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 
 	prerelease := releaseVersion.Next.Version.Prerelease() != ""
 
-	release, resp, err := g.client.Repositories.CreateRelease(g.context, g.config.User, g.config.Repo, &github.RepositoryRelease{
+	release, _, err := g.client.Repositories.CreateRelease(g.context, g.config.User, g.config.Repo, &github.RepositoryRelease{
 		TagName:         &tag,
 		TargetCommitish: &releaseVersion.Branch,
 		Name:            &generatedChangelog.Title,
@@ -97,19 +97,18 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 		Draft:           &releaseVersion.Draft,
 		Prerelease:      &prerelease,
 	})
-
 	if err != nil {
-		if !strings.Contains(err.Error(), "already_exists") && resp.StatusCode >= http.StatusUnprocessableEntity {
-			return fmt.Errorf("could not create release: %v", err)
+		if strings.Contains(err.Error(), "already_exists") {
+			log.Infof("A release with tag %s already exits, will not perform a release or update", tag)
+			return nil
 		}
-		log.Infof("A release with tag %s already exits, will not perform a release or update", tag)
-	} else {
-		g.release = release
-		log.Debugf("Release repsone: %+v", *release)
-		log.Infof("Crated release")
+		return fmt.Errorf("could not create release: %v", err)
 	}
-
+	g.release = release
+	log.Debugf("Release repsone: %+v", *release)
+	log.Infof("Crated release")
 	return nil
+
 }
 
 // UploadAssets uploads specified assets
