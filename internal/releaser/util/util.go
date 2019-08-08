@@ -175,6 +175,7 @@ func Do(client *http.Client, req *http.Request, v interface{}) (*http.Response, 
 	return resp, err
 }
 
+// IsValidResult validates response code
 func IsValidResult(resp *http.Response) error {
 	switch resp.StatusCode {
 	case 200, 201, 202, 204, 304:
@@ -184,6 +185,7 @@ func IsValidResult(resp *http.Response) error {
 	}
 }
 
+// ShouldRetry request
 func ShouldRetry(resp *http.Response) bool {
 	return resp.StatusCode == http.StatusTooManyRequests
 }
