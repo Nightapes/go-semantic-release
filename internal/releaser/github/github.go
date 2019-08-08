@@ -25,6 +25,7 @@ type Client struct {
 	context context.Context
 	release *github.RepositoryRelease
 	baseURL string
+	log     *log.Entry
 }
 
 // New initialize a new GitHubRelease
@@ -52,6 +53,7 @@ func New(c *config.GitHubProvider) (*Client, error) {
 		client:  client,
 		context: ctx,
 		baseURL: baseURL,
+		log:     log.WithField("releaser", GITHUB),
 	}, err
 }
 
@@ -85,7 +87,7 @@ func (g *Client) ValidateConfig() error {
 func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
 	tag := releaseVersion.Next.Version.String()
-	log.Debugf("create release with version %s", tag)
+	g.log.Debugf("create release with version %s", tag)
 
 	prerelease := releaseVersion.Next.Version.Prerelease() != ""
 
@@ -102,11 +104,11 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 		if !strings.Contains(err.Error(), "already_exists") && resp.StatusCode >= http.StatusUnprocessableEntity {
 			return fmt.Errorf("could not create release: %v", err)
 		}
-		log.Infof("A release with tag %s already exits, will not perform a release or update", tag)
+		g.log.Infof("A release with tag %s already exits, will not perform a release or update", tag)
 	} else {
 		g.release = release
-		log.Debugf("Release repsone: %+v", *release)
-		log.Infof("Crated release")
+		g.log.Debugf("Release repsone: %+v", *release)
+		g.log.Infof("Crated release")
 	}
 
 	return nil
@@ -133,7 +135,7 @@ func (g *Client) UploadAssets(repoDir string, assets []config.Asset) error {
 			}
 
 			if resp.StatusCode >= http.StatusBadRequest {
-				return fmt.Errorf("releaser: github: Could not upload asset %s: %s", file.Name(), resp.Status)
+				return fmt.Errorf("could not upload asset %s: %s", file.Name(), resp.Status)
 			}
 		}
 	}
