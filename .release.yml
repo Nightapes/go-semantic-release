@@ -9,7 +9,7 @@ changelog:
   printAll: false
   template: ''
   templatePath: ''
-release: 'gitlab'
+release: 'github'
 assets:
   - name: go-semantic-release
     compress: false
@@ -19,6 +19,3 @@ github:
   repo: "go-semantic-release"
   user: "nightapes"
   customUrl: ""
-gitlab:
-  repo: "test/bla"
-  customUrl: "http://gitlab.example.com"
