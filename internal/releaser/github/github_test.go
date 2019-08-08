@@ -7,21 +7,22 @@ import (
 	"os"
 	"testing"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/Masterminds/semver"
 
 	"github.com/Nightapes/go-semantic-release/internal/releaser/github"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
-type testDouble struct {
+type testHelperMethodStruct struct {
 	config config.GitHubProvider
 	valid  bool
 }
 
-type testFourth struct {
+type testReleaseStruct struct {
 	config              config.GitHubProvider
 	releaseVersion      *shared.ReleaseVersion
 	generatedChangelog  *shared.GeneratedChangelog
@@ -30,15 +31,15 @@ type testFourth struct {
 	valid               bool
 }
 
-var doublesNew = []testDouble{
-	testDouble{config: config.GitHubProvider{
+var testNewClient = []testHelperMethodStruct{
+	testHelperMethodStruct{config: config.GitHubProvider{
 		Repo: "foo",
 		User: "bar",
 	},
 		valid: true,
 	},
 
-	testDouble{config: config.GitHubProvider{
+	testHelperMethodStruct{config: config.GitHubProvider{
 		Repo:      "foo",
 		User:      "bar",
 		CustomURL: "https://test.com",
@@ -47,22 +48,22 @@ var doublesNew = []testDouble{
 	},
 }
 
-var doublesValidateConfig = []testDouble{
-	testDouble{config: config.GitHubProvider{
+var testHelperMethod = []testHelperMethodStruct{
+	testHelperMethodStruct{config: config.GitHubProvider{
 		Repo: "foo",
 		User: "bar",
 	},
 		valid: true,
 	},
 
-	testDouble{config: config.GitHubProvider{
+	testHelperMethodStruct{config: config.GitHubProvider{
 		Repo: "",
 		User: "bar",
 	},
 		valid: false,
 	},
 
-	testDouble{config: config.GitHubProvider{
+	testHelperMethodStruct{config: config.GitHubProvider{
 		Repo: "foo",
 		User: "",
 	},
@@ -73,8 +74,8 @@ var doublesValidateConfig = []testDouble{
 var lastVersion, _ = semver.NewVersion("1.0.0")
 var newVersion, _ = semver.NewVersion("2.0.0")
 
-var fourthsReleas = []testFourth{
-	testFourth{
+var testReleases = []testReleaseStruct{
+	testReleaseStruct{
 		config: config.GitHubProvider{
 			Repo: "foo",
 			User: "bar",
@@ -99,7 +100,7 @@ var fourthsReleas = []testFourth{
 		requestResponseCode: 200,
 		valid:               true,
 	},
-	testFourth{
+	testReleaseStruct{
 		config: config.GitHubProvider{
 			Repo: "foo",
 			User: "bar",
@@ -120,8 +121,7 @@ var fourthsReleas = []testFourth{
 			Title:   "title",
 			Content: "content",
 		},
-		requestResponseBody: "",
-		requestResponseCode: 422,
+		requestResponseCode: 400,
 		valid:               false,
 	},
 }
@@ -141,7 +141,7 @@ func initHTTPServer(respCode int, body string) *httptest.Server {
 }
 
 func TestNew(t *testing.T) {
-	for _, testOject := range doublesNew {
+	for _, testOject := range testNewClient {
 		if testOject.valid {
 			os.Setenv("GITHUB_ACCESS_TOKEN", "XXX")
 		}
@@ -156,7 +156,7 @@ func TestNew(t *testing.T) {
 
 func TestGetCommitURL(t *testing.T) {
 	os.Setenv("GITHUB_ACCESS_TOKEN", "XX")
-	for _, testOject := range doublesNew {
+	for _, testOject := range testNewClient {
 		client, _ := github.New(&testOject.config)
 		actualUrl := client.GetCommitURL()
 		if testOject.config.CustomURL != "" {
@@ -174,7 +174,7 @@ func TestGetCommitURL(t *testing.T) {
 
 func TestGetCompareURL(t *testing.T) {
 	os.Setenv("GITHUB_ACCESS_TOKEN", "XX")
-	for _, testOject := range doublesNew {
+	for _, testOject := range testNewClient {
 		client, _ := github.New(&testOject.config)
 		actualUrl := client.GetCompareURL("1", "2")
 		if testOject.config.CustomURL != "" {
@@ -192,7 +192,7 @@ func TestGetCompareURL(t *testing.T) {
 
 func TestValidateConfig(t *testing.T) {
 	os.Setenv("GITHUB_ACCESS_TOKEN", "XX")
-	for _, testOject := range doublesValidateConfig {
+	for _, testOject := range testHelperMethod {
 		client, _ := github.New(&testOject.config)
 		err := client.ValidateConfig()
 
@@ -205,7 +205,7 @@ func TestValidateConfig(t *testing.T) {
 func TestCreateRelease(t *testing.T) {
 	os.Setenv("GITHUB_ACCESS_TOKEN", "XX")
 
-	for _, testObejct := range fourthsReleas {
+	for _, testObejct := range testReleases {
 		if testObejct.valid {
 			server := initHTTPServer(testObejct.requestResponseCode, testObejct.requestResponseBody)
 			testObejct.config.CustomURL = server.URL
