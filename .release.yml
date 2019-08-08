@@ -11,10 +11,10 @@ changelog:
   templatePath: ''
 release: 'github'
 assets:
-  - name: go-semantic-release
+  - name: ./build/go-semantic-release
     compress: false
-  - name: go-semantic-release.exe
-    compress: true
+  - name: ./build/go-semantic-release.exe
+    compress: false
 github:
   repo: "go-semantic-release"
   user: "nightapes"
