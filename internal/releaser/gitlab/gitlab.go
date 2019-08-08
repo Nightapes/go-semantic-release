@@ -149,10 +149,11 @@ func (g *Client) UploadAssets(repoDir string, assets []config.Asset) error {
 	for _, f := range filesToUpload {
 
 		file, err := os.Open(*f)
-		defer file.Close()
 		if err != nil {
 			return err
 		}
+		defer file.Close()
+
 		fileInfo, _ := file.Stat()
 
 		result, err := g.uploadFile(fileInfo.Name(), file)
@@ -216,6 +217,9 @@ func (g *Client) uploadFile(fileName string, file *os.File) (*ProjectFile, error
 
 	uf := &ProjectFile{}
 	resp, err := util.Do(g.client, req, uf)
+	if err != nil {
+		return nil, err
+	}
 
 	if err = util.IsValidResult(resp); err != nil {
 		return nil, err

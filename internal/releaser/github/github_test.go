@@ -135,7 +135,9 @@ func initHTTPServer(respCode int, body string) *httptest.Server {
 		rw.WriteHeader(respCode)
 		rw.Header().Set("Content-Type", "application/json")
 
-		rw.Write([]byte(body))
+		if _, err := rw.Write([]byte(body)); err != nil {
+			log.Info(err)
+		}
 
 	}))
 }
@@ -158,14 +160,14 @@ func TestGetCommitURL(t *testing.T) {
 	os.Setenv("GITHUB_ACCESS_TOKEN", "XX")
 	for _, testOject := range testNewClient {
 		client, _ := github.New(&testOject.config)
-		actualUrl := client.GetCommitURL()
+		actualURL := client.GetCommitURL()
 		if testOject.config.CustomURL != "" {
-			expectedUrl := fmt.Sprintf("%s/%s/%s/commit/{{hash}}", testOject.config.CustomURL, testOject.config.User, testOject.config.Repo)
-			assert.EqualValues(t, expectedUrl, actualUrl)
+			expectedURL := fmt.Sprintf("%s/%s/%s/commit/{{hash}}", testOject.config.CustomURL, testOject.config.User, testOject.config.Repo)
+			assert.EqualValues(t, expectedURL, actualURL)
 
 		} else {
-			expectedUrl := fmt.Sprintf("%s/%s/%s/commit/{{hash}}", "https://github.com", testOject.config.User, testOject.config.Repo)
-			assert.EqualValues(t, expectedUrl, actualUrl)
+			expectedURL := fmt.Sprintf("%s/%s/%s/commit/{{hash}}", "https://github.com", testOject.config.User, testOject.config.Repo)
+			assert.EqualValues(t, expectedURL, actualURL)
 		}
 	}
 	os.Unsetenv("GITHUB_ACCESS_TOKEN")
@@ -176,14 +178,14 @@ func TestGetCompareURL(t *testing.T) {
 	os.Setenv("GITHUB_ACCESS_TOKEN", "XX")
 	for _, testOject := range testNewClient {
 		client, _ := github.New(&testOject.config)
-		actualUrl := client.GetCompareURL("1", "2")
+		actualURL := client.GetCompareURL("1", "2")
 		if testOject.config.CustomURL != "" {
-			expectedUrl := fmt.Sprintf("%s/%s/%s/compare/%s...%s", testOject.config.CustomURL, testOject.config.User, testOject.config.Repo, "1", "2")
-			assert.EqualValues(t, expectedUrl, actualUrl)
+			expectedURL := fmt.Sprintf("%s/%s/%s/compare/%s...%s", testOject.config.CustomURL, testOject.config.User, testOject.config.Repo, "1", "2")
+			assert.EqualValues(t, expectedURL, actualURL)
 
 		} else {
-			expectedUrl := fmt.Sprintf("%s/%s/%s/compare/%s...%s", "https://github.com", testOject.config.User, testOject.config.Repo, "1", "2")
-			assert.EqualValues(t, expectedUrl, actualUrl)
+			expectedURL := fmt.Sprintf("%s/%s/%s/compare/%s...%s", "https://github.com", testOject.config.User, testOject.config.Repo, "1", "2")
+			assert.EqualValues(t, expectedURL, actualURL)
 		}
 	}
 	os.Unsetenv("GITHUB_ACCESS_TOKEN")
