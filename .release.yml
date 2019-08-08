@@ -5,18 +5,20 @@ branch:
   rc: rc
   beta: beta
   alpha: alpha
-  add_git_releases: alpha
 changelog:
   printAll: false
   template: ''
   templatePath: ''
-release: 'github'
+release: 'gitlab'
 assets:
-  - name: ./build/go-semantic-release
+  - name: go-semantic-release
     compress: false
-  - name: ./build/go-semantic-release.exe
-    compress: false
+  - name: go-semantic-release.exe
+    compress: true
 github:
   repo: "go-semantic-release"
   user: "nightapes"
   customUrl: ""
+gitlab:
+  repo: "test/bla"
+  customUrl: "http://gitlab.example.com"

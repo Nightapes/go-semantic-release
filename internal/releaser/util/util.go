@@ -185,8 +185,5 @@ func IsValidResult(resp *http.Response) error {
 }
 
 func ShouldRetry(resp *http.Response) bool {
-	if resp.StatusCode == http.StatusTooManyRequests {
-		return true
-	}
-	return false
+	return resp.StatusCode == http.StatusTooManyRequests
 }
