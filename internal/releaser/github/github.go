@@ -91,6 +91,8 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 
 	prerelease := releaseVersion.Next.Version.Prerelease() != ""
 
+	log.Debugf("Send %+v", generatedChangelog)
+
 	release, _, err := g.client.Repositories.CreateRelease(g.context, g.config.User, g.config.Repo, &github.RepositoryRelease{
 		TagName:         &tag,
 		TargetCommitish: &releaseVersion.Branch,
@@ -104,7 +106,7 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 			log.Infof("A release with tag %s already exits, will not perform a release or update", tag)
 			return nil
 		}
-    return fmt.Errorf("could not create release: %s", err.Error())
+		return fmt.Errorf("could not create release: %s", err.Error())
 	}
 	g.release = release
 	log.Debugf("Release repsone: %+v", *release)

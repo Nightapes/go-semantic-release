@@ -31,17 +31,12 @@ type Client struct {
 	baseURL string
 	apiURL  string
 	token   string
-	release string
+	Release string
 	log     *log.Entry
 }
 
 // New initialize a new gitlabRelease
-func New(config *config.GitLabProvider) (*Client, error) {
-	accessToken, err := util.GetAccessToken(GITLAB)
-	if err != nil {
-		return nil, err
-	}
-
+func New(config *config.GitLabProvider, accessToken string) (*Client, error) {
 	ctx := context.Background()
 	tokenHeader := util.NewAddHeaderTransport(nil, "PRIVATE-TOKEN", accessToken)
 	acceptHeader := util.NewAddHeaderTransport(tokenHeader, "Accept", "application/json")
@@ -50,44 +45,46 @@ func New(config *config.GitLabProvider) (*Client, error) {
 		Timeout:   time.Second * 60,
 	}
 
+	logger := log.WithField("releaser", GITLAB)
+
+	logger.Debugf("validate gitlab provider config")
+
+	if config.Repo == "" {
+		return nil, fmt.Errorf("gitlab Repro is not set")
+	}
+
+	config.Repo = strings.Trim(config.Repo, "/")
+
+	if config.CustomURL == "" {
+		config.CustomURL = "https://gitlab.com"
+	}
+
+	config.CustomURL = strings.Trim(config.CustomURL, "/")
+	logger.Debugf("Use gitlab url %s", config.CustomURL)
+
 	return &Client{
 		token:   accessToken,
 		config:  config,
 		context: ctx,
 		baseURL: config.CustomURL,
-		apiURL:  config.CustomURL + "api/v4",
+		apiURL:  config.CustomURL + "/api/v4",
 		client:  httpClient,
-		log:     log.WithField("releaser", GITLAB),
+		log:     logger,
 	}, nil
 }
 
 //GetCommitURL for gitlab
 func (g *Client) GetCommitURL() string {
-	return fmt.Sprintf("%s%s/commit/{{hash}}", g.baseURL, g.config.Repo)
+	return fmt.Sprintf("%s/%s/commit/{{hash}}", g.baseURL, g.config.Repo)
 }
 
 //GetCompareURL for gitlab
 func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
-	return fmt.Sprintf("%s%s/compare/%s...%s", g.baseURL, g.config.Repo, oldVersion, newVersion)
+	return fmt.Sprintf("%s/%s/compare/%s...%s", g.baseURL, g.config.Repo, oldVersion, newVersion)
 }
 
 //ValidateConfig for gitlab
 func (g *Client) ValidateConfig() error {
-	g.log.Debugf("validate gitlab provider config")
-
-	if g.config.Repo == "" {
-		return fmt.Errorf("gitlab Repro is not set")
-	}
-
-	g.config.Repo = strings.Trim(g.config.Repo, "/")
-
-	if g.config.CustomURL == "" {
-		g.config.CustomURL = "https://gitlab.com"
-	}
-
-	g.config.CustomURL = strings.Trim(g.config.CustomURL, "/")
-	g.log.Debugf("Use gitlab url %s", g.config.CustomURL)
-
 	return nil
 
 }
@@ -96,10 +93,10 @@ func (g *Client) ValidateConfig() error {
 func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
 	tag := releaseVersion.Next.Version.String()
-	g.release = tag
-	g.log.Debugf("create release with version %s", tag)
+	g.Release = tag
+	g.log.Infof("create release with version %s", tag)
 	url := fmt.Sprintf("%s/projects/%s/releases", g.apiURL, util.PathEscape(g.config.Repo))
-	g.log.Debugf("Send release to  %s", url)
+	g.log.Infof("Send release to  %s", url)
 
 	bodyBytes, err := json.Marshal(Release{
 		TagName:     tag,
@@ -113,22 +110,14 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(bodyBytes))
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create request: %s", err.Error())
 	}
 
-	req.Header.Set("Content-Type", "application/json")
 	resp, err := util.Do(g.client, req, nil)
 
 	if err != nil {
-
 		return fmt.Errorf("could not create release: %s", err.Error())
 	}
-
-	respBodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	log.Debugf("Release repsone: %+v", string(respBodyBytes))
 
 	if err := util.IsValidResult(resp); err != nil {
 		return err
@@ -160,18 +149,18 @@ func (g *Client) UploadAssets(repoDir string, assets []config.Asset) error {
 			return fmt.Errorf("could not upload asset %s: %s", file.Name(), err.Error())
 		}
 
-		downloadURL := fmt.Sprintf("%s%s%s", g.baseURL, g.config.Repo, result.URL)
+		downloadURL := fmt.Sprintf("%s/%s%s", g.baseURL, g.config.Repo, result.URL)
 
 		log.Infof("Uploaded file %s to gitlab can be downloaded under %s", file.Name(), downloadURL)
 
-		path := fmt.Sprintf("%s/projects/%s/releases/%s/assets/links?name=%s&url=%s", g.apiURL, util.PathEscape(g.config.Repo), g.release, util.PathEscape(fileInfo.Name()), downloadURL)
+		path := fmt.Sprintf("%s/projects/%s/releases/%s/assets/links?name=%s&url=%s", g.apiURL, util.PathEscape(g.config.Repo), g.Release, util.PathEscape(fileInfo.Name()), downloadURL)
 
 		req, err := http.NewRequest("POST", path, nil)
 		if err != nil {
 			return err
 		}
 
-		log.Infof("Link file %s with release %s", file.Name(), g.release)
+		log.Infof("Link file %s with release %s", file.Name(), g.Release)
 
 		resp, err := util.Do(g.client, req, nil)
 		if err != nil {
@@ -182,7 +171,7 @@ func (g *Client) UploadAssets(repoDir string, assets []config.Asset) error {
 			return err
 		}
 
-		log.Infof("Link file with release %s is done", g.release)
+		log.Infof("Link file with release %s is done", g.Release)
 	}
 	return nil
 }
