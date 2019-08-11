@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Nightapes/go-semantic-release/internal/analyzer"
-	"github.com/Nightapes/go-semantic-release/internal/gitutil"
+	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,15 +13,15 @@ func TestAngular(t *testing.T) {
 
 	testConfigs := []struct {
 		testCase        string
-		commits         []gitutil.Commit
-		analyzedCommits map[analyzer.Release][]analyzer.AnalyzedCommit
+		commits         []shared.Commit
+		analyzedCommits map[shared.Release][]shared.AnalyzedCommit
 	}{
 		{
 			testCase: "feat",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"minor": []analyzer.AnalyzedCommit{
-					analyzer.AnalyzedCommit{
-						Commit: gitutil.Commit{
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"minor": []shared.AnalyzedCommit{
+					shared.AnalyzedCommit{
+						Commit: shared.Commit{
 							Message: "feat(internal/changelog): my first commit",
 							Author:  "me",
 							Hash:    "12345667",
@@ -33,12 +33,12 @@ func TestAngular(t *testing.T) {
 						Print:         true,
 					},
 				},
-				"major": []analyzer.AnalyzedCommit{},
-				"patch": []analyzer.AnalyzedCommit{},
-				"none":  []analyzer.AnalyzedCommit{},
+				"major": []shared.AnalyzedCommit{},
+				"patch": []shared.AnalyzedCommit{},
+				"none":  []shared.AnalyzedCommit{},
 			},
-			commits: []gitutil.Commit{
-				gitutil.Commit{
+			commits: []shared.Commit{
+				shared.Commit{
 					Message: "feat(internal/changelog): my first commit",
 					Author:  "me",
 					Hash:    "12345667",
@@ -47,10 +47,10 @@ func TestAngular(t *testing.T) {
 		},
 		{
 			testCase: "feat breaking change",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"minor": []analyzer.AnalyzedCommit{
-					analyzer.AnalyzedCommit{
-						Commit: gitutil.Commit{
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"minor": []shared.AnalyzedCommit{
+					shared.AnalyzedCommit{
+						Commit: shared.Commit{
 							Message: "feat(internal/changelog): my first commit",
 							Author:  "me",
 							Hash:    "12345667",
@@ -62,9 +62,9 @@ func TestAngular(t *testing.T) {
 						Print:         true,
 					},
 				},
-				"major": []analyzer.AnalyzedCommit{
-					analyzer.AnalyzedCommit{
-						Commit: gitutil.Commit{
+				"major": []shared.AnalyzedCommit{
+					shared.AnalyzedCommit{
+						Commit: shared.Commit{
 							Message: "feat(internal/changelog): my first break BREAKING CHANGE: change api to v2",
 							Author:  "me",
 							Hash:    "12345668",
@@ -77,16 +77,16 @@ func TestAngular(t *testing.T) {
 						ParsedBreakingChangeMessage: "change api to v2",
 					},
 				},
-				"patch": []analyzer.AnalyzedCommit{},
-				"none":  []analyzer.AnalyzedCommit{},
+				"patch": []shared.AnalyzedCommit{},
+				"none":  []shared.AnalyzedCommit{},
 			},
-			commits: []gitutil.Commit{
-				gitutil.Commit{
+			commits: []shared.Commit{
+				shared.Commit{
 					Message: "feat(internal/changelog): my first commit",
 					Author:  "me",
 					Hash:    "12345667",
 				},
-				gitutil.Commit{
+				shared.Commit{
 					Message: "feat(internal/changelog): my first break BREAKING CHANGE: change api to v2",
 					Author:  "me",
 					Hash:    "12345668",
@@ -95,14 +95,14 @@ func TestAngular(t *testing.T) {
 		},
 		{
 			testCase: "invalid",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"minor": []analyzer.AnalyzedCommit{},
-				"major": []analyzer.AnalyzedCommit{},
-				"patch": []analyzer.AnalyzedCommit{},
-				"none":  []analyzer.AnalyzedCommit{},
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"minor": []shared.AnalyzedCommit{},
+				"major": []shared.AnalyzedCommit{},
+				"patch": []shared.AnalyzedCommit{},
+				"none":  []shared.AnalyzedCommit{},
 			},
-			commits: []gitutil.Commit{
-				gitutil.Commit{
+			commits: []shared.Commit{
+				shared.Commit{
 					Message: "internal/changelog: my first commit",
 					Author:  "me",
 					Hash:    "12345667",
@@ -111,10 +111,10 @@ func TestAngular(t *testing.T) {
 		},
 		{
 			testCase: "feat and build",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"minor": []analyzer.AnalyzedCommit{
-					analyzer.AnalyzedCommit{
-						Commit: gitutil.Commit{
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"minor": []shared.AnalyzedCommit{
+					shared.AnalyzedCommit{
+						Commit: shared.Commit{
 							Message: "feat(internal/changelog): my first commit",
 							Author:  "me",
 							Hash:    "12345667",
@@ -126,9 +126,9 @@ func TestAngular(t *testing.T) {
 						Print:         true,
 					},
 				},
-				"none": []analyzer.AnalyzedCommit{
-					analyzer.AnalyzedCommit{
-						Commit: gitutil.Commit{
+				"none": []shared.AnalyzedCommit{
+					shared.AnalyzedCommit{
+						Commit: shared.Commit{
 							Message: "build(internal/changelog): my first build",
 							Author:  "me",
 							Hash:    "12345668",
@@ -141,16 +141,16 @@ func TestAngular(t *testing.T) {
 						ParsedBreakingChangeMessage: "",
 					},
 				},
-				"patch": []analyzer.AnalyzedCommit{},
-				"major": []analyzer.AnalyzedCommit{},
+				"patch": []shared.AnalyzedCommit{},
+				"major": []shared.AnalyzedCommit{},
 			},
-			commits: []gitutil.Commit{
-				gitutil.Commit{
+			commits: []shared.Commit{
+				shared.Commit{
 					Message: "feat(internal/changelog): my first commit",
 					Author:  "me",
 					Hash:    "12345667",
 				},
-				gitutil.Commit{
+				shared.Commit{
 					Message: "build(internal/changelog): my first build",
 					Author:  "me",
 					Hash:    "12345668",

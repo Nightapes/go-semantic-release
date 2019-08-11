@@ -43,7 +43,7 @@ var nextCmd = &cobra.Command{
 			return nil
 		}
 
-		releaseVersion, _, err := s.GetNextVersion(provider, force)
+		releaseVersion, err := s.GetNextVersion(provider, force)
 		if err != nil {
 			return err
 		}

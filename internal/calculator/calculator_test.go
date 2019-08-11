@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/Masterminds/semver"
-	"github.com/Nightapes/go-semantic-release/internal/analyzer"
 	"github.com/Nightapes/go-semantic-release/internal/calculator"
+	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -74,20 +74,20 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 		nextVersion     string
 		isDraft         bool
 		isFirst         bool
-		analyzedCommits map[analyzer.Release][]analyzer.AnalyzedCommit
+		analyzedCommits map[shared.Release][]shared.AnalyzedCommit
 	}{
 		{
 			testCase:    "version with preRelease alpha",
 			releaseType: "alpha",
 			lastVersion: createVersion("1.0.0"),
 			nextVersion: "1.0.0-alpha.0",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"major": []analyzer.AnalyzedCommit{},
-				"minor": []analyzer.AnalyzedCommit{
-					analyzer.AnalyzedCommit{},
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"major": []shared.AnalyzedCommit{},
+				"minor": []shared.AnalyzedCommit{
+					shared.AnalyzedCommit{},
 				},
-				"patch": []analyzer.AnalyzedCommit{},
-				"none":  []analyzer.AnalyzedCommit{},
+				"patch": []shared.AnalyzedCommit{},
+				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
 			isDraft: true,
@@ -97,13 +97,13 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 			releaseType: "beta",
 			lastVersion: createVersion("1.0.0"),
 			nextVersion: "1.0.0-beta.0",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"major": []analyzer.AnalyzedCommit{},
-				"minor": []analyzer.AnalyzedCommit{
-					analyzer.AnalyzedCommit{},
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"major": []shared.AnalyzedCommit{},
+				"minor": []shared.AnalyzedCommit{
+					shared.AnalyzedCommit{},
 				},
-				"patch": []analyzer.AnalyzedCommit{},
-				"none":  []analyzer.AnalyzedCommit{},
+				"patch": []shared.AnalyzedCommit{},
+				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
 			isDraft: true,
@@ -113,11 +113,11 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 			releaseType: "alpha",
 			lastVersion: createVersion("1.0.0"),
 			nextVersion: "1.0.0",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"major": []analyzer.AnalyzedCommit{},
-				"minor": []analyzer.AnalyzedCommit{},
-				"patch": []analyzer.AnalyzedCommit{},
-				"none":  []analyzer.AnalyzedCommit{},
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"major": []shared.AnalyzedCommit{},
+				"minor": []shared.AnalyzedCommit{},
+				"patch": []shared.AnalyzedCommit{},
+				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
 			isDraft: false,
@@ -127,11 +127,11 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 			releaseType: "release",
 			lastVersion: createVersion("1.0.0"),
 			nextVersion: "1.0.0",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"major": []analyzer.AnalyzedCommit{analyzer.AnalyzedCommit{}},
-				"minor": []analyzer.AnalyzedCommit{},
-				"patch": []analyzer.AnalyzedCommit{},
-				"none":  []analyzer.AnalyzedCommit{},
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"major": []shared.AnalyzedCommit{shared.AnalyzedCommit{}},
+				"minor": []shared.AnalyzedCommit{},
+				"patch": []shared.AnalyzedCommit{},
+				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: true,
 			isDraft: false,
@@ -141,11 +141,11 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 			releaseType: "rc",
 			lastVersion: createVersion("1.0.0"),
 			nextVersion: "1.0.0-rc.0",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"major": []analyzer.AnalyzedCommit{analyzer.AnalyzedCommit{}},
-				"minor": []analyzer.AnalyzedCommit{analyzer.AnalyzedCommit{}},
-				"patch": []analyzer.AnalyzedCommit{analyzer.AnalyzedCommit{}},
-				"none":  []analyzer.AnalyzedCommit{},
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"major": []shared.AnalyzedCommit{shared.AnalyzedCommit{}},
+				"minor": []shared.AnalyzedCommit{shared.AnalyzedCommit{}},
+				"patch": []shared.AnalyzedCommit{shared.AnalyzedCommit{}},
+				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
 			isDraft: false,
@@ -155,11 +155,11 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 			releaseType: "rc",
 			lastVersion: createVersion("1.0.0-rc.0"),
 			nextVersion: "1.0.0-rc.1",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"major": []analyzer.AnalyzedCommit{},
-				"minor": []analyzer.AnalyzedCommit{analyzer.AnalyzedCommit{}},
-				"patch": []analyzer.AnalyzedCommit{analyzer.AnalyzedCommit{}},
-				"none":  []analyzer.AnalyzedCommit{},
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"major": []shared.AnalyzedCommit{},
+				"minor": []shared.AnalyzedCommit{shared.AnalyzedCommit{}},
+				"patch": []shared.AnalyzedCommit{shared.AnalyzedCommit{}},
+				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
 			isDraft: false,
@@ -169,11 +169,11 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 			releaseType: "release",
 			lastVersion: createVersion("1.0.0"),
 			nextVersion: "2.0.0",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"major": []analyzer.AnalyzedCommit{analyzer.AnalyzedCommit{}},
-				"minor": []analyzer.AnalyzedCommit{analyzer.AnalyzedCommit{}},
-				"patch": []analyzer.AnalyzedCommit{analyzer.AnalyzedCommit{}},
-				"none":  []analyzer.AnalyzedCommit{},
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"major": []shared.AnalyzedCommit{shared.AnalyzedCommit{}},
+				"minor": []shared.AnalyzedCommit{shared.AnalyzedCommit{}},
+				"patch": []shared.AnalyzedCommit{shared.AnalyzedCommit{}},
+				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
 			isDraft: false,
@@ -183,11 +183,11 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 			releaseType: "release",
 			lastVersion: createVersion("1.0.0"),
 			nextVersion: "1.1.0",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"major": []analyzer.AnalyzedCommit{},
-				"minor": []analyzer.AnalyzedCommit{analyzer.AnalyzedCommit{}},
-				"patch": []analyzer.AnalyzedCommit{analyzer.AnalyzedCommit{}},
-				"none":  []analyzer.AnalyzedCommit{},
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"major": []shared.AnalyzedCommit{},
+				"minor": []shared.AnalyzedCommit{shared.AnalyzedCommit{}},
+				"patch": []shared.AnalyzedCommit{shared.AnalyzedCommit{}},
+				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
 			isDraft: false,
@@ -197,11 +197,11 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 			releaseType: "release",
 			lastVersion: createVersion("1.0.0"),
 			nextVersion: "1.0.1",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"major": []analyzer.AnalyzedCommit{},
-				"minor": []analyzer.AnalyzedCommit{},
-				"patch": []analyzer.AnalyzedCommit{analyzer.AnalyzedCommit{}},
-				"none":  []analyzer.AnalyzedCommit{},
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"major": []shared.AnalyzedCommit{},
+				"minor": []shared.AnalyzedCommit{},
+				"patch": []shared.AnalyzedCommit{shared.AnalyzedCommit{}},
+				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
 			isDraft: false,

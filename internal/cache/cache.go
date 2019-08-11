@@ -2,52 +2,35 @@
 package cache
 
 import (
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"path"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/Masterminds/semver"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"gopkg.in/yaml.v2"
 )
 
-// ReleaseVersion struct
-type ReleaseVersion struct {
-	Last   ReleaseVersionEntry `yaml:"last"`
-	Next   ReleaseVersionEntry `yaml:"next"`
-	Branch string              `yaml:"branch"`
-	Draft  bool                `yaml:"draft"`
-}
-
-//ReleaseVersionEntry struct
-type ReleaseVersionEntry struct {
-	Commit  string `yaml:"commit"`
-	Version string `yaml:"version"`
-}
-
 // Write version into .version
 func Write(repository string, releaseVersion shared.ReleaseVersion) error {
 	completePath := path.Join(path.Dir(repository), ".version")
 
-	toCache := &ReleaseVersion{
-		Next: ReleaseVersionEntry{
-			Commit:  releaseVersion.Next.Commit,
-			Version: releaseVersion.Next.Version.String(),
-		},
-		Last: ReleaseVersionEntry{
-			Commit:  releaseVersion.Last.Commit,
-			Version: releaseVersion.Last.Version.String(),
-		},
-		Branch: releaseVersion.Branch,
-		Draft:  releaseVersion.Draft,
+	if releaseVersion.Last.Version != nil {
+		releaseVersion.Last.VersionString = releaseVersion.Last.Version.String()
 	}
 
-	data, err := yaml.Marshal(toCache)
+	if releaseVersion.Next.Version != nil {
+		releaseVersion.Next.VersionString = releaseVersion.Next.Version.String()
+	}
+
+	//toCache := &ReleaseVersion(releaseVersion)
+	data, err := yaml.Marshal(releaseVersion)
 	if err != nil {
 		return err
 	}
 
-	log.Infof("Save %s with hash %s to cache", releaseVersion.Next.Version.String(), releaseVersion.Next.Commit)
+	log.Infof("Save %s with hash %s to cache %s", releaseVersion.Next.Version.String(), releaseVersion.Next.Commit, completePath)
 	return ioutil.WriteFile(completePath, data, 0644)
 }
 
@@ -57,37 +40,26 @@ func Read(repository string) (*shared.ReleaseVersion, error) {
 
 	content, err := ioutil.ReadFile(completePath)
 	if err != nil {
-		return &shared.ReleaseVersion{}, err
+		log.Warnf("Could not read cache %s, will ignore cache", completePath)
+		return &shared.ReleaseVersion{}, nil
 	}
 
-	var parsedContent ReleaseVersion
+	var parsedContent shared.ReleaseVersion
 	err = yaml.Unmarshal(content, &parsedContent)
 	if err != nil {
 		return &shared.ReleaseVersion{}, err
 	}
 
-	nextVersion, err := semver.NewVersion(parsedContent.Next.Version)
+	parsedContent.Next.Version, err = semver.NewVersion(parsedContent.Next.VersionString)
 	if err != nil {
 		return nil, err
 	}
 
-	lastVersion, err := semver.NewVersion(parsedContent.Last.Version)
+	parsedContent.Last.Version, err = semver.NewVersion(parsedContent.Last.VersionString)
 	if err != nil {
 		return nil, err
 	}
 
-	releaseVersion := &shared.ReleaseVersion{
-		Next: shared.ReleaseVersionEntry{
-			Commit:  parsedContent.Next.Commit,
-			Version: nextVersion,
-		},
-		Last: shared.ReleaseVersionEntry{
-			Commit:  parsedContent.Last.Commit,
-			Version: lastVersion,
-		},
-		Branch: parsedContent.Branch,
-		Draft:  parsedContent.Draft,
-	}
 	log.Infof("Found cache, will return cached version %s", parsedContent.Next.Version)
-	return releaseVersion, nil
+	return &parsedContent, nil
 }

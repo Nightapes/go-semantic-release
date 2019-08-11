@@ -123,7 +123,7 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 		return err
 	}
 
-	log.Infof("Crated release")
+	g.log.Infof("Crated release")
 
 	return nil
 }
@@ -151,7 +151,7 @@ func (g *Client) UploadAssets(repoDir string, assets []config.Asset) error {
 
 		downloadURL := fmt.Sprintf("%s/%s%s", g.baseURL, g.config.Repo, result.URL)
 
-		log.Infof("Uploaded file %s to gitlab can be downloaded under %s", file.Name(), downloadURL)
+		g.log.Infof("Uploaded file %s to gitlab can be downloaded under %s", file.Name(), downloadURL)
 
 		path := fmt.Sprintf("%s/projects/%s/releases/%s/assets/links?name=%s&url=%s", g.apiURL, util.PathEscape(g.config.Repo), g.Release, util.PathEscape(fileInfo.Name()), downloadURL)
 
@@ -160,7 +160,7 @@ func (g *Client) UploadAssets(repoDir string, assets []config.Asset) error {
 			return err
 		}
 
-		log.Infof("Link file %s with release %s", file.Name(), g.Release)
+		g.log.Infof("Link file %s with release %s", file.Name(), g.Release)
 
 		resp, err := util.Do(g.client, req, nil)
 		if err != nil {
@@ -171,7 +171,7 @@ func (g *Client) UploadAssets(repoDir string, assets []config.Asset) error {
 			return err
 		}
 
-		log.Infof("Link file with release %s is done", g.Release)
+		g.log.Infof("Link file with release %s is done", g.Release)
 	}
 	return nil
 }

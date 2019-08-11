@@ -14,8 +14,9 @@ import (
 
 func TestReadCacheNotFound(t *testing.T) {
 
-	_, err := cache.Read("notfound/dir")
-	assert.Errorf(t, err, "Read non exsiting file")
+	resp, err := cache.Read("notfound/dir")
+	assert.NoErrorf(t, err, "Read non exsiting file")
+	assert.NotNil(t, resp)
 
 }
 
@@ -43,15 +44,34 @@ func TestWriteAndReadCache(t *testing.T) {
 
 	content := shared.ReleaseVersion{
 		Last: shared.ReleaseVersionEntry{
-			Commit:  "12345",
-			Version: createVersion("1.0.0"),
+			Commit:        "12345",
+			Version:       createVersion("1.0.0"),
+			VersionString: "1.0.0",
 		},
 		Next: shared.ReleaseVersionEntry{
-			Commit:  "12346",
-			Version: createVersion("1.1.0"),
+			Commit:        "12346",
+			Version:       createVersion("1.1.0"),
+			VersionString: "1.1.0",
 		},
 		Branch: "master",
 		Draft:  true,
+		Commits: map[shared.Release][]shared.AnalyzedCommit{
+			"major": []shared.AnalyzedCommit{
+				shared.AnalyzedCommit{
+					Commit: shared.Commit{
+						Message: "Message",
+						Author:  "Author",
+						Hash:    "Hash",
+					},
+					ParsedMessage:               "add gitlab as relase option",
+					Scope:                       "releaser",
+					ParsedBreakingChangeMessage: "",
+					Tag:                         "feat",
+					TagString:                   "Features",
+					Print:                       true,
+				},
+			},
+		},
 	}
 
 	defer os.RemoveAll(dir)

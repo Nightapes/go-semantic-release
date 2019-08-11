@@ -5,7 +5,6 @@ import (
 
 	"github.com/Nightapes/go-semantic-release/internal/analyzer"
 	"github.com/Nightapes/go-semantic-release/internal/changelog"
-	"github.com/Nightapes/go-semantic-release/internal/gitutil"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	"github.com/stretchr/testify/assert"
@@ -23,16 +22,16 @@ func TestChangelog(t *testing.T) {
 
 	testConfigs := []struct {
 		testCase        string
-		analyzedCommits map[analyzer.Release][]analyzer.AnalyzedCommit
+		analyzedCommits map[shared.Release][]shared.AnalyzedCommit
 		result          *shared.GeneratedChangelog
 		hasError        bool
 	}{
 		{
 			testCase: "feat",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"minor": []analyzer.AnalyzedCommit{
-					analyzer.AnalyzedCommit{
-						Commit: gitutil.Commit{
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"minor": []shared.AnalyzedCommit{
+					shared.AnalyzedCommit{
+						Commit: shared.Commit{
 							Message: "feat(test): my first commit",
 							Author:  "me",
 							Hash:    "12345667",
@@ -53,10 +52,10 @@ func TestChangelog(t *testing.T) {
 		},
 		{
 			testCase: "feat breaking change",
-			analyzedCommits: map[analyzer.Release][]analyzer.AnalyzedCommit{
-				"minor": []analyzer.AnalyzedCommit{
-					analyzer.AnalyzedCommit{
-						Commit: gitutil.Commit{
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"minor": []shared.AnalyzedCommit{
+					shared.AnalyzedCommit{
+						Commit: shared.Commit{
 							Message: "feat(test): my first commit",
 							Author:  "me",
 							Hash:    "12345667",
@@ -67,8 +66,8 @@ func TestChangelog(t *testing.T) {
 						TagString:     "Features",
 						Print:         true,
 					},
-					analyzer.AnalyzedCommit{
-						Commit: gitutil.Commit{
+					shared.AnalyzedCommit{
+						Commit: shared.Commit{
 							Message: "feat(test): my first break: BREAKING CHANGE: change api to v2",
 							Author:  "me",
 							Hash:    "12345668",
