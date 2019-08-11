@@ -133,21 +133,6 @@ func zipFile(repository string, file string) (string, error) {
 	return zipFileName, nil
 }
 
-// CheckURL if is valid
-func CheckURL(urlStr string) (string, error) {
-
-	if !strings.HasSuffix(urlStr, "/") {
-		urlStr += "/"
-	}
-
-	_, err := url.Parse(urlStr)
-	if err != nil {
-		return "", err
-	}
-
-	return urlStr, nil
-}
-
 //PathEscape to be url save
 func PathEscape(s string) string {
 	return strings.Replace(url.PathEscape(s), ".", "%2E", -1)
@@ -162,7 +147,7 @@ func Do(client *http.Client, req *http.Request, v interface{}) (*http.Response, 
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
-	case 200, 201, 202, 204, 304:
+	case 200, 201, 202, 204:
 		if v != nil {
 			if w, ok := v.(io.Writer); ok {
 				_, err = io.Copy(w, resp.Body)
@@ -178,7 +163,7 @@ func Do(client *http.Client, req *http.Request, v interface{}) (*http.Response, 
 // IsValidResult validates response code
 func IsValidResult(resp *http.Response) error {
 	switch resp.StatusCode {
-	case 200, 201, 202, 204, 304:
+	case 200, 201, 202, 204:
 		return nil
 	default:
 		return fmt.Errorf("%s %s: %d", resp.Request.Method, resp.Request.URL, resp.StatusCode)

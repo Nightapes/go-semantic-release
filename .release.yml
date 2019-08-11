@@ -5,7 +5,6 @@ branch:
   rc: rc
   beta: beta
   alpha: alpha
-  add_git_releases: alpha
 changelog:
   printAll: false
   template: ''
