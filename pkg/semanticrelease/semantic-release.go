@@ -62,22 +62,22 @@ func (s *SemanticRelease) GetCIProvider() (*ci.ProviderConfig, error) {
 }
 
 // GetNextVersion from .version or calculate new from commits
-func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool) (*shared.ReleaseVersion, map[analyzer.Release][]analyzer.AnalyzedCommit, error) {
+func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool) (*shared.ReleaseVersion, error) {
 	log.Debugf("Ignore .version file if exits, %t", force)
 	if !force {
 		releaseVersion, err := cache.Read(s.repository)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		if releaseVersion.Next.Commit == provider.Commit && releaseVersion != nil {
-			return releaseVersion, nil, nil
+			return releaseVersion, nil
 		}
 	}
 
 	lastVersion, lastVersionHash, err := s.gitutil.GetLastVersion()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	firstRelease := false
@@ -90,7 +90,7 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 
 	commits, err := s.gitutil.GetCommits(lastVersionHash)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	log.Debugf("Found %d commits till last release", len(commits))
@@ -116,16 +116,17 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 			Commit:  lastVersionHash,
 			Version: lastVersion,
 		},
-		Branch: provider.Branch,
-		Draft:  isDraft,
+		Branch:  provider.Branch,
+		Draft:   isDraft,
+		Commits: analyzedCommits,
 	}
 
 	log.Infof("New version %s -> %s", lastVersion.String(), newVersion.String())
 	err = cache.Write(s.repository, releaseVersion)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return &releaseVersion, analyzedCommits, err
+	return &releaseVersion, err
 }
 
 //SetVersion for git repository
@@ -158,14 +159,14 @@ func (s *SemanticRelease) SetVersion(provider *ci.ProviderConfig, version string
 }
 
 // GetChangelog from last version till now
-func (s *SemanticRelease) GetChangelog(analyzedCommits map[analyzer.Release][]analyzer.AnalyzedCommit, releaseVersion *shared.ReleaseVersion) (*shared.GeneratedChangelog, error) {
+func (s *SemanticRelease) GetChangelog(releaseVersion *shared.ReleaseVersion) (*shared.GeneratedChangelog, error) {
 	c := changelog.New(s.config, s.analyzer.GetRules(), time.Now())
 	return c.GenerateChanglog(shared.ChangelogTemplateConfig{
 		Version:    releaseVersion.Next.Version.String(),
 		Hash:       releaseVersion.Last.Commit,
 		CommitURL:  s.releaser.GetCommitURL(),
 		CompareURL: s.releaser.GetCompareURL(releaseVersion.Last.Version.String(), releaseVersion.Next.Version.String()),
-	}, analyzedCommits)
+	}, releaseVersion.Commits)
 
 }
 
@@ -187,7 +188,7 @@ func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error
 		return nil
 	}
 
-	releaseVersion, analyzedCommits, err := s.GetNextVersion(provider, force)
+	releaseVersion, err := s.GetNextVersion(provider, force)
 	if err != nil {
 		log.Debugf("Could not get next version")
 		return err
@@ -198,7 +199,7 @@ func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error
 		return nil
 	}
 
-	generatedChanglog, err := s.GetChangelog(analyzedCommits, releaseVersion)
+	generatedChanglog, err := s.GetChangelog(releaseVersion)
 	if err != nil {
 		log.Debugf("Could not get changelog")
 		return err

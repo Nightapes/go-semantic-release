@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver"
-	"github.com/Nightapes/go-semantic-release/internal/analyzer"
+	"github.com/Nightapes/go-semantic-release/internal/shared"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -40,7 +40,7 @@ func (c *Calculator) IncPrerelease(preReleaseType string, version *semver.Versio
 }
 
 //CalculateNewVersion from given commits and lastversion
-func (c *Calculator) CalculateNewVersion(commits map[analyzer.Release][]analyzer.AnalyzedCommit, lastVersion *semver.Version, releaseType string, firstRelease bool) (semver.Version, bool) {
+func (c *Calculator) CalculateNewVersion(commits map[shared.Release][]shared.AnalyzedCommit, lastVersion *semver.Version, releaseType string, firstRelease bool) (semver.Version, bool) {
 	switch releaseType {
 	case "beta", "alpha":
 		if len(commits["major"]) > 0 || len(commits["minor"]) > 0 || len(commits["patch"]) > 0 {

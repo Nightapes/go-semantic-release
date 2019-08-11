@@ -34,8 +34,8 @@ introduced by commit:
 `
 
 type changelogContent struct {
-	Commits         map[string][]analyzer.AnalyzedCommit
-	BreakingChanges []analyzer.AnalyzedCommit
+	Commits         map[string][]shared.AnalyzedCommit
+	BreakingChanges []shared.AnalyzedCommit
 	Order           []string
 	Version         string
 	Now             time.Time
@@ -49,6 +49,7 @@ type Changelog struct {
 	config      *config.ReleaseConfig
 	rules       []analyzer.Rule
 	releaseTime time.Time
+	log         *log.Entry
 }
 
 //New Changelog struct for generating changelog from commits
@@ -57,18 +58,19 @@ func New(config *config.ReleaseConfig, rules []analyzer.Rule, releaseTime time.T
 		config:      config,
 		rules:       rules,
 		releaseTime: releaseTime,
+		log:         log.WithField("changelog", config.CommitFormat),
 	}
 }
 
 // GenerateChanglog from given commits
-func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConfig, analyzedCommits map[analyzer.Release][]analyzer.AnalyzedCommit) (*shared.GeneratedChangelog, error) {
+func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConfig, analyzedCommits map[shared.Release][]shared.AnalyzedCommit) (*shared.GeneratedChangelog, error) {
 
-	commitsPerScope := map[string][]analyzer.AnalyzedCommit{}
-	commitsBreakingChange := []analyzer.AnalyzedCommit{}
+	commitsPerScope := map[string][]shared.AnalyzedCommit{}
+	commitsBreakingChange := []shared.AnalyzedCommit{}
 	order := make([]string, 0)
 
 	for _, rule := range c.rules {
-		log.Debugf("Add %s to list", rule.TagString)
+		c.log.Tracef("Add %s to list", rule.TagString)
 		if rule.Changelog || c.config.Changelog.PrintAll {
 			order = append(order, rule.TagString)
 		}
@@ -82,7 +84,7 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 					continue
 				}
 				if _, ok := commitsPerScope[commit.TagString]; !ok {
-					commitsPerScope[commit.TagString] = make([]analyzer.AnalyzedCommit, 0)
+					commitsPerScope[commit.TagString] = make([]shared.AnalyzedCommit, 0)
 				}
 				commitsPerScope[commit.TagString] = append(commitsPerScope[commit.TagString], commit)
 			}

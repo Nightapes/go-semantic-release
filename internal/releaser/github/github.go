@@ -69,7 +69,7 @@ func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 
 //ValidateConfig for github
 func (g *Client) ValidateConfig() error {
-	log.Debugf("validate GitHub provider config")
+	g.log.Debugf("validate GitHub provider config")
 
 	if g.config.Repo == "" {
 		return fmt.Errorf("github Repro is not set")
@@ -91,8 +91,6 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 
 	prerelease := releaseVersion.Next.Version.Prerelease() != ""
 
-	log.Debugf("Send %+v", generatedChangelog)
-
 	release, _, err := g.client.Repositories.CreateRelease(g.context, g.config.User, g.config.Repo, &github.RepositoryRelease{
 		TagName:         &tag,
 		TargetCommitish: &releaseVersion.Branch,
@@ -103,14 +101,14 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), "already_exists") {
-			log.Infof("A release with tag %s already exits, will not perform a release or update", tag)
+			g.log.Infof("A release with tag %s already exits, will not perform a release or update", tag)
 			return nil
 		}
 		return fmt.Errorf("could not create release: %s", err.Error())
 	}
 	g.release = release
-	log.Debugf("Release repsone: %+v", *release)
-	log.Infof("Crated release")
+	g.log.Debugf("Release repsone: %+v", *release)
+	g.log.Infof("Crated release")
 	return nil
 
 }

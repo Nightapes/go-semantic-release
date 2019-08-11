@@ -8,17 +8,22 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/Nightapes/go-semantic-release/internal/gitutil"
+	"github.com/Nightapes/go-semantic-release/internal/shared"
 )
 
 type angular struct {
 	rules []Rule
 	regex string
+	log   *log.Entry
 }
+
+// ANGULAR identifer
+const ANGULAR = "angular"
 
 func newAngular() *angular {
 	return &angular{
 		regex: `(TAG)(?:\((.*)\))?: (.*)`,
+		log:   log.WithField("analyzer", ANGULAR),
 		rules: []Rule{
 			{
 				Tag:       "feat",
@@ -76,9 +81,9 @@ func (a *angular) getRules() []Rule {
 	return a.rules
 }
 
-func (a *angular) analyze(commit gitutil.Commit, rule Rule) (AnalyzedCommit, bool, error) {
+func (a *angular) analyze(commit shared.Commit, rule Rule) (shared.AnalyzedCommit, bool, error) {
 
-	analyzed := AnalyzedCommit{
+	analyzed := shared.AnalyzedCommit{
 		Commit:    commit,
 		Tag:       rule.Tag,
 		TagString: rule.TagString,
@@ -89,13 +94,13 @@ func (a *angular) analyze(commit gitutil.Commit, rule Rule) (AnalyzedCommit, boo
 	if len(matches) >= 1 {
 		if len(matches[0]) >= 3 {
 
-			analyzed.Scope = Scope(matches[0][2])
+			analyzed.Scope = shared.Scope(matches[0][2])
 
 			message := strings.Join(matches[0][3:], "")
 			if !strings.Contains(message, "BREAKING CHANGE:") {
 				analyzed.ParsedMessage = strings.Trim(message, " ")
 
-				log.Tracef("%s: found %s", commit.Message, rule.Tag)
+				a.log.Tracef("%s: found %s", commit.Message, rule.Tag)
 				return analyzed, false, nil
 			}
 			breakingChange := strings.SplitN(message, "BREAKING CHANGE:", 2)
@@ -103,11 +108,11 @@ func (a *angular) analyze(commit gitutil.Commit, rule Rule) (AnalyzedCommit, boo
 			analyzed.ParsedMessage = strings.Trim(breakingChange[0], " ")
 			analyzed.ParsedBreakingChangeMessage = strings.Trim(breakingChange[1], " ")
 
-			log.Tracef(" %s, BREAKING CHANGE found", commit.Message)
+			a.log.Tracef(" %s, BREAKING CHANGE found", commit.Message)
 			return analyzed, true, nil
 		}
 	}
-	log.Tracef("%s does not match %s, skip", commit.Message, rule.Tag)
+	a.log.Tracef("%s does not match %s, skip", commit.Message, rule.Tag)
 	return analyzed, false, fmt.Errorf("not found")
 
 }

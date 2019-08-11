@@ -10,14 +10,8 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"github.com/Nightapes/go-semantic-release/internal/shared"
 )
-
-// Commit struct
-type Commit struct {
-	Message string
-	Author  string
-	Hash    string
-}
 
 // GitUtil struct
 type GitUtil struct {
@@ -126,7 +120,7 @@ func (g *GitUtil) GetLastVersion() (*semver.Version, string, error) {
 }
 
 // GetCommits from git hash to HEAD
-func (g *GitUtil) GetCommits(lastTagHash string) ([]Commit, error) {
+func (g *GitUtil) GetCommits(lastTagHash string) ([]shared.Commit, error) {
 
 	ref, err := g.Repository.Head()
 	if err != nil {
@@ -138,7 +132,7 @@ func (g *GitUtil) GetCommits(lastTagHash string) ([]Commit, error) {
 		return nil, err
 	}
 
-	var commits []Commit
+	var commits []shared.Commit
 	var foundEnd bool
 
 	err = cIter.ForEach(func(c *object.Commit) error {
@@ -149,7 +143,7 @@ func (g *GitUtil) GetCommits(lastTagHash string) ([]Commit, error) {
 		}
 		if !foundEnd {
 			log.Tracef("Found commit with hash %s", c.Hash.String())
-			commit := Commit{
+			commit := shared.Commit{
 				Message: c.Message,
 				Author:  c.Committer.Name,
 				Hash:    c.Hash.String(),

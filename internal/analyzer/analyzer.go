@@ -4,45 +4,28 @@ package analyzer
 import (
 	"fmt"
 
-	"github.com/Nightapes/go-semantic-release/internal/gitutil"
+	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	log "github.com/sirupsen/logrus"
 )
 
 //Analyzer struct
 type Analyzer struct {
-	analyzeCommit analyzeCommit
-	Config        config.ChangelogConfig
+	analyzeCommits analyzeCommits
+	Config         config.ChangelogConfig
 }
-
-//Release types, like major
-type Release string
-
-//Scope of the commit, like feat, fix,..
-type Scope string
 
 //Rule for commits
 type Rule struct {
 	Tag       string
 	TagString string
-	Release   Release
+	Release   shared.Release
 	Changelog bool
 }
 
-type analyzeCommit interface {
-	analyze(commit gitutil.Commit, tag Rule) (AnalyzedCommit, bool, error)
+type analyzeCommits interface {
+	analyze(commit shared.Commit, tag Rule) (shared.AnalyzedCommit, bool, error)
 	getRules() []Rule
-}
-
-//AnalyzedCommit struct
-type AnalyzedCommit struct {
-	Commit                      gitutil.Commit
-	ParsedMessage               string
-	Scope                       Scope
-	ParsedBreakingChangeMessage string
-	Tag                         string
-	TagString                   string
-	Print                       bool
 }
 
 //New Analyzer struct for given commit format
@@ -52,9 +35,9 @@ func New(format string, config config.ChangelogConfig) (*Analyzer, error) {
 	}
 
 	switch format {
-	case "angular":
-		log.Debugf("Commit format set to angular")
-		analyzer.analyzeCommit = newAngular()
+	case ANGULAR:
+		analyzer.analyzeCommits = newAngular()
+		log.Debugf("Commit format set to %s", ANGULAR)
 	default:
 		return nil, fmt.Errorf("invalid commit format: %s", format)
 	}
@@ -64,21 +47,21 @@ func New(format string, config config.ChangelogConfig) (*Analyzer, error) {
 
 // GetRules from current mode
 func (a *Analyzer) GetRules() []Rule {
-	return a.analyzeCommit.getRules()
+	return a.analyzeCommits.getRules()
 }
 
 // Analyze commits and return commits splitted by major,minor,patch
-func (a *Analyzer) Analyze(commits []gitutil.Commit) map[Release][]AnalyzedCommit {
+func (a *Analyzer) Analyze(commits []shared.Commit) map[shared.Release][]shared.AnalyzedCommit {
 
-	analyzedCommits := make(map[Release][]AnalyzedCommit)
-	analyzedCommits["major"] = make([]AnalyzedCommit, 0)
-	analyzedCommits["minor"] = make([]AnalyzedCommit, 0)
-	analyzedCommits["patch"] = make([]AnalyzedCommit, 0)
-	analyzedCommits["none"] = make([]AnalyzedCommit, 0)
+	analyzedCommits := make(map[shared.Release][]shared.AnalyzedCommit)
+	analyzedCommits["major"] = make([]shared.AnalyzedCommit, 0)
+	analyzedCommits["minor"] = make([]shared.AnalyzedCommit, 0)
+	analyzedCommits["patch"] = make([]shared.AnalyzedCommit, 0)
+	analyzedCommits["none"] = make([]shared.AnalyzedCommit, 0)
 
 	for _, commit := range commits {
-		for _, rule := range a.analyzeCommit.getRules() {
-			analyzedCommit, hasBreakingChange, err := a.analyzeCommit.analyze(commit, rule)
+		for _, rule := range a.analyzeCommits.getRules() {
+			analyzedCommit, hasBreakingChange, err := a.analyzeCommits.analyze(commit, rule)
 			if err == nil {
 				if a.Config.PrintAll {
 					analyzedCommit.Print = true
