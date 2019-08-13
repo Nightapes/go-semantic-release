@@ -90,7 +90,6 @@ var testReleases = []testReleaseStruct{
 				Commit:  "bar",
 			},
 			Branch: "master",
-			Draft:  false,
 		},
 		generatedChangelog: &shared.GeneratedChangelog{
 			Title:   "title",
@@ -115,7 +114,6 @@ var testReleases = []testReleaseStruct{
 				Commit:  "bar",
 			},
 			Branch: "master",
-			Draft:  false,
 		},
 		generatedChangelog: &shared.GeneratedChangelog{
 			Title:   "title",

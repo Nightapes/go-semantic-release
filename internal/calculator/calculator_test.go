@@ -72,7 +72,6 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 		releaseType     string
 		lastVersion     *semver.Version
 		nextVersion     string
-		isDraft         bool
 		isFirst         bool
 		analyzedCommits map[shared.Release][]shared.AnalyzedCommit
 	}{
@@ -90,7 +89,6 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
-			isDraft: true,
 		},
 		{
 			testCase:    "version with preRelease beta",
@@ -106,7 +104,6 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
-			isDraft: true,
 		},
 		{
 			testCase:    "version without commits",
@@ -120,7 +117,6 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
-			isDraft: false,
 		},
 		{
 			testCase:    "version with commits and first release",
@@ -134,7 +130,6 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: true,
-			isDraft: false,
 		},
 		{
 			testCase:    "version with commits and rc release",
@@ -148,7 +143,6 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
-			isDraft: false,
 		},
 		{
 			testCase:    "version with commits and rc release",
@@ -162,7 +156,6 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
-			isDraft: false,
 		},
 		{
 			testCase:    "version with commits and major release",
@@ -176,7 +169,6 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
-			isDraft: false,
 		},
 		{
 			testCase:    "version with commits and minor release",
@@ -190,7 +182,6 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
-			isDraft: false,
 		},
 		{
 			testCase:    "version with commits and minor patch",
@@ -204,15 +195,13 @@ func TestCalculator_CalculateNewVersion(t *testing.T) {
 				"none":  []shared.AnalyzedCommit{},
 			},
 			isFirst: false,
-			isDraft: false,
 		},
 	}
 
 	c := calculator.New()
 
 	for _, test := range testConfigs {
-		next, draft := c.CalculateNewVersion(test.analyzedCommits, test.lastVersion, test.releaseType, test.isFirst)
-		assert.Equalf(t, test.isDraft, draft, "Should have draft %t for testcase %s", test.isDraft, test.testCase)
+		next := c.CalculateNewVersion(test.analyzedCommits, test.lastVersion, test.releaseType, test.isFirst)
 		assert.Equalf(t, test.nextVersion, next.String(), "Should have version %s for testcase %s", test.nextVersion, test.testCase)
 	}
 

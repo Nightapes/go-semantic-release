@@ -38,15 +38,15 @@ type GitLabProvider struct {
 
 // ReleaseConfig struct
 type ReleaseConfig struct {
-	CommitFormat          string            `yaml:"commitFormat"`
-	Branch                map[string]string `yaml:"branch"`
-	Changelog             ChangelogConfig   `yaml:"changelog,omitempty"`
-	Release               string            `yaml:"release,omitempty"`
-	GitHubProvider        GitHubProvider    `yaml:"github,omitempty"`
-	GitLabProvider        GitLabProvider    `yaml:"gitlab,omitempty"`
-	Assets                []Asset           `yaml:"assets"`
-	ReleaseTitle          string            `yaml:"title"`
-	IsPreRelease, IsDraft bool
+	CommitFormat   string            `yaml:"commitFormat"`
+	Branch         map[string]string `yaml:"branch"`
+	Changelog      ChangelogConfig   `yaml:"changelog,omitempty"`
+	Release        string            `yaml:"release,omitempty"`
+	GitHubProvider GitHubProvider    `yaml:"github,omitempty"`
+	GitLabProvider GitLabProvider    `yaml:"gitlab,omitempty"`
+	Assets         []Asset           `yaml:"assets"`
+	ReleaseTitle   string            `yaml:"title"`
+	IsPreRelease   bool
 }
 
 // Read ReleaseConfig

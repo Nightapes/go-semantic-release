@@ -96,7 +96,6 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 		TargetCommitish: &releaseVersion.Branch,
 		Name:            &generatedChangelog.Title,
 		Body:            &generatedChangelog.Content,
-		Draft:           &releaseVersion.Draft,
 		Prerelease:      &prerelease,
 	})
 	if err != nil {

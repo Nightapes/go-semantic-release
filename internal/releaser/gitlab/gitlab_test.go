@@ -94,7 +94,6 @@ func TestCreateRelease(t *testing.T) {
 					Commit:  "bar",
 				},
 				Branch: "master",
-				Draft:  false,
 			},
 			generatedChangelog: &shared.GeneratedChangelog{
 				Title:   "title",
@@ -119,7 +118,6 @@ func TestCreateRelease(t *testing.T) {
 					Commit:  "bar",
 				},
 				Branch: "master",
-				Draft:  false,
 			},
 			generatedChangelog: &shared.GeneratedChangelog{
 				Title:   "title",
@@ -145,7 +143,6 @@ func TestCreateRelease(t *testing.T) {
 					Commit:  "bar",
 				},
 				Branch: "master",
-				Draft:  false,
 			},
 			generatedChangelog: &shared.GeneratedChangelog{
 				Title:   "title",

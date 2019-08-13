@@ -3,13 +3,14 @@ package cache_test
 import (
 	"testing"
 
+	"io/ioutil"
+	"os"
+	"path"
+
 	"github.com/Masterminds/semver"
 	"github.com/Nightapes/go-semantic-release/internal/cache"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"os"
-	"path"
 )
 
 func TestReadCacheNotFound(t *testing.T) {
@@ -54,7 +55,6 @@ func TestWriteAndReadCache(t *testing.T) {
 			VersionString: "1.1.0",
 		},
 		Branch: "master",
-		Draft:  true,
 		Commits: map[shared.Release][]shared.AnalyzedCommit{
 			"major": []shared.AnalyzedCommit{
 				shared.AnalyzedCommit{
@@ -97,7 +97,6 @@ func TestWriteNotFound(t *testing.T) {
 			Version: createVersion("1.1.0"),
 		},
 		Branch: "master",
-		Draft:  true,
 	})
 	assert.Errorf(t, err, "Write non exsiting file")
 
