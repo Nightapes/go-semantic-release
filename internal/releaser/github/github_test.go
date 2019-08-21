@@ -145,19 +145,19 @@ func initHTTPServer(respCode int, body string) *httptest.Server {
 func TestNew(t *testing.T) {
 	for _, testOject := range testNewClient {
 		if testOject.valid {
-			os.Setenv("GITHUB_ACCESS_TOKEN", "XXX")
+			os.Setenv("GITHUB_TOKEN", "XXX")
 		}
 
 		_, err := github.New(&testOject.config)
 		assert.Equal(t, testOject.valid, err == nil)
 
-		os.Unsetenv("GITHUB_ACCESS_TOKEN")
+		os.Unsetenv("GITHUB_TOKEN")
 
 	}
 }
 
 func TestGetCommitURL(t *testing.T) {
-	os.Setenv("GITHUB_ACCESS_TOKEN", "XX")
+	os.Setenv("GITHUB_TOKEN", "XX")
 	for _, testOject := range testNewClient {
 		client, _ := github.New(&testOject.config)
 		actualURL := client.GetCommitURL()
@@ -170,12 +170,12 @@ func TestGetCommitURL(t *testing.T) {
 			assert.EqualValues(t, expectedURL, actualURL)
 		}
 	}
-	os.Unsetenv("GITHUB_ACCESS_TOKEN")
+	os.Unsetenv("GITHUB_TOKEN")
 
 }
 
 func TestGetCompareURL(t *testing.T) {
-	os.Setenv("GITHUB_ACCESS_TOKEN", "XX")
+	os.Setenv("GITHUB_TOKEN", "XX")
 	for _, testOject := range testNewClient {
 		client, _ := github.New(&testOject.config)
 		actualURL := client.GetCompareURL("1", "2")
@@ -188,12 +188,12 @@ func TestGetCompareURL(t *testing.T) {
 			assert.EqualValues(t, expectedURL, actualURL)
 		}
 	}
-	os.Unsetenv("GITHUB_ACCESS_TOKEN")
+	os.Unsetenv("GITHUB_TOKEN")
 
 }
 
 func TestValidateConfig(t *testing.T) {
-	os.Setenv("GITHUB_ACCESS_TOKEN", "XX")
+	os.Setenv("GITHUB_TOKEN", "XX")
 	for _, testOject := range testHelperMethod {
 		client, _ := github.New(&testOject.config)
 		err := client.ValidateConfig()
@@ -201,11 +201,11 @@ func TestValidateConfig(t *testing.T) {
 		assert.Equal(t, testOject.valid, err == nil)
 
 	}
-	os.Unsetenv("GITHUB_ACCESS_TOKEN")
+	os.Unsetenv("GITHUB_TOKEN")
 }
 
 func TestCreateRelease(t *testing.T) {
-	os.Setenv("GITHUB_ACCESS_TOKEN", "XX")
+	os.Setenv("GITHUB_TOKEN", "XX")
 
 	for _, testObejct := range testReleases {
 		if testObejct.valid {
@@ -232,6 +232,6 @@ func TestCreateRelease(t *testing.T) {
 			assert.Error(t, err)
 		}
 	}
-	os.Unsetenv("GITHUB_ACCESS_TOKEN")
+	os.Unsetenv("GITHUB_TOKEN")
 
 }

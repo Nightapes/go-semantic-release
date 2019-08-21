@@ -63,4 +63,6 @@ jobs:
         GOOS=windows GOARCH=386 go build -o build/go-semantic-release.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
 
     - name: Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: ./build/go-semantic-release-temp release --loglevel trace

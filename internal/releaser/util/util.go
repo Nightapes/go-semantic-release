@@ -49,11 +49,9 @@ func NewAddHeaderTransport(T http.RoundTripper, key, value string) *AddHeaderTra
 }
 
 // GetAccessToken lookup for the providers accesstoken
-func GetAccessToken(providerName string) (string, error) {
+func GetAccessToken(envName string) (string, error) {
 	var token string
 	var exists bool
-	envName := fmt.Sprintf("%s_ACCESS_TOKEN", strings.ToUpper(providerName))
-
 	log.Debugf("check if %s environment variable is set", envName)
 
 	if token, exists = os.LookupEnv(envName); !exists {
