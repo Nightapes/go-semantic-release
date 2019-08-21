@@ -193,7 +193,7 @@ func TestDoAndRoundTrip(t *testing.T) {
 			hasError:         true,
 			responseBody:     &example{},
 			responseBodyType: &example{},
-			path:             "broken",
+			path:             "4/broken",
 		},
 	}
 
