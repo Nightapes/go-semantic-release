@@ -2,11 +2,16 @@ name: Go
 on: [push, pull_request]
 jobs:
 
-  lint:
-    name: Lint
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
 
+    - name: tmp
+      run: |
+        echo $GITHUB_EVENT_NAME
+        cat $GITHUB_EVENT_PATH
+    
     - name: Set up Go 1.12
       uses: actions/setup-go@v1
       with:
@@ -22,39 +27,8 @@ jobs:
         curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
         golangci-lint run ./...
 
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-
-    - name: Set up Go 1.12
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.12
-      id: go
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
-
     - name: Run tests
       run: go test -v ./...
-
-    - name: Build binary without version
-      run: 
-
-  build:
-    name: Build on ${{ matrix.os }}
-    needs: [Test, Lint]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Set up Go 1.12
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.12
-      id: go
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
 
     - name: Build binary
       run: |
