@@ -108,7 +108,7 @@ func TestCi(t *testing.T) {
 				"GITHUB_REF":        "refs/heads/feature-branch-1",
 				"GITHUB_ACTION":     "action",
 			},
-			result:   &ci.ProviderConfig{IsPR: false, PR: "", PRBranch: "", Branch: "refs/heads/feature-branch-1", Tag: "", Commit: "190bfd6aa60022afd0ef830342cfb07e33c45f37", BuildURL: "", Service: "GithubActions", Name: "GithubActions CI"},
+			result:   &ci.ProviderConfig{IsPR: false, PR: "", PRBranch: "", Branch: "feature-branch-1", Tag: "", Commit: "190bfd6aa60022afd0ef830342cfb07e33c45f37", BuildURL: "", Service: "GithubActions", Name: "GithubActions CI"},
 			hasError: false,
 		},
 	}
