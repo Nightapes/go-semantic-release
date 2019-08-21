@@ -43,7 +43,7 @@ func TestGetAccessToken(t *testing.T) {
 			fmt.Println(err.Error())
 		}
 
-		_, err := util.GetAccessToken(testObject.providerName)
+		_, err := util.GetAccessToken(envName)
 
 		assert.Equal(t, testObject.valid, err == nil)
 		os.Unsetenv(envName)
@@ -193,7 +193,7 @@ func TestDoAndRoundTrip(t *testing.T) {
 			hasError:         true,
 			responseBody:     &example{},
 			responseBodyType: &example{},
-			path:             "broken",
+			path:             "4/broken",
 		},
 	}
 

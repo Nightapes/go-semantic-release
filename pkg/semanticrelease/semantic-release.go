@@ -177,12 +177,12 @@ func (s *SemanticRelease) WriteChangeLog(changelogContent, file string) error {
 func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error {
 
 	if provider.IsPR {
-		log.Debugf("Will not perform a new release. This is a pull request")
+		log.Infof("Will not perform a new release. This is a pull request")
 		return nil
 	}
 
 	if _, ok := s.config.Branch[provider.Branch]; !ok {
-		log.Debugf("Will not perform a new release. Current %s branch is not configured in release config", provider.Branch)
+		log.Infof("Will not perform a new release. Current %s branch is not configured in release config", provider.Branch)
 		return nil
 	}
 

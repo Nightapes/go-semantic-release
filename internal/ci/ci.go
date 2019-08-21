@@ -42,6 +42,7 @@ func GetCIProvider(gitUtil *gitutil.GitUtil, envs map[string]string) (*ProviderC
 
 	services := []Service{
 		Travis{},
+		GithubActions{},
 		Git{gitUtil: gitUtil}, // GIt must be the last option to check
 	}
 

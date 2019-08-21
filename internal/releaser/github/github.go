@@ -32,7 +32,7 @@ type Client struct {
 func New(c *config.GitHubProvider) (*Client, error) {
 	var err error
 
-	if c.AccessToken, err = util.GetAccessToken(GITHUB); err != nil {
+	if c.AccessToken, err = util.GetAccessToken("GITHUB_TOKEN"); err != nil {
 		return &Client{}, err
 	}
 	ctx := context.Background()
