@@ -28,9 +28,11 @@ jobs:
         golangci-lint run ./...
 
     - name: Run tests
-      run: go test -v ./...
+      run: go test ./...
 
     - name: Build binary
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         go build -o build/go-semantic-release-temp ./cmd/go-semantic-release/
         go build -o build/go-semantic-release  -ldflags "-w -s --X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/

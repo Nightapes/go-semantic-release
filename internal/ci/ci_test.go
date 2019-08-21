@@ -89,6 +89,28 @@ func TestCi(t *testing.T) {
 			result:   &ci.ProviderConfig{IsPR: false, PR: "", PRBranch: "", Branch: "master", Tag: "TAG", Commit: "190bfd6aa60022afd0ef830342cfb07e33c45f37", BuildURL: "https://travis-ci.com/owner/repo/builds/1234", Service: "travis", Name: "Travis CI"},
 			hasError: false,
 		},
+		{
+			service: "Github Actions PR",
+			envs: map[string]string{
+				"GITHUB_EVENT_NAME": "pull_request",
+				"GITHUB_SHA":        "190bfd6aa60022afd0ef830342cfb07e33c45f37",
+				"GITHUB_REF":        "master",
+				"GITHUB_ACTION":     "action",
+			},
+			result:   &ci.ProviderConfig{IsPR: true, PR: "", PRBranch: "", Branch: "master", Tag: "", Commit: "190bfd6aa60022afd0ef830342cfb07e33c45f37", BuildURL: "", Service: "GithubActions", Name: "GithubActions CI"},
+			hasError: false,
+		},
+		{
+			service: "Github Actions Push",
+			envs: map[string]string{
+				"GITHUB_EVENT_NAME": "push",
+				"GITHUB_SHA":        "190bfd6aa60022afd0ef830342cfb07e33c45f37",
+				"GITHUB_REF":        "refs/heads/feature-branch-1",
+				"GITHUB_ACTION":     "action",
+			},
+			result:   &ci.ProviderConfig{IsPR: false, PR: "", PRBranch: "", Branch: "refs/heads/feature-branch-1", Tag: "", Commit: "190bfd6aa60022afd0ef830342cfb07e33c45f37", BuildURL: "", Service: "GithubActions", Name: "GithubActions CI"},
+			hasError: false,
+		},
 	}
 
 	for _, config := range testConfigs {
