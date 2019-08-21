@@ -1,6 +1,25 @@
 name: Go
-on: [push, pull_request]
 jobs:
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.12
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.12
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: Lint
+      run: |
+        export PATH=$PATH:$(go env GOPATH)/bin
+        curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
+        golangci-lint run ./...
 
   test:
     name: Test
@@ -16,20 +35,15 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
 
-    - name: Lint
-      run: |
-        curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
-        golangci-lint run ./...
-
     - name: Run tests
       run: go test -v ./...
 
     - name: Build binary without version
-      run: go build -o build/go-semantic-release-temp ./cmd/go-semantic-release/
+      run: 
 
   build:
     name: Build on ${{ matrix.os }}
-    needs: Test
+    needs: [Test, Lint]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -37,4 +51,5 @@ jobs:
     steps:
     - name: Build binary
       run: |
+        go build -o build/go-semantic-release-temp ./cmd/go-semantic-release/
         go build -o build/go-semantic-release  -ldflags "-w -s --X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
