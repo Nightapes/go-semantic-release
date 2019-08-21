@@ -1,0 +1,44 @@
+name: Go
+on: [push, pull_request]
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: tmp
+      run: |
+        echo $GITHUB_EVENT_NAME
+        cat $GITHUB_EVENT_PATH
+    
+    - name: Set up Go 1.12
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.12
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: Lint
+      run: |
+        export PATH=$PATH:$(go env GOPATH)/bin
+        curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
+        golangci-lint run ./...
+
+    - name: Run tests
+      run: go test ./...
+
+    - name: Build binary
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        go build -o build/go-semantic-release-temp ./cmd/go-semantic-release/
+        go build -o build/go-semantic-release  -ldflags "-w -s --X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
+        GOOS=windows GOARCH=386 go build -o build/go-semantic-release.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
+
+    - name: Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: ./build/go-semantic-release-temp release --loglevel trace
