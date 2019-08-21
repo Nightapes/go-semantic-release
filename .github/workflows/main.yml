@@ -45,12 +45,22 @@ jobs:
   build:
     name: Build on ${{ matrix.os }}
     needs: [Test, Lint]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+    runs-on: ubuntu-latest
     steps:
+    - name: Set up Go 1.12
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.12
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
     - name: Build binary
       run: |
         go build -o build/go-semantic-release-temp ./cmd/go-semantic-release/
         go build -o build/go-semantic-release  -ldflags "-w -s --X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
+        GOOS=windows GOARCH=386 go build -o build/go-semantic-release.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
+
+    - name: Release
+      run: ./build/go-semantic-release-temp release --loglevel trace
