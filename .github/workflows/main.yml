@@ -6,11 +6,6 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-
-    - name: tmp
-      run: |
-        echo $GITHUB_EVENT_NAME
-        cat $GITHUB_EVENT_PATH
     
     - name: Set up Go 1.12
       uses: actions/setup-go@v1
