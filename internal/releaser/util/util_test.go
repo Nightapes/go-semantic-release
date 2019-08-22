@@ -214,6 +214,8 @@ func TestDoAndRoundTrip(t *testing.T) {
 
 		}))
 
+		defer testServer.Close()
+
 		req, err := http.NewRequest("POST", testServer.URL+testOject.path, nil)
 		assert.NoError(t, err)
 
@@ -225,6 +227,5 @@ func TestDoAndRoundTrip(t *testing.T) {
 			assert.Equal(t, testOject.statusCode, resp.StatusCode)
 			assert.Equal(t, testOject.responseBody, testOject.responseBodyType)
 		}
-		testServer.Close()
 	}
 }

@@ -97,12 +97,11 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 
 	analyzedCommits := s.analyzer.Analyze(commits)
 
-	isDraft := false
 	var newVersion semver.Version
 	for branch, releaseType := range s.config.Branch {
 		if provider.Branch == branch || strings.HasPrefix(provider.Branch, branch) {
 			log.Debugf("Found branch config for branch %s with release type %s", provider.Branch, releaseType)
-			newVersion, isDraft = s.calculator.CalculateNewVersion(analyzedCommits, lastVersion, releaseType, firstRelease)
+			newVersion = s.calculator.CalculateNewVersion(analyzedCommits, lastVersion, releaseType, firstRelease)
 			break
 		}
 	}
@@ -117,7 +116,6 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 			Version: lastVersion,
 		},
 		Branch:  provider.Branch,
-		Draft:   isDraft,
 		Commits: analyzedCommits,
 	}
 

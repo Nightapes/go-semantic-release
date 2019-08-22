@@ -6,17 +6,16 @@ import (
 
 //ReleaseVersion struct
 type ReleaseVersion struct {
-	Last    ReleaseVersionEntry                            `yaml:"last"`
-	Next    ReleaseVersionEntry                            `yaml:"next"`
-	Branch  string                                         `yaml:"branch"`
-	Draft   bool                                           `yaml:"draft"`
+	Last    ReleaseVersionEntry          `yaml:"last"`
+	Next    ReleaseVersionEntry          `yaml:"next"`
+	Branch  string                       `yaml:"branch"`
 	Commits map[Release][]AnalyzedCommit `yaml:"commits"`
 }
 
 //ReleaseVersionEntry struct
 type ReleaseVersionEntry struct {
-	Commit        string `yaml:"commit"`
-	VersionString string `yaml:"version"`
+	Commit        string          `yaml:"commit"`
+	VersionString string          `yaml:"version"`
 	Version       *semver.Version `yaml:"-"`
 }
 

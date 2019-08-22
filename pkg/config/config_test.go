@@ -3,11 +3,12 @@ package config_test
 import (
 	"testing"
 
-	"github.com/Nightapes/go-semantic-release/pkg/config"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path"
+
+	"github.com/Nightapes/go-semantic-release/pkg/config"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestReadCacheNotFound(t *testing.T) {
@@ -88,7 +89,6 @@ github:
 				Compress: false}},
 		ReleaseTitle: "go-semantic-release release",
 		IsPreRelease: false,
-		IsDraft:      false,
 	}, result)
 
 }
@@ -105,7 +105,6 @@ github:
 // 			Version: createVersion("1.1.0"),
 // 		},
 // 		Branch: "master",
-// 		Draft:  true,
 // 	})
 // 	assert.Errorf(t, err, "Write non exsiting file")
 

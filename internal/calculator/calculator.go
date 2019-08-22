@@ -40,29 +40,24 @@ func (c *Calculator) IncPrerelease(preReleaseType string, version *semver.Versio
 }
 
 //CalculateNewVersion from given commits and lastversion
-func (c *Calculator) CalculateNewVersion(commits map[shared.Release][]shared.AnalyzedCommit, lastVersion *semver.Version, releaseType string, firstRelease bool) (semver.Version, bool) {
+func (c *Calculator) CalculateNewVersion(commits map[shared.Release][]shared.AnalyzedCommit, lastVersion *semver.Version, releaseType string, firstRelease bool) semver.Version {
 	switch releaseType {
-	case "beta", "alpha":
+	case "beta", "alpha", "rc":
 		if len(commits["major"]) > 0 || len(commits["minor"]) > 0 || len(commits["patch"]) > 0 {
 			version, _ := c.IncPrerelease(releaseType, lastVersion)
-			return version, true
-		}
-	case "rc":
-		if len(commits["major"]) > 0 || len(commits["minor"]) > 0 || len(commits["patch"]) > 0 {
-			version, _ := c.IncPrerelease(releaseType, lastVersion)
-			return version, false
+			return version
 		}
 	case "release":
 		if !firstRelease {
 			if len(commits["major"]) > 0 {
-				return lastVersion.IncMajor(), false
+				return lastVersion.IncMajor()
 			} else if len(commits["minor"]) > 0 {
-				return lastVersion.IncMinor(), false
+				return lastVersion.IncMinor()
 			} else if len(commits["patch"]) > 0 {
-				return lastVersion.IncPatch(), false
+				return lastVersion.IncPatch()
 			}
 		}
 	}
 
-	return *lastVersion, false
+	return *lastVersion
 }
