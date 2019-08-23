@@ -83,8 +83,8 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 	firstRelease := false
 
 	if lastVersion == nil {
-		defaultVersion, _ := semver.NewVersion("1.0.0")
-		lastVersion = defaultVersion
+		lastVersion, _ = semver.NewVersion("1.0.0")
+		log.Infof("This is the first release, will set version to %s", lastVersion.String())
 		firstRelease = true
 	}
 
@@ -117,6 +117,10 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 		},
 		Branch:  provider.Branch,
 		Commits: analyzedCommits,
+	}
+
+	if firstRelease {
+		releaseVersion.Last.Version, _ = semver.NewVersion("0.0.0")
 	}
 
 	log.Infof("New version %s -> %s", lastVersion.String(), newVersion.String())
