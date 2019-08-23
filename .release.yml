@@ -1,10 +1,7 @@
 commitFormat: angular
 title: "go-semantic-release release"
 branch:
-  master: beta
-  rc: rc
-  beta: beta
-  alpha: alpha
+  master: rc
 changelog:
   printAll: false
   template: ''
