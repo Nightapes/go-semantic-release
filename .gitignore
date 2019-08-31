@@ -16,3 +16,4 @@ go-semantic-release
 .vscode/settings.json
 CHANGELOG.md
 cover.html
+build/

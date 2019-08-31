@@ -20,47 +20,55 @@ import (
 )
 
 func TestGetCommitURL(t *testing.T) {
-
+	os.Setenv("GITLAB_ACCESS_TOKEN", "XXX")
+	defer os.Unsetenv("GITLAB_ACCESS_TOKEN")
 	client, err := gitlab.New(&config.GitLabProvider{
 		CustomURL: "https://localhost/",
 		Repo:      "test/test",
-	}, "aToken")
+	})
 	assert.NoError(t, err)
 	assert.Equal(t, "https://localhost/test/test/commit/{{hash}}", client.GetCommitURL())
 }
 
 func TestGetCompareURL(t *testing.T) {
-
+	os.Setenv("GITLAB_ACCESS_TOKEN", "XXX")
+	defer os.Unsetenv("GITLAB_ACCESS_TOKEN")
 	client, err := gitlab.New(&config.GitLabProvider{
 		CustomURL: "https://localhost/",
 		Repo:      "test/test",
-	}, "aToken")
+	})
 	assert.NoError(t, err)
 	assert.Equal(t, "https://localhost/test/test/compare/1.0.0...1.0.1", client.GetCompareURL("1.0.0", "1.0.1"))
 }
 
 func TestValidateConfig_EmptyRepro(t *testing.T) {
+	os.Setenv("GITLAB_ACCESS_TOKEN", "XXX")
+	defer os.Unsetenv("GITLAB_ACCESS_TOKEN")
 	_, err := gitlab.New(&config.GitLabProvider{
 		CustomURL: "https://localhost/",
-	}, "aToken")
+	})
 	assert.Error(t, err)
 }
 
 func TestValidateConfig_DefaultURL(t *testing.T) {
+	os.Setenv("GITLAB_ACCESS_TOKEN", "XXX")
+	defer os.Unsetenv("GITLAB_ACCESS_TOKEN")
 	config := &config.GitLabProvider{
 		Repo: "localhost/test",
 	}
-	_, err := gitlab.New(config, "aToken")
+	_, err := gitlab.New(config)
 	assert.NoError(t, err)
 	assert.Equal(t, "https://gitlab.com", config.CustomURL)
 }
 
 func TestValidateConfig_CustomURL(t *testing.T) {
+	os.Setenv("GITLAB_ACCESS_TOKEN", "XXX")
+	defer os.Unsetenv("GITLAB_ACCESS_TOKEN")
 	config := &config.GitLabProvider{
 		Repo:      "/localhost/test/",
 		CustomURL: "https://localhost/",
 	}
-	_, err := gitlab.New(config, "aToken")
+	_, err := gitlab.New(config)
 	assert.NoError(t, err)
 	assert.Equal(t, "https://localhost", config.CustomURL)
 	assert.Equal(t, "localhost/test", config.Repo)
@@ -181,8 +189,9 @@ func TestCreateRelease(t *testing.T) {
 		if testObject.config.CustomURL == "" {
 			testObject.config.CustomURL = testServer.URL
 		}
-
-		client, err := gitlab.New(&testObject.config, "aToken")
+		os.Setenv("GITLAB_ACCESS_TOKEN", "aToken")
+		defer os.Unsetenv("GITLAB_ACCESS_TOKEN")
+		client, err := gitlab.New(&testObject.config)
 		assert.NoError(t, err)
 
 		err = client.CreateRelease(testObject.releaseVersion, testObject.generatedChangelog)
@@ -307,8 +316,9 @@ func TestUploadAssets(t *testing.T) {
 		if testObject.config.CustomURL == "" {
 			testObject.config.CustomURL = testServer.URL
 		}
-
-		client, err := gitlab.New(&testObject.config, "aToken")
+		os.Setenv("GITLAB_ACCESS_TOKEN", "aToken")
+		defer os.Unsetenv("GITLAB_ACCESS_TOKEN")
+		client, err := gitlab.New(&testObject.config)
 		assert.NoError(t, err)
 		client.Release = "1.0.0"
 

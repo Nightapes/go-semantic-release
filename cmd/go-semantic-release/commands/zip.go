@@ -11,7 +11,7 @@ func init() {
 
 var zipCmd = &cobra.Command{
 	Use:   "zip",
-	Short: "Zip configured artifact from release config",
+	Short: "Zip configured artifact from release config (internal)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := cmd.Flags().GetString("config")
 		if err != nil {
