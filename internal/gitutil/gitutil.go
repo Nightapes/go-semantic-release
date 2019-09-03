@@ -6,11 +6,11 @@ import (
 	"sort"
 
 	"github.com/Masterminds/semver"
+	"github.com/Nightapes/go-semantic-release/internal/shared"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"github.com/Nightapes/go-semantic-release/internal/shared"
 )
 
 // GitUtil struct
@@ -87,7 +87,7 @@ func (g *GitUtil) GetLastVersion() (*semver.Version, string, error) {
 
 	err = gitTags.ForEach(func(p *plumbing.Reference) error {
 		v, err := semver.NewVersion(p.Name().Short())
-		log.Tracef("%+v with hash: %s", p.Target(), p.Hash())
+		log.Tracef("Tag %+v with hash: %s", p.Target(), p.Hash())
 
 		if err == nil {
 			tags = append(tags, v)
