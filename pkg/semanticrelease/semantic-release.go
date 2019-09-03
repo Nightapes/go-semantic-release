@@ -2,7 +2,6 @@ package semanticrelease
 
 import (
 	"io/ioutil"
-	"strings"
 	"time"
 
 	"github.com/Masterminds/semver"
@@ -98,12 +97,19 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 	analyzedCommits := s.analyzer.Analyze(commits)
 
 	var newVersion semver.Version
+	foundBranchConfig := false
 	for branch, releaseType := range s.config.Branch {
-		if provider.Branch == branch || strings.HasPrefix(provider.Branch, branch) {
+		if provider.Branch == branch {
 			log.Debugf("Found branch config for branch %s with release type %s", provider.Branch, releaseType)
 			newVersion = s.calculator.CalculateNewVersion(analyzedCommits, lastVersion, releaseType, firstRelease)
+			foundBranchConfig = true
 			break
 		}
+	}
+
+	if !foundBranchConfig {
+		log.Warnf("No branch config found for branch %s, will return last known version", provider.Branch)
+		newVersion = *lastVersion
 	}
 
 	releaseVersion := shared.ReleaseVersion{
