@@ -31,17 +31,34 @@ introduced by commit:
 {{ end -}}
 {{ end -}}
 {{ end -}}
+{{ if .HasDocker}}
+## Docker image
+
+New docker image is released under {{$.Backtick}}{{.DockerRepository}}:{{.Version}}{{$.Backtick}}
+
+### Usage
+
+{{$.Backtick}}docker run {{.DockerRepository}}:{{.Version}}{{$.Backtick}}
+{{ if .HasDockerLatest}}
+or
+
+{{$.Backtick}}docker run {{.DockerRepository}}:latest{{$.Backtick}}
+{{ end -}}
+{{ end -}}
 `
 
 type changelogContent struct {
-	Commits         map[string][]shared.AnalyzedCommit
-	BreakingChanges []shared.AnalyzedCommit
-	Order           []string
-	Version         string
-	Now             time.Time
-	Backtick        string
-	HasURL          bool
-	URL             string
+	Commits          map[string][]shared.AnalyzedCommit
+	BreakingChanges  []shared.AnalyzedCommit
+	Order            []string
+	Version          string
+	Now              time.Time
+	Backtick         string
+	HasURL           bool
+	URL              string
+	HasDocker        bool
+	HasDockerLatest  bool
+	DockerRepository string
 }
 
 //Changelog struct
@@ -92,14 +109,17 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 	}
 
 	changelogContent := changelogContent{
-		Version:         templateConfig.Version,
-		Commits:         commitsPerScope,
-		Now:             c.releaseTime,
-		BreakingChanges: commitsBreakingChange,
-		Backtick:        "`",
-		Order:           order,
-		HasURL:          templateConfig.CommitURL != "",
-		URL:             templateConfig.CommitURL,
+		Version:          templateConfig.Version,
+		Commits:          commitsPerScope,
+		Now:              c.releaseTime,
+		BreakingChanges:  commitsBreakingChange,
+		Backtick:         "`",
+		Order:            order,
+		HasURL:           templateConfig.CommitURL != "",
+		URL:              templateConfig.CommitURL,
+		HasDocker:        c.config.Changelog.Docker.Repository != "",
+		HasDockerLatest:  c.config.Changelog.Docker.Latest,
+		DockerRepository: c.config.Changelog.Docker.Repository,
 	}
 
 	title, err := generateTemplate(defaultChangelogTitle, changelogContent)

@@ -107,6 +107,11 @@ func TestAngular(t *testing.T) {
 					Author:  "me",
 					Hash:    "12345667",
 				},
+				shared.Commit{
+					Message: "Merge feat(internal/changelog): my first commit",
+					Author:  "me",
+					Hash:    "12345667",
+				},
 			},
 		},
 		{

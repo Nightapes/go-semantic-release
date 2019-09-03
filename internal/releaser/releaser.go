@@ -2,11 +2,9 @@ package releaser
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/Nightapes/go-semantic-release/internal/releaser/github"
 	"github.com/Nightapes/go-semantic-release/internal/releaser/gitlab"
-	"github.com/Nightapes/go-semantic-release/internal/releaser/util"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 
 	"github.com/Nightapes/go-semantic-release/pkg/config"
@@ -42,11 +40,7 @@ func (r *Releasers) GetReleaser() (Releaser, error) {
 		return github.New(&r.config.GitHubProvider)
 	case gitlab.GITLAB:
 		log.Debugf("initialize new %s-provider", gitlab.GITLAB)
-		accessToken, err := util.GetAccessToken(fmt.Sprintf("%s_ACCESS_TOKEN", strings.ToUpper(gitlab.GITLAB)))
-		if err != nil {
-			return nil, err
-		}
-		return gitlab.New(&r.config.GitLabProvider, accessToken)
+		return gitlab.New(&r.config.GitLabProvider)
 	}
 	return nil, fmt.Errorf("could not initialize a releaser from this type: %s", r.config.Release)
 }

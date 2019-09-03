@@ -22,7 +22,7 @@ const ANGULAR = "angular"
 
 func newAngular() *angular {
 	return &angular{
-		regex: `(TAG)(?:\((.*)\))?: (.*)`,
+		regex: `^(TAG)(?:\((.*)\))?: (.*)$`,
 		log:   log.WithField("analyzer", ANGULAR),
 		rules: []Rule{
 			{

@@ -10,9 +10,23 @@ import (
 
 // ChangelogConfig struct
 type ChangelogConfig struct {
-	PrintAll     bool   `yaml:"printAll,omitempty"`
-	Template     string `yaml:"template,omitempty"`
-	TemplatePath string `yaml:"templatePath,omitempty"`
+	PrintAll     bool            `yaml:"printAll,omitempty"`
+	Template     string          `yaml:"template,omitempty"`
+	TemplatePath string          `yaml:"templatePath,omitempty"`
+	Docker       ChangelogDocker `yaml:"docker,omitempty"`
+	NPM          ChangelogNPM    `yaml:"npm,omitempty"`
+}
+
+//ChangelogDocker type struct
+type ChangelogDocker struct {
+	Latest     bool   `yaml:"latest"`
+	Repository string `yaml:"repository"`
+}
+
+//ChangelogNPM type struct
+type ChangelogNPM struct {
+	YARN       bool   `yaml:"latest"`
+	Repository string `yaml:"repository"`
 }
 
 //Asset type struct

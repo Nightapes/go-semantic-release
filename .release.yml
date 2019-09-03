@@ -1,18 +1,12 @@
-commitFormat: angular
-title: "go-semantic-release release"
-branch:
-  master: rc
-changelog:
-  printAll: false
-  template: ''
-  templatePath: ''
 release: 'github'
+github:
+  repo: "go-semantic-release"
+  user: "nightapes"
+commitFormat: angular
+branch:
+  master: release
 assets:
   - name: ./build/go-semantic-release
     compress: false
   - name: ./build/go-semantic-release.exe
     compress: false
-github:
-  repo: "go-semantic-release"
-  user: "nightapes"
-  customUrl: ""

@@ -2,7 +2,6 @@ package gitlab
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -26,7 +25,6 @@ const GITLAB = "gitlab"
 // Client type struct
 type Client struct {
 	config  *config.GitLabProvider
-	context context.Context
 	client  *http.Client
 	baseURL string
 	apiURL  string
@@ -36,8 +34,12 @@ type Client struct {
 }
 
 // New initialize a new gitlabRelease
-func New(config *config.GitLabProvider, accessToken string) (*Client, error) {
-	ctx := context.Background()
+func New(config *config.GitLabProvider) (*Client, error) {
+	accessToken, err := util.GetAccessToken(fmt.Sprintf("%s_ACCESS_TOKEN", strings.ToUpper(GITLAB)))
+	if err != nil {
+		return nil, err
+	}
+
 	tokenHeader := util.NewAddHeaderTransport(nil, "PRIVATE-TOKEN", accessToken)
 	acceptHeader := util.NewAddHeaderTransport(tokenHeader, "Accept", "application/json")
 	httpClient := &http.Client{
@@ -65,7 +67,6 @@ func New(config *config.GitLabProvider, accessToken string) (*Client, error) {
 	return &Client{
 		token:   accessToken,
 		config:  config,
-		context: ctx,
 		baseURL: config.CustomURL,
 		apiURL:  config.CustomURL + "/api/v4",
 		client:  httpClient,
