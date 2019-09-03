@@ -50,6 +50,7 @@ func GetCIProvider(gitUtil *gitutil.GitUtil, envs map[string]string) (*ProviderC
 		config, err := service.detect(envs)
 		if err == nil {
 			log.Infof("Found CI: %s", config.Name)
+			log.Tracef("Found CI config: %+v", config)
 			return config, nil
 		}
 		log.Debugf("%s", err.Error())
