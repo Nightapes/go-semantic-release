@@ -49,6 +49,11 @@ func (c *Calculator) CalculateNewVersion(commits map[shared.Release][]shared.Ana
 		}
 	case "release":
 		if !firstRelease {
+			if lastVersion.Prerelease() != "" {
+				newVersion, _ := lastVersion.SetPrerelease("")
+				return newVersion
+			}
+
 			if len(commits["major"]) > 0 {
 				return lastVersion.IncMajor()
 			} else if len(commits["minor"]) > 0 {
