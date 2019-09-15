@@ -31,8 +31,8 @@ jobs:
       run: |
         go build -o build/go-semantic-release-temp ./cmd/go-semantic-release/
         ./build/go-semantic-release-temp next --no-cache --loglevel trace
-        go build -o build/go-semantic-release  -ldflags "-w -s --X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
-        GOOS=windows GOARCH=386 go build -o build/go-semantic-release.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
+        GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/go-semantic-release  -ldflags "-w -s --X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
+        GOOS=windows GOARCH=386 CGO_ENABLED=0 go build -o build/go-semantic-release.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
 
     - name: Release
       env:

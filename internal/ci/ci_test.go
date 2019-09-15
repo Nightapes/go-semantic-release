@@ -111,6 +111,19 @@ func TestCi(t *testing.T) {
 			result:   &ci.ProviderConfig{IsPR: false, PR: "", PRBranch: "", Branch: "feature-branch-1", Tag: "", Commit: "190bfd6aa60022afd0ef830342cfb07e33c45f37", BuildURL: "", Service: "GithubActions", Name: "GithubActions CI"},
 			hasError: false,
 		},
+		{
+			service: "GitLab CI/CD PR",
+			envs: map[string]string{
+				"GITLAB_CI":          "true",
+				"CI_COMMIT_SHA":      "190bfd6aa60022afd0ef830342cfb07e33c45f37",
+				"CI_COMMIT_REF_NAME": "master",
+				"CI_COMMIT_TAG":      "tag",
+				"CI_PROJECT_URL":     "https://my.gitlab.com",
+				"CI_PIPELINE_ID":     "1",
+			},
+			result:   &ci.ProviderConfig{IsPR: false, PR: "", PRBranch: "", Branch: "master", Tag: "tag", Commit: "190bfd6aa60022afd0ef830342cfb07e33c45f37", BuildURL: "https://my.gitlab.com/pipelines/1", Service: "gitlab", Name: "GitLab CI/CD"},
+			hasError: false,
+		},
 	}
 
 	for _, config := range testConfigs {

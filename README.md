@@ -71,6 +71,8 @@ At the moment we support releases to gitlab and github.
 
 ##### Github 
 
+You need to set the env `GITHUB_TOKEN` with an access token.
+
 ```yml
 release: 'github'
 github:
@@ -81,6 +83,9 @@ github:
 ```
 
 ##### Gitlab 
+
+You need to set the env `GITLAB_ACCESS_TOKEN` with an personal access token.
+
 
 ```yml
 release: 'gitlab'
