@@ -3,10 +3,11 @@ package ci
 import (
 	"fmt"
 
-	"github.com/Nightapes/go-semantic-release/internal/gitutil"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"strings"
+
+	"github.com/Nightapes/go-semantic-release/internal/gitutil"
+	log "github.com/sirupsen/logrus"
 )
 
 //ProviderConfig struct
@@ -43,6 +44,7 @@ func GetCIProvider(gitUtil *gitutil.GitUtil, envs map[string]string) (*ProviderC
 	services := []Service{
 		Travis{},
 		GithubActions{},
+		GitlabCI{},
 		Git{gitUtil: gitUtil}, // GIt must be the last option to check
 	}
 
