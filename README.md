@@ -79,7 +79,7 @@ github:
   user: "<user/group"
   repo: "<repositroyname>"
   ## Optional, if your not using github.com
-  customURL: <https://your.github>
+  customUrl: <https://your.github>
 ```
 
 ##### Gitlab 
@@ -92,7 +92,7 @@ release: 'gitlab'
 gitlab:
   repo: "<repositroyname>"  ## Example group/project
   ## Optional, if your not using gitlab.com
-  customURL: <https://your.gitlab>
+  customUrl: <https://your.gitlab>
 ```
 
 #### Assets
