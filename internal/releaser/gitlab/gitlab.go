@@ -42,8 +42,9 @@ func New(config *config.GitLabProvider) (*Client, error) {
 
 	tokenHeader := util.NewAddHeaderTransport(nil, "PRIVATE-TOKEN", accessToken)
 	acceptHeader := util.NewAddHeaderTransport(tokenHeader, "Accept", "application/json")
+	contentHeader := util.NewAddHeaderTransport(acceptHeader, "Content-Type", "application/json")
 	httpClient := &http.Client{
-		Transport: acceptHeader,
+		Transport: contentHeader,
 		Timeout:   time.Second * 60,
 	}
 
@@ -97,7 +98,7 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 	g.Release = tag
 	g.log.Infof("create release with version %s", tag)
 	url := fmt.Sprintf("%s/projects/%s/releases", g.apiURL, util.PathEscape(g.config.Repo))
-	g.log.Infof("Send release to  %s", url)
+	g.log.Infof("Send release to %s", url)
 
 	bodyBytes, err := json.Marshal(Release{
 		TagName:     tag,
@@ -108,6 +109,8 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 	if err != nil {
 		return err
 	}
+
+	g.log.Tracef("Send release config %s", bodyBytes)
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(bodyBytes))
 	if err != nil {
@@ -124,7 +127,7 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 		return err
 	}
 
-	g.log.Infof("Crated release")
+	g.log.Infof("Created release")
 
 	return nil
 }

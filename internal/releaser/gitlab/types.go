@@ -6,9 +6,6 @@ type Release struct {
 	Name        string `json:"name"`
 	Ref         string `json:"ref"`
 	Description string `json:"description,omitempty"`
-	Assets      struct {
-		Links []*ReleaseLink `json:"links"`
-	} `json:"assets"`
 }
 
 // ReleaseLink struct

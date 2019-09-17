@@ -13,7 +13,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
-	//"github.com/Nightapes/go-semantic-release/internal/releaser/util"
 	"github.com/Nightapes/go-semantic-release/internal/releaser/gitlab"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
@@ -109,7 +108,7 @@ func TestCreateRelease(t *testing.T) {
 			},
 			responseBody: "{}",
 			responseCode: 200,
-			requestBody:  `{"tag_name":"2.0.0","name":"title","ref":"master","description":"content","assets":{"links":null}}`,
+			requestBody:  `{"tag_name":"2.0.0","name":"title","ref":"master","description":"content"}`,
 			valid:        true,
 		},
 		{
@@ -133,7 +132,7 @@ func TestCreateRelease(t *testing.T) {
 			},
 			responseBody: "{}",
 			responseCode: 500,
-			requestBody:  `{"tag_name":"2.0.0","name":"title","ref":"master","description":"content","assets":{"links":null}}`,
+			requestBody:  `{"tag_name":"2.0.0","name":"title","ref":"master","description":"content"}`,
 			valid:        false,
 		},
 		{
@@ -158,7 +157,7 @@ func TestCreateRelease(t *testing.T) {
 			},
 			responseCode: 400,
 			responseBody: "{}",
-			requestBody:  `{"tag_name":"2.0.0","name":"title","ref":"master","description":"content","assets":{"links":null}}`,
+			requestBody:  `{"tag_name":"2.0.0","name":"title","ref":"master","description":"content"}`,
 			valid:        false,
 		},
 	}
