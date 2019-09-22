@@ -10,3 +10,7 @@ assets:
     compress: false
   - name: ./build/go-semantic-release.exe
     compress: false
+changelog:
+  docker:
+    latest: true
+    repository: "nightapes/go-semantic-release"
