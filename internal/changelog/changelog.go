@@ -2,6 +2,7 @@ package changelog
 
 import (
 	"bytes"
+	"io/ioutil"
 	"strings"
 	"text/template"
 	"time"
@@ -13,9 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const defaultChangelogTitle string = `v{{.Version}} ({{.Now.Format "2006-01-02"}})`
-const defaultChangelog string = `# v{{$.Version}} ({{.Now.Format "2006-01-02"}})
-{{ range $index,$commit := .BreakingChanges -}}
+const defaultCommitList string = `{{ range $index,$commit := .BreakingChanges -}}
 {{ if eq $index 0 }}
 ## BREAKING CHANGES
 {{ end}}
@@ -30,7 +29,10 @@ introduced by commit:
 * **{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}** {{$commit.ParsedMessage}} {{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}}))  {{end}}
 {{ end -}}
 {{ end -}}
-{{ end -}}
+{{ end -}}`
+const defaultChangelogTitle string = `v{{.Version}} ({{.Now.Format "2006-01-02"}})`
+const defaultChangelog string = `# v{{$.Version}} ({{.Now.Format "2006-01-02"}})
+{{ .Commits -}}
 {{ if .HasDocker}}
 ## Docker image
 
@@ -48,17 +50,24 @@ or
 `
 
 type changelogContent struct {
-	Commits          map[string][]shared.AnalyzedCommit
-	BreakingChanges  []shared.AnalyzedCommit
-	Order            []string
+	Commits          string
 	Version          string
 	Now              time.Time
 	Backtick         string
-	HasURL           bool
-	URL              string
 	HasDocker        bool
 	HasDockerLatest  bool
 	DockerRepository string
+}
+
+type commitsContent struct {
+	Commits         map[string][]shared.AnalyzedCommit
+	BreakingChanges []shared.AnalyzedCommit
+	Order           []string
+	Version         string
+	Now             time.Time
+	Backtick        string
+	HasURL          bool
+	URL             string
 }
 
 //Changelog struct
@@ -108,30 +117,61 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 		}
 	}
 
+	commitsContent := commitsContent{
+		Version:         templateConfig.Version,
+		Commits:         commitsPerScope,
+		Now:             c.releaseTime,
+		BreakingChanges: commitsBreakingChange,
+		Backtick:        "`",
+		Order:           order,
+		HasURL:          templateConfig.CommitURL != "",
+		URL:             templateConfig.CommitURL,
+	}
+
 	changelogContent := changelogContent{
 		Version:          templateConfig.Version,
-		Commits:          commitsPerScope,
 		Now:              c.releaseTime,
-		BreakingChanges:  commitsBreakingChange,
 		Backtick:         "`",
-		Order:            order,
-		HasURL:           templateConfig.CommitURL != "",
-		URL:              templateConfig.CommitURL,
 		HasDocker:        c.config.Changelog.Docker.Repository != "",
 		HasDockerLatest:  c.config.Changelog.Docker.Latest,
 		DockerRepository: c.config.Changelog.Docker.Repository,
 	}
+	template := defaultChangelog
+	if c.config.Changelog.TemplatePath != "" {
+		content, err := ioutil.ReadFile(c.config.Changelog.TemplatePath)
+		if err != nil {
+			return nil, err
+		}
+		template = string(content)
+	}
 
-	title, err := generateTemplate(defaultChangelogTitle, changelogContent)
+	templateTitle := defaultChangelogTitle
+	if c.config.Changelog.TemplateTitle != "" {
+		templateTitle = c.config.Changelog.TemplateTitle
+	}
+
+	log.Debugf("Render title")
+	renderedTitle, err := generateTemplate(templateTitle, changelogContent)
 	if err != nil {
 		return nil, err
 	}
-	content, err := generateTemplate(defaultChangelog, changelogContent)
 
-	return &shared.GeneratedChangelog{Title: title, Content: content}, err
+	log.Debugf("Render commits")
+	renderedCommitList, err := generateTemplate(defaultCommitList, commitsContent)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Tracef("Commits %s", renderedCommitList)
+
+	changelogContent.Commits = renderedCommitList
+	log.Debugf("Render changelog")
+	renderedContent, err := generateTemplate(template, changelogContent)
+
+	return &shared.GeneratedChangelog{Title: renderedTitle, Content: renderedContent}, err
 }
 
-func generateTemplate(text string, values changelogContent) (string, error) {
+func generateTemplate(text string, values interface{}) (string, error) {
 
 	funcMap := template.FuncMap{
 		"replace": replace,
