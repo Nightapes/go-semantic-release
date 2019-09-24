@@ -110,9 +110,20 @@ assets:
 
 #### Changelog
 
+Following variables can be used for templates:
+*   `Commits` string
+*	`Version` string
+* 	`Now` time.Time
+* 	`Backtick` string
+* 	`HasDocker` bool
+* 	`HasDockerLatest` bool
+* 	`DockerRepository` string
+
 ```yml
 changelog:
   printAll: false ## Print all valid commits to changelog
+  title: "v{{.Version}} ({{.Now.Format "2006-01-02"}})" ## Used for releases (go template)
+  templatePath: "./examples/changelog.tmpl"    ## Path to a template file (go template)
 ```
 
 ##### Docker 

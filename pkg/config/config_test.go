@@ -74,9 +74,9 @@ github:
 		CommitFormat: "angular",
 		Branch:       map[string]string{"add_git_releases": "alpha", "alpha": "alpha", "beta": "beta", "master": "release", "rc": "rc"},
 		Changelog: config.ChangelogConfig{
-			PrintAll:     false,
-			Template:     "",
-			TemplatePath: ""},
+			PrintAll:      false,
+			TemplateTitle: "",
+			TemplatePath:  ""},
 		Release: "github",
 		GitHubProvider: config.GitHubProvider{
 			Repo:        "go-semantic-release",
@@ -92,20 +92,3 @@ github:
 	}, result)
 
 }
-
-// func TestWriteNotFound(t *testing.T) {
-
-// 	err := cache.Write("notfound/dir", shared.ReleaseVersion{
-// 		Last: shared.ReleaseVersionEntry{
-// 			Commit:  "12345",
-// 			Version: createVersion("1.0.0"),
-// 		},
-// 		Next: shared.ReleaseVersionEntry{
-// 			Commit:  "12346",
-// 			Version: createVersion("1.1.0"),
-// 		},
-// 		Branch: "master",
-// 	})
-// 	assert.Errorf(t, err, "Write non exsiting file")
-
-// }

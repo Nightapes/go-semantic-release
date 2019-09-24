@@ -34,6 +34,34 @@ jobs:
         GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/go-semantic-release  -ldflags "-w -s --X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
         GOOS=windows GOARCH=386 CGO_ENABLED=0 go build -o build/go-semantic-release.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
 
+    - name: Build Docker image for master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      if: github.ref == 'refs/heads/master'
+      run: |
+        docker build -t nightapes/go-semantic-release:latest .
+        docker build -t nightapes/go-semantic-release:"$(./go-semantic-release next)" .
+
+    - name: Push Docker image for master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      if: github.ref == 'refs/heads/master'
+      run: |
+        docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
+        docker push nightapes/go-semantic-release:latest
+        docker push nightapes/go-semantic-release:"$(./go-semantic-release next)"
+
+    - name: Build Docker image
+      if: github.ref != 'refs/heads/master'
+      run: |
+        docker build -t nightapes/go-semantic-release:development .
+
+    - name: Push Docker image
+      if: github.ref != 'refs/heads/master'
+      run: |
+        docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
+        docker push nightapes/go-semantic-release:development
+
     - name: Release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

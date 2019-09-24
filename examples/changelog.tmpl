@@ -1,0 +1,16 @@
+# My custom release template v{{$.Version}} ({{.Now.Format "2006-01-02"}})
+{{ .Commits -}}
+{{ if .HasDocker}}
+## Docker image
+
+New docker image is released under {{$.Backtick}}{{.DockerRepository}}:{{.Version}}{{$.Backtick}}
+
+### Usage
+
+{{$.Backtick}}docker run {{.DockerRepository}}:{{.Version}}{{$.Backtick}}
+{{ if .HasDockerLatest}}
+or
+
+{{$.Backtick}}docker run {{.DockerRepository}}:latest{{$.Backtick}}
+{{ end -}}
+{{ end -}}
