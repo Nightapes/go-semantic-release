@@ -40,7 +40,7 @@ jobs:
       if: github.ref == 'refs/heads/master'
       run: |
         docker build -t nightapes/go-semantic-release:latest .
-        docker build -t nightapes/go-semantic-release:"$(./go-semantic-release next)" .
+        docker build -t nightapes/go-semantic-release:"$(./build/go-semantic-release next)" .
 
     - name: Push Docker image for master
       env:
@@ -49,7 +49,7 @@ jobs:
       run: |
         docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
         docker push nightapes/go-semantic-release:latest
-        docker push nightapes/go-semantic-release:"$(./go-semantic-release next)"
+        docker push nightapes/go-semantic-release:"$(./build/go-semantic-release next)"
 
     - name: Build Docker image
       if: github.ref != 'refs/heads/master'
