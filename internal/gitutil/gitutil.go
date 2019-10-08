@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/pkg/errors"
+
 	"github.com/Masterminds/semver"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/plumbing/storer"
 )
 
 // GitUtil struct
@@ -139,7 +142,7 @@ func (g *GitUtil) GetCommits(lastTagHash string) ([]shared.Commit, error) {
 		if c.Hash.String() == lastTagHash {
 			log.Debugf("Found commit with hash %s, will stop here", c.Hash.String())
 			foundEnd = true
-
+			return storer.ErrStop
 		}
 		if !foundEnd {
 			log.Tracef("Found commit with hash %s", c.Hash.String())
@@ -153,5 +156,9 @@ func (g *GitUtil) GetCommits(lastTagHash string) ([]shared.Commit, error) {
 		return nil
 	})
 
-	return commits, err
+	if err != nil {
+		return commits, errors.Wrap(err, "Could not read commits, check git clone depth in your ci")
+	}
+
+	return commits, nil
 }

@@ -8,6 +8,7 @@ require (
 	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/google/go-github/v25 v25.1.3
 	github.com/kevinburke/ssh_config v0.0.0-20190630040420-2e50c441276c // indirect
+	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/stretchr/testify v1.3.0
