@@ -48,29 +48,6 @@ var testNewClient = []testHelperMethodStruct{
 	},
 }
 
-var testHelperMethod = []testHelperMethodStruct{
-	testHelperMethodStruct{config: config.GitHubProvider{
-		Repo: "foo",
-		User: "bar",
-	},
-		valid: true,
-	},
-
-	testHelperMethodStruct{config: config.GitHubProvider{
-		Repo: "",
-		User: "bar",
-	},
-		valid: false,
-	},
-
-	testHelperMethodStruct{config: config.GitHubProvider{
-		Repo: "foo",
-		User: "",
-	},
-		valid: false,
-	},
-}
-
 var lastVersion, _ = semver.NewVersion("1.0.0")
 var newVersion, _ = semver.NewVersion("2.0.0")
 
