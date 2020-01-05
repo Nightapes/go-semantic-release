@@ -1,4 +1,4 @@
-release: 'github'
+release: "github"
 github:
   repo: "go-semantic-release"
   user: "nightapes"

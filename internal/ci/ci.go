@@ -39,13 +39,13 @@ func ReadAllEnvs() map[string]string {
 }
 
 //GetCIProvider get provider
-func GetCIProvider(gitUtil *gitutil.GitUtil, envs map[string]string) (*ProviderConfig, error) {
+func GetCIProvider(gitUtil *gitutil.GitUtil, configCheck bool, envs map[string]string) (*ProviderConfig, error) {
 
 	services := []Service{
 		Travis{},
 		GithubActions{},
 		GitlabCI{},
-		Git{gitUtil: gitUtil}, // GIt must be the last option to check
+		Git{gitUtil: gitUtil}, // Git must be the last option to check
 	}
 
 	for _, service := range services {
@@ -57,5 +57,9 @@ func GetCIProvider(gitUtil *gitutil.GitUtil, envs map[string]string) (*ProviderC
 		}
 		log.Debugf("%s", err.Error())
 	}
-	return nil, fmt.Errorf("could not find any CI, if running locally set env CI=true")
+	if configCheck {
+		return nil, fmt.Errorf("could not find any CI, if running locally set env CI=true")
+
+	}
+	return Git{gitUtil: gitUtil}.detect(map[string]string{"CI": "true"})
 }

@@ -29,17 +29,27 @@ type Client struct {
 }
 
 // New initialize a new GitHubRelease
-func New(c *config.GitHubProvider) (*Client, error) {
-	var err error
+func New(c *config.GitHubProvider, checkConfig bool) (*Client, error) {
 
-	if c.AccessToken, err = util.GetAccessToken("GITHUB_TOKEN"); err != nil {
+	token, err := util.GetAccessToken("GITHUB_TOKEN")
+	if err != nil && checkConfig {
 		return &Client{}, err
 	}
+	c.AccessToken = token
 	ctx := context.Background()
 	httpClient := util.CreateBearerHTTPClient(ctx, c.AccessToken)
 
 	var client *github.Client
 	baseURL := "https://github.com"
+
+	if c.Repo == "" && checkConfig {
+		return nil, fmt.Errorf("github repro is not set")
+	}
+
+	if c.User == "" && checkConfig {
+		return nil, fmt.Errorf("github user is not set")
+	}
+
 	if c.CustomURL == "" {
 		client = github.NewClient(httpClient)
 	} else {
@@ -54,7 +64,7 @@ func New(c *config.GitHubProvider) (*Client, error) {
 		context: ctx,
 		baseURL: baseURL,
 		log:     log.WithField("releaser", GITHUB),
-	}, err
+	}, nil
 }
 
 //GetCommitURL for github
@@ -67,26 +77,10 @@ func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 	return fmt.Sprintf("%s/%s/%s/compare/%s...%s", g.baseURL, g.config.User, g.config.Repo, oldVersion, newVersion)
 }
 
-//ValidateConfig for github
-func (g *Client) ValidateConfig() error {
-	g.log.Debugf("validate GitHub provider config")
-
-	if g.config.Repo == "" {
-		return fmt.Errorf("github Repro is not set")
-	}
-
-	if g.config.User == "" {
-		return fmt.Errorf("github User is not set")
-	}
-
-	return nil
-
-}
-
 // CreateRelease creates release on remote
 func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
-	tag := releaseVersion.Next.Version.String()
+	tag := "v" + releaseVersion.Next.Version.String()
 	g.log.Debugf("create release with version %s", tag)
 
 	prerelease := releaseVersion.Next.Version.Prerelease() != ""
