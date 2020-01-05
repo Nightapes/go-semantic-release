@@ -94,7 +94,7 @@ func TestHelperProcess(t *testing.T) {
 
 		return
 	}
-	assert.Equal(t, "1.0.0", os.Args[3])
+	assert.Contains(t, os.Args, "1.0.0")
 }
 
 func createVersion(version string) *semver.Version {
