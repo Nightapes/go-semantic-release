@@ -14,3 +14,10 @@ changelog:
   docker:
     latest: true
     repository: "nightapes/go-semantic-release"
+hooks:
+  preRelease:
+    - docker build -t nightapes/go-semantic-release:latest .
+    - docker build -t nightapes/go-semantic-release:$RELEASE_VERSION .
+  postRelease:
+    - docker push nightapes/go-semantic-release:latest
+    - docker push nightapes/go-semantic-release:$RELEASE_VERSION
