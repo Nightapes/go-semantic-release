@@ -34,9 +34,9 @@ type Client struct {
 }
 
 // New initialize a new gitlabRelease
-func New(config *config.GitLabProvider) (*Client, error) {
+func New(config *config.GitLabProvider, checkConfig bool) (*Client, error) {
 	accessToken, err := util.GetAccessToken(fmt.Sprintf("%s_ACCESS_TOKEN", strings.ToUpper(GITLAB)))
-	if err != nil {
+	if err != nil && checkConfig {
 		return nil, err
 	}
 
@@ -52,7 +52,7 @@ func New(config *config.GitLabProvider) (*Client, error) {
 
 	logger.Debugf("validate gitlab provider config")
 
-	if config.Repo == "" {
+	if config.Repo == "" && checkConfig {
 		return nil, fmt.Errorf("gitlab Repro is not set")
 	}
 
@@ -85,16 +85,10 @@ func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 	return fmt.Sprintf("%s/%s/compare/%s...%s", g.baseURL, g.config.Repo, oldVersion, newVersion)
 }
 
-//ValidateConfig for gitlab
-func (g *Client) ValidateConfig() error {
-	return nil
-
-}
-
 // CreateRelease creates release on remote
 func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
-	tag := releaseVersion.Next.Version.String()
+	tag := "v" + releaseVersion.Next.Version.String()
 	g.Release = tag
 	g.log.Infof("create release with version %s", tag)
 	url := fmt.Sprintf("%s/projects/%s/releases", g.apiURL, util.PathEscape(g.config.Repo))

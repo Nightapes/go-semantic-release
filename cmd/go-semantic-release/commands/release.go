@@ -28,7 +28,12 @@ var releaseCmd = &cobra.Command{
 			return err
 		}
 
-		s, err := semanticrelease.New(readConfig(config), repository)
+		ignoreConfigChecks, err := cmd.Flags().GetBool("no-checks")
+		if err != nil {
+			return err
+		}
+
+		s, err := semanticrelease.New(readConfig(config), repository, !ignoreConfigChecks)
 		if err != nil {
 			return err
 		}

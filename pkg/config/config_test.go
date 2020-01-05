@@ -41,6 +41,9 @@ func TestWriteAndReadCache(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
 
+	os.Setenv("TEST_CONFIG", "value")
+	defer os.Unsetenv("TEST_CONFIG")
+
 	completePath := path.Join(path.Dir(dir), ".release.yml")
 	content := []byte(`
 commitFormat: angular
@@ -53,9 +56,12 @@ branch:
   add_git_releases: alpha
 changelog:
   printAll: false
-  template: ''
-  templatePath: ''
+  template: ""
+  templatePath: '${TEST_CONFIG}'
 release: 'github'
+hooks:
+  preRelease:
+    - "Test hook ${RELEASE_VERSION}"
 assets:
   - name: ./build/go-semantic-release
     compress: false
@@ -76,13 +82,18 @@ github:
 		Changelog: config.ChangelogConfig{
 			PrintAll:      false,
 			TemplateTitle: "",
-			TemplatePath:  ""},
+			TemplatePath:  "value"},
 		Release: "github",
 		GitHubProvider: config.GitHubProvider{
 			Repo:        "go-semantic-release",
 			User:        "nightapes",
 			CustomURL:   "",
 			AccessToken: ""},
+		Hooks: config.Hooks{
+			PreRelease: []string{
+				"Test hook ${RELEASE_VERSION}",
+			},
+		},
 		Assets: []config.Asset{
 			config.Asset{
 				Name:     "./build/go-semantic-release",

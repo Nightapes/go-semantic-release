@@ -48,29 +48,6 @@ var testNewClient = []testHelperMethodStruct{
 	},
 }
 
-var testHelperMethod = []testHelperMethodStruct{
-	testHelperMethodStruct{config: config.GitHubProvider{
-		Repo: "foo",
-		User: "bar",
-	},
-		valid: true,
-	},
-
-	testHelperMethodStruct{config: config.GitHubProvider{
-		Repo: "",
-		User: "bar",
-	},
-		valid: false,
-	},
-
-	testHelperMethodStruct{config: config.GitHubProvider{
-		Repo: "foo",
-		User: "",
-	},
-		valid: false,
-	},
-}
-
 var lastVersion, _ = semver.NewVersion("1.0.0")
 var newVersion, _ = semver.NewVersion("2.0.0")
 
@@ -146,7 +123,7 @@ func TestNew(t *testing.T) {
 			os.Setenv("GITHUB_TOKEN", "XXX")
 		}
 
-		_, err := github.New(&testOject.config)
+		_, err := github.New(&testOject.config, true)
 		assert.Equal(t, testOject.valid, err == nil)
 
 		os.Unsetenv("GITHUB_TOKEN")
@@ -157,7 +134,7 @@ func TestNew(t *testing.T) {
 func TestGetCommitURL(t *testing.T) {
 	os.Setenv("GITHUB_TOKEN", "XX")
 	for _, testOject := range testNewClient {
-		client, _ := github.New(&testOject.config)
+		client, _ := github.New(&testOject.config, false)
 		actualURL := client.GetCommitURL()
 		if testOject.config.CustomURL != "" {
 			expectedURL := fmt.Sprintf("%s/%s/%s/commit/{{hash}}", testOject.config.CustomURL, testOject.config.User, testOject.config.Repo)
@@ -175,7 +152,7 @@ func TestGetCommitURL(t *testing.T) {
 func TestGetCompareURL(t *testing.T) {
 	os.Setenv("GITHUB_TOKEN", "XX")
 	for _, testOject := range testNewClient {
-		client, _ := github.New(&testOject.config)
+		client, _ := github.New(&testOject.config, false)
 		actualURL := client.GetCompareURL("1", "2")
 		if testOject.config.CustomURL != "" {
 			expectedURL := fmt.Sprintf("%s/%s/%s/compare/%s...%s", testOject.config.CustomURL, testOject.config.User, testOject.config.Repo, "1", "2")
@@ -190,18 +167,6 @@ func TestGetCompareURL(t *testing.T) {
 
 }
 
-func TestValidateConfig(t *testing.T) {
-	os.Setenv("GITHUB_TOKEN", "XX")
-	for _, testOject := range testHelperMethod {
-		client, _ := github.New(&testOject.config)
-		err := client.ValidateConfig()
-
-		assert.Equal(t, testOject.valid, err == nil)
-
-	}
-	os.Unsetenv("GITHUB_TOKEN")
-}
-
 func TestCreateRelease(t *testing.T) {
 	os.Setenv("GITHUB_TOKEN", "XX")
 
@@ -209,7 +174,7 @@ func TestCreateRelease(t *testing.T) {
 		if testObejct.valid {
 			server := initHTTPServer(testObejct.requestResponseCode, testObejct.requestResponseBody)
 			testObejct.config.CustomURL = server.URL
-			client, _ := github.New(&testObejct.config)
+			client, _ := github.New(&testObejct.config, false)
 
 			err := client.CreateRelease(testObejct.releaseVersion, testObejct.generatedChangelog)
 			if err != nil {
@@ -221,7 +186,7 @@ func TestCreateRelease(t *testing.T) {
 
 		} else {
 			testObejct.config.CustomURL = "http://foo"
-			client, _ := github.New(&testObejct.config)
+			client, _ := github.New(&testObejct.config, false)
 
 			err := client.CreateRelease(testObejct.releaseVersion, testObejct.generatedChangelog)
 			if err != nil {

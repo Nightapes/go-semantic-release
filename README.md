@@ -6,7 +6,7 @@
 | ---------- | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |
 | `github`   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    | :white_check_mark: |
 | `gitlab`   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    | :white_check_mark: |
-| `git`      |    Comming soon    | :white_check_mark: |                    |                    | :white_check_mark: |                    |
+| `git`      | :white_check_mark: | :white_check_mark: |                    |                    | :white_check_mark: |                    |
 | `bitbuckt` |    Comming soon    | :white_check_mark: |                    |                    | :white_check_mark: |                    |
 
 
@@ -37,6 +37,11 @@ assets:
     compress: false
   - name: ./build/go-semantic-release.exe
     compress: false
+hooks:
+  preRelease:
+    - name: echo $RELEASE_VERSION
+  postRelease:
+    - name: echo $RELEASE_VERSION
 ```
 
 #### CommitFormat
@@ -65,7 +70,7 @@ branch:
   <branch-name>: <kind>
 ```
 
-#### Relase
+#### Release
 
 At the moment we support releases to gitlab and github.
 
@@ -95,6 +100,20 @@ gitlab:
   customUrl: <https://your.gitlab>
 ```
 
+##### Git only 
+
+Only via https at the moment. You need write access to your git repository
+
+
+```yml
+release: 'git'
+git:
+  email: "<email>" # Used for creating tag
+  user: "<user>" : # Used for creating tag and pushing
+  auth: "<token>" # Used for pushing, can be env "$GIT_TOKEN", will be replaced with env
+```
+
+
 #### Assets
 
 You can upload assets to a release
@@ -107,6 +126,10 @@ assets:
   - name: ./build/go-semantic-release
     compress: false
 ```
+
+#### Hooks
+
+Hooks will run when calling `release`. Hooks run only if a release will be triggered.  
 
 #### Changelog
 

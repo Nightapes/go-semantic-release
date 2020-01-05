@@ -63,7 +63,7 @@ func TestWriteAndReadCache(t *testing.T) {
 						Author:  "Author",
 						Hash:    "Hash",
 					},
-					ParsedMessage:               "add gitlab as relase option",
+					ParsedMessage:               "add gitlab as release option",
 					Scope:                       "releaser",
 					ParsedBreakingChangeMessage: "",
 					Tag:                         "feat",

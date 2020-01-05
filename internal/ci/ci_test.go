@@ -127,7 +127,7 @@ func TestCi(t *testing.T) {
 	}
 
 	for _, config := range testConfigs {
-		provider, err := ci.GetCIProvider(gitUtilInMemory, config.envs)
+		provider, err := ci.GetCIProvider(gitUtilInMemory, true, config.envs)
 		assert.Equalf(t, config.hasError, err != nil, "Service %s should have error: %t -> %s", config.service, config.hasError, err)
 		assert.Equalf(t, config.result, provider, "Service %s should have provider", config.service)
 	}

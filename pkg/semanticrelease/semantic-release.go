@@ -11,6 +11,7 @@ import (
 	"github.com/Nightapes/go-semantic-release/internal/changelog"
 	"github.com/Nightapes/go-semantic-release/internal/ci"
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
+	"github.com/Nightapes/go-semantic-release/internal/hooks"
 	"github.com/Nightapes/go-semantic-release/internal/releaser"
 	"github.com/Nightapes/go-semantic-release/internal/releaser/util"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
@@ -20,16 +21,17 @@ import (
 
 // SemanticRelease struct
 type SemanticRelease struct {
-	config     *config.ReleaseConfig
-	gitutil    *gitutil.GitUtil
-	analyzer   *analyzer.Analyzer
-	calculator *calculator.Calculator
-	releaser   releaser.Releaser
-	repository string
+	config      *config.ReleaseConfig
+	gitutil     *gitutil.GitUtil
+	analyzer    *analyzer.Analyzer
+	calculator  *calculator.Calculator
+	releaser    releaser.Releaser
+	repository  string
+	checkConfig bool
 }
 
 // New SemanticRelease struct
-func New(c *config.ReleaseConfig, repository string) (*SemanticRelease, error) {
+func New(c *config.ReleaseConfig, repository string, checkConfig bool) (*SemanticRelease, error) {
 	util, err := gitutil.New(repository)
 	if err != nil {
 		return nil, err
@@ -40,24 +42,29 @@ func New(c *config.ReleaseConfig, repository string) (*SemanticRelease, error) {
 		return nil, err
 	}
 
-	releaser, err := releaser.New(c).GetReleaser()
+	if !checkConfig {
+		log.Infof("Ignore config checks!. No guarantee to run without issues")
+	}
+
+	releaser, err := releaser.New(c, util).GetReleaser(checkConfig)
 	if err != nil {
 		return nil, err
 	}
 
 	return &SemanticRelease{
-		config:     c,
-		gitutil:    util,
-		releaser:   releaser,
-		analyzer:   analyzer,
-		repository: repository,
-		calculator: calculator.New(),
+		config:      c,
+		gitutil:     util,
+		releaser:    releaser,
+		analyzer:    analyzer,
+		repository:  repository,
+		checkConfig: checkConfig,
+		calculator:  calculator.New(),
 	}, nil
 }
 
 //GetCIProvider result with ci config
 func (s *SemanticRelease) GetCIProvider() (*ci.ProviderConfig, error) {
-	return ci.GetCIProvider(s.gitutil, ci.ReadAllEnvs())
+	return ci.GetCIProvider(s.gitutil, s.checkConfig, ci.ReadAllEnvs())
 }
 
 // GetNextVersion from .version or calculate new from commits
@@ -183,7 +190,7 @@ func (s *SemanticRelease) WriteChangeLog(changelogContent, file string) error {
 	return ioutil.WriteFile(file, []byte(changelogContent), 0644)
 }
 
-// Release pusblish release to provider
+// Release publish release to provider
 func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error {
 
 	if provider.IsPR {
@@ -207,27 +214,31 @@ func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error
 		return nil
 	}
 
-	generatedChanglog, err := s.GetChangelog(releaseVersion)
+	hook := hooks.New(s.config, releaseVersion)
+
+	generatedChangelog, err := s.GetChangelog(releaseVersion)
 	if err != nil {
 		log.Debugf("Could not get changelog")
 		return err
 	}
 
-	releaser, err := releaser.New(s.config).GetReleaser()
+	err = hook.PreRelease()
 	if err != nil {
+		log.Debugf("Error during pre release hook")
 		return err
 	}
 
-	err = releaser.ValidateConfig()
+	if err = s.releaser.CreateRelease(releaseVersion, generatedChangelog); err != nil {
+		return err
+	}
+
+	if err = s.releaser.UploadAssets(s.repository, s.config.Assets); err != nil {
+		return err
+	}
+
+	err = hook.PostRelease()
 	if err != nil {
-		return err
-	}
-
-	if err = releaser.CreateRelease(releaseVersion, generatedChanglog); err != nil {
-		return err
-	}
-
-	if err = releaser.UploadAssets(s.repository, s.config.Assets); err != nil {
+		log.Debugf("Error during post release hook")
 		return err
 	}
 

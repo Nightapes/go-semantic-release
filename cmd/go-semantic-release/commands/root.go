@@ -35,6 +35,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("loglevel", "l", "error", "Set loglevel")
 	rootCmd.PersistentFlags().StringP("config", "c", ".release.yml", "Path to config file")
 	rootCmd.PersistentFlags().Bool("no-cache", false, "Ignore cache, don't use in ci build")
+	rootCmd.PersistentFlags().Bool("no-checks", false, "Ignore missing values and envs")
 }
 
 func readConfig(file string) *config.ReleaseConfig {
