@@ -1,11 +1,8 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/Nightapes/go-semantic-release/internal/hooks"
 	"github.com/Nightapes/go-semantic-release/pkg/semanticrelease"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
