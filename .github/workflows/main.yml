@@ -39,8 +39,8 @@ jobs:
           docker login -u nightapes -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
           docker build -t nightapes/go-semantic-release:development .
           docker push nightapes/go-semantic-release:development
-          docker tag nightapes/go-semantic-release:development docker.pkg.github.com/Nightapes/go-semantic-release/go-semantic-release:development
-          docker push nightapes/go-semantic-release:development
+          docker tag nightapes/go-semantic-release:development docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development
+          docker push docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development
 
       - name: Push Docker image
         if: github.ref != 'refs/heads/master'
