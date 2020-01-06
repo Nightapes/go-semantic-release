@@ -2,12 +2,12 @@
 
 ## Release Types
 
-| Type       |    Implemendet     |      Git tag       |     Changelog      |      Release       |  Write access git  |     Api token      |
-| ---------- | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |
-| `github`   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    | :white_check_mark: |
-| `gitlab`   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    | :white_check_mark: |
-| `git`      | :white_check_mark: | :white_check_mark: |                    |                    | :white_check_mark: |                    |
-| `bitbuckt` |    Comming soon    | :white_check_mark: |                    |                    | :white_check_mark: |                    |
+| Type        |    Implemendet     |      Git tag       |     Changelog      |      Release       |  Write access git  |     Api token      |
+| ----------- | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |
+| `github`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    | :white_check_mark: |
+| `gitlab`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    | :white_check_mark: |
+| `git`       | :white_check_mark: | :white_check_mark: |                    |                    | :white_check_mark: |                    |
+| `bitbucket` |    Comming soon    | :white_check_mark: |                    |                    | :white_check_mark: |                    |
 
 
 ## Supported CI Pipelines
