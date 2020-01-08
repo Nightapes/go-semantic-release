@@ -17,7 +17,9 @@ changelog:
 hooks:
   preRelease:
     - docker build -t nightapes/go-semantic-release:latest .
-    - docker build -t nightapes/go-semantic-release:$RELEASE_VERSION .
+    - docker tag nightapes/go-semantic-release:latest docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:$RELEASE_VERSION
+    - docker tag nightapes/go-semantic-release:latest nightapes/go-semantic-release:$RELEASE_VERSION
   postRelease:
     - docker push nightapes/go-semantic-release:latest
     - docker push nightapes/go-semantic-release:$RELEASE_VERSION
+    - docker push docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:$RELEASE_VERSION

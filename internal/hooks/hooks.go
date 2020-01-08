@@ -3,6 +3,7 @@ package hooks
 import (
 	"bufio"
 	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/Nightapes/go-semantic-release/internal/shared"
@@ -51,9 +52,14 @@ func (h *Hooks) PostRelease() error {
 
 func (h *Hooks) runCommand(command string) error {
 
-	splittedCmd := strings.Split(strings.ReplaceAll(command, "$RELEASE_VERSION", h.version.Next.Version.String()), " ")
+	cmdReplaced := strings.ReplaceAll(command, "$RELEASE_VERSION", h.version.Next.Version.String())
 
-	cmd := exec.Command(splittedCmd[0], splittedCmd[1:]...)
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd.exe", "/C", cmdReplaced)
+	} else {
+		cmd = exec.Command("sh", "-c", cmdReplaced)
+	}
 
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
@@ -63,7 +69,7 @@ func (h *Hooks) runCommand(command string) error {
 	scanner := bufio.NewScanner(cmdReader)
 	go func() {
 		for scanner.Scan() {
-			log.WithField("cmd", splittedCmd[0]).Infof("%s\n", scanner.Text())
+			log.WithField("cmd", strings.Fields(cmdReplaced)[0]).Infof("%s\n", scanner.Text())
 		}
 	}()
 

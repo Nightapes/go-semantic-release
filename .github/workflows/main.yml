@@ -35,9 +35,12 @@ jobs:
       - name: Build Docker image
         if: github.ref != 'refs/heads/master'
         run: |
-          docker build -t nightapes/go-semantic-release:development .
           docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
+          docker login -u nightapes -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
+          docker build -t nightapes/go-semantic-release:development .
           docker push nightapes/go-semantic-release:development
+          docker tag nightapes/go-semantic-release:development docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development
+          docker push docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development
 
       - name: Push Docker image
         if: github.ref != 'refs/heads/master'
@@ -48,4 +51,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
+          docker login -u nightapes -p $GITHUB_TOKEN docker.pkg.github.com
           ./build/go-semantic-release-temp release --loglevel trace

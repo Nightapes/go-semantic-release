@@ -90,7 +90,7 @@ func (g *GitUtil) GetLastVersion() (*semver.Version, string, error) {
 
 	err = gitTags.ForEach(func(p *plumbing.Reference) error {
 		v, err := semver.NewVersion(p.Name().Short())
-		log.Tracef("Tag %+v with hash: %s", p.Target(), p.Hash())
+		log.Tracef("Tag %+v with hash: %s", p.Name().Short(), p.Hash())
 
 		if err == nil {
 			tags = append(tags, v)
