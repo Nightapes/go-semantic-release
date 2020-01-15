@@ -32,7 +32,7 @@ func TestChangelog(t *testing.T) {
 				"minor": []shared.AnalyzedCommit{
 					shared.AnalyzedCommit{
 						Commit: shared.Commit{
-							Message: "feat(test): my first commit",
+							Message: "feat(internal/changelog): my first commit",
 							Author:  "me",
 							Hash:    "12345667",
 						},
@@ -46,7 +46,30 @@ func TestChangelog(t *testing.T) {
 			},
 			result: &shared.GeneratedChangelog{
 				Title:   "v1.0.0 (2019-07-19)",
-				Content: "# v1.0.0 (2019-07-19)\n\n ### Features\n* **`internal/changelog`** my first commit  ([1234566](https://commit.url))  \n\n ",
+				Content: "# v1.0.0 (2019-07-19)\n\n\n### Features\n\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n\n",
+			},
+			hasError: false,
+		},
+		{
+			testCase: "feat no scope",
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"minor": []shared.AnalyzedCommit{
+					shared.AnalyzedCommit{
+						Commit: shared.Commit{
+							Message: "feat: my first commit",
+							Author:  "me",
+							Hash:    "12345667",
+						},
+						ParsedMessage: "my first commit",
+						Tag:           "feat",
+						TagString:     "Features",
+						Print:         true,
+					},
+				},
+			},
+			result: &shared.GeneratedChangelog{
+				Title:   "v1.0.0 (2019-07-19)",
+				Content: "# v1.0.0 (2019-07-19)\n\n\n### Features\n\n* my first commit ([1234566](https://commit.url))\n\n",
 			},
 			hasError: false,
 		},
@@ -56,7 +79,7 @@ func TestChangelog(t *testing.T) {
 				"minor": []shared.AnalyzedCommit{
 					shared.AnalyzedCommit{
 						Commit: shared.Commit{
-							Message: "feat(test): my first commit",
+							Message: "feat(internal/changelog): my first commit",
 							Author:  "me",
 							Hash:    "12345667",
 						},
@@ -68,7 +91,7 @@ func TestChangelog(t *testing.T) {
 					},
 					shared.AnalyzedCommit{
 						Commit: shared.Commit{
-							Message: "feat(test): my first break: BREAKING CHANGE: change api to v2",
+							Message: "feat(internal/changelog): my first break: BREAKING CHANGE: change api to v2",
 							Author:  "me",
 							Hash:    "12345668",
 						},
@@ -83,7 +106,7 @@ func TestChangelog(t *testing.T) {
 			},
 			result: &shared.GeneratedChangelog{
 				Title:   "v1.0.0 (2019-07-19)",
-				Content: "# v1.0.0 (2019-07-19)\n\n## BREAKING CHANGES\n\n* **`internal/changelog`** change api to v2  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))  \n\n ### Features\n* **`internal/changelog`** my first commit  ([1234566](https://commit.url))  \n\n ",
+				Content: "# v1.0.0 (2019-07-19)\n\n## BREAKING CHANGES\n\n* **`internal/changelog`** change api to v2  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n\n\n### Features\n\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n\n",
 			},
 			hasError: false,
 		},
