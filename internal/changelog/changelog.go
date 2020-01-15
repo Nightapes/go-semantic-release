@@ -18,15 +18,16 @@ const defaultCommitList string = `{{ range $index,$commit := .BreakingChanges -}
 {{ if eq $index 0 }}
 ## BREAKING CHANGES
 {{ end}}
-* **{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}** {{$commit.ParsedBreakingChangeMessage}}  
+* {{ if $commit.Scope }}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}**{{ end }} {{$commit.ParsedBreakingChangeMessage}}  
 introduced by commit: 
-{{$commit.ParsedMessage}} {{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}}))  {{end}}
+{{$commit.ParsedMessage}} {{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
 {{ end -}}
 {{ range $key := .Order }}
-{{ $commits := index $.Commits $key}} {{if $commits -}}
+{{ $commits := index $.Commits $key -}}
+{{ if $commits }}
 ### {{ $key }}
-{{ range $index,$commit := $commits -}}
-* **{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}** {{$commit.ParsedMessage}} {{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}}))  {{end}}
+{{ range $index,$commit := $commits }}
+* {{ if $commit.Scope}}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}** {{end}}{{$commit.ParsedMessage}}{{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
 {{ end -}}
 {{ end -}}
 {{ end -}}`
