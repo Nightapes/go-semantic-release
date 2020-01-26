@@ -5,6 +5,7 @@ github:
 commitFormat: angular
 branch:
   master: release
+  beta: beta
 assets:
   - name: ./build/go-semantic-release
     compress: false
