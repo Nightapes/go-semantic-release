@@ -15,19 +15,19 @@ import (
 )
 
 const defaultCommitList string = `{{ range $index,$commit := .BreakingChanges -}}
-{{ if eq $index 0 }}
+{{ if eq $index 0 -}}
 ## BREAKING CHANGES
-{{ end}}
+{{ end -}}
 * {{ if $commit.Scope }}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}**{{ end }} {{$commit.ParsedBreakingChangeMessage}}  
 introduced by commit: 
 {{$commit.ParsedMessage}} {{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
 {{ end -}}
-{{ range $key := .Order }}
+{{ range $key := .Order  -}}
 {{ $commits := index $.Commits $key -}}
-{{ if $commits }}
+{{ if $commits -}}
 ### {{ $key }}
-{{ range $index,$commit := $commits }}
-* {{ if $commit.Scope}}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}** {{end}}{{$commit.ParsedMessage}}{{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
+{{ range $index,$commit := $commits -}}
+* {{ if $commit.Scope }}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}** {{end}}{{$commit.ParsedMessage}}{{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
 {{ end -}}
 {{ end -}}
 {{ end -}}`
