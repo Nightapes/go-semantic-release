@@ -46,7 +46,7 @@ func TestChangelog(t *testing.T) {
 			},
 			result: &shared.GeneratedChangelog{
 				Title:   "v1.0.0 (2019-07-19)",
-				Content: "# v1.0.0 (2019-07-19)\n\n\n### Features\n\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n\n",
+				Content: "# v1.0.0 (2019-07-19)\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n",
 			},
 			hasError: false,
 		},
@@ -69,7 +69,7 @@ func TestChangelog(t *testing.T) {
 			},
 			result: &shared.GeneratedChangelog{
 				Title:   "v1.0.0 (2019-07-19)",
-				Content: "# v1.0.0 (2019-07-19)\n\n\n### Features\n\n* my first commit ([1234566](https://commit.url))\n\n",
+				Content: "# v1.0.0 (2019-07-19)\n### Features\n* my first commit ([1234566](https://commit.url))\n",
 			},
 			hasError: false,
 		},
@@ -106,7 +106,7 @@ func TestChangelog(t *testing.T) {
 			},
 			result: &shared.GeneratedChangelog{
 				Title:   "v1.0.0 (2019-07-19)",
-				Content: "# v1.0.0 (2019-07-19)\n\n## BREAKING CHANGES\n\n* **`internal/changelog`** change api to v2  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n\n\n### Features\n\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n\n",
+				Content: "# v1.0.0 (2019-07-19)\n## BREAKING CHANGES\n* **`internal/changelog`** change api to v2  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n",
 			},
 			hasError: false,
 		},
@@ -134,9 +134,11 @@ func TestChangelog(t *testing.T) {
 	}, time.Date(2019, 7, 19, 0, 0, 0, 0, time.UTC))
 
 	for _, config := range testConfigs {
-		generatedChangelog, err := cl.GenerateChanglog(templateConfig, config.analyzedCommits)
-		assert.Equalf(t, config.hasError, err != nil, "Testcase %s should have error: %t -> %s", config.testCase, config.hasError, err)
-		assert.Equalf(t, config.result, generatedChangelog, "Testcase %s should have generated changelog", config.testCase)
+		t.Run(config.testCase, func(t *testing.T) {
+			generatedChangelog, err := cl.GenerateChanglog(templateConfig, config.analyzedCommits)
+			assert.Equalf(t, config.hasError, err != nil, "Testcase %s should have error: %t -> %s", config.testCase, config.hasError, err)
+			assert.Equalf(t, config.result, generatedChangelog, "Testcase %s should have generated changelog", config.testCase)
+		})
 	}
 
 }
