@@ -44,7 +44,7 @@ hooks:
     - name: echo $RELEASE_VERSION
 ```
 
-#### CommitFormat
+#### CommitFormat t
 
 Set the commit format, at the moment we support ony [angular](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit-message-format), more coming soon.
 
