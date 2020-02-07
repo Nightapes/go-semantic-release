@@ -17,6 +17,18 @@
 * Travis CI
 * Custom CI, set enviroment `CI=true`
 
+## Download
+
+You can download the newest version under [releases](https://github.com/Nightapes/go-semantic-release/releases)
+
+or
+
+you can use a Docker image
+
+`docker pull nightapes/go-semantic-release:<VERSION>` or `docker pull docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:<VERSION>`
+
+
+
 ## How to use
 
 `go-semantic-release` config file 
