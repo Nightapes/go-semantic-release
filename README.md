@@ -194,7 +194,8 @@ following command:
 Print the next version, can be used to add version to your program
 
 ```bash
-./go-semantic-release next
+./go-semantic-release next // show next version (calculated by new commits since last version)
+./go-semantic-release last // show last released version 
 ```
 Example with go-lang
 
