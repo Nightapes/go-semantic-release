@@ -1,5 +1,7 @@
 # go-semantic-release
 
+![go-semantic-release](https://github.com/Nightapes/go-semantic-release/workflows/Go/badge.svg)
+
 ## Release Types
 
 | Type        |    Implemendet     |      Git tag       |     Changelog      |      Release       |  Write access git  |     Api token      |
