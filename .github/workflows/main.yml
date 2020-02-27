@@ -43,9 +43,10 @@ jobs:
           docker login -u nightapes -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
           docker build -t nightapes/go-semantic-release:development-${{matrix.go}} .
           docker push nightapes/go-semantic-release:development-${{matrix.go}}
-          docker tag nightapes/go-semantic-release:development docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{matrix.go}}
+          docker tag nightapes/go-semantic-release:development-${{matrix.go}} docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{matrix.go}}
           docker push docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{matrix.go}}
       - uses: actions/upload-artifact@v1
+        if: github.ref != 'refs/heads/master' &&  matrix.go == '1.14'
         with:
           name: build
           path: build
