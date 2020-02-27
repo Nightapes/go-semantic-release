@@ -63,6 +63,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          chmod -R +x build
           docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
           docker login -u nightapes -p $GITHUB_TOKEN docker.pkg.github.com
           ./build/go-semantic-release-temp release --loglevel trace
