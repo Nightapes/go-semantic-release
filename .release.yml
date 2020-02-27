@@ -7,10 +7,14 @@ branch:
   master: release
   beta: beta
 assets:
-  - name: ./build/go-semantic-release
-    compress: false
-  - name: ./build/go-semantic-release.exe
-    compress: false
+  - name: ./build/go-semantic-release.linux_x86_64
+    compress: true
+  - name: ./build/go-semantic-release.windows_i386.exe
+    compress: true
+  - name: ./build/go-semantic-release.windows_x86_64.exe
+    compress: true
+  - name: ./build/go-semantic-release.darwin_x86_64
+    compress: true
 changelog:
   docker:
     latest: true

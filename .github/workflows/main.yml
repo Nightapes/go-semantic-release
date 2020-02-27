@@ -2,13 +2,16 @@ name: Go
 on: [push, pull_request]
 jobs:
   build:
-    name: Build
+    strategy:
+      matrix:
+        go: ["1.13", "1.14"]
+    name: Build with go version ${{ matrix.go }}
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.13
+      - name: Set up Go 1.14
         uses: actions/setup-go@v1
         with:
-          go-version: 1.13
+          go-version: ${{ matrix.go }}
         id: go
 
       - name: Check out code into the Go module directory
@@ -29,23 +32,33 @@ jobs:
         run: |
           go build -o build/go-semantic-release-temp ./cmd/go-semantic-release/
           ./build/go-semantic-release-temp next --no-cache --loglevel trace
-          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/go-semantic-release  -ldflags "-w -s --X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
-          GOOS=windows GOARCH=386 CGO_ENABLED=0 go build -o build/go-semantic-release.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
-
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/go-semantic-release.linux_x86_64  -ldflags "-w -s --X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
+          GOOS=windows GOARCH=386 CGO_ENABLED=0 go build -o build/go-semantic-release.windows_i386.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o build/go-semantic-release.windows_x86_64.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
+          GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -o build/go-semantic-release.darwin_x86_64  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
       - name: Build Docker image
-        if: github.ref != 'refs/heads/master'
+        if: github.ref != 'refs/heads/master' &&  matrix.go == '1.14'
+        env:
+          GO_VERSION: ${{ matrix.go }}
         run: |
           docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
           docker login -u nightapes -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
-          docker build -t nightapes/go-semantic-release:development .
-          docker push nightapes/go-semantic-release:development
-          docker tag nightapes/go-semantic-release:development docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development
-          docker push docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development
-
-      - name: Push Docker image
-        if: github.ref != 'refs/heads/master'
-        run: |
-
+          docker build -t nightapes/go-semantic-release:development-${{GO_VERSION}} .
+          docker push nightapes/go-semantic-release:development-${{GO_VERSION}}
+          docker tag nightapes/go-semantic-release:development docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{GO_VERSION}}
+          docker push docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{GO_VERSION}}
+      - uses: actions/upload-artifact@v1
+        with:
+          name: build
+          path: build
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v1
+        with:
+          name: build
+          path: build
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
