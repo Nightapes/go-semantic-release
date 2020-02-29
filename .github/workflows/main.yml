@@ -37,7 +37,7 @@ jobs:
           GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o build/go-semantic-release.windows_x86_64.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
           GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -o build/go-semantic-release.darwin_x86_64  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
       - name: Build Docker image
-        if: github.ref != 'refs/heads/master' &&  matrix.go == '1.14'
+        if: matrix.go == '1.14'
         run: |
           docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
           docker login -u nightapes -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
@@ -46,7 +46,7 @@ jobs:
           docker tag nightapes/go-semantic-release:development-${{matrix.go}} docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{matrix.go}}
           docker push docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{matrix.go}}
       - uses: actions/upload-artifact@v1
-        if: github.ref != 'refs/heads/master' &&  matrix.go == '1.14'
+        if: matrix.go == '1.14'
         with:
           name: build
           path: build
