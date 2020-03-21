@@ -49,10 +49,6 @@ func New(c *config.ReleaseConfig, repository string, checkConfig bool) (*Semanti
 
 	assets := assets.New(repository, c.Checksum.Algorithm)
 
-	if err := assets.Add(c.Assets...); err != nil {
-		return nil, err
-	}
-
 	releaser, err := releaser.New(c, util).GetReleaser(checkConfig)
 	if err != nil {
 		return nil, err
@@ -209,6 +205,10 @@ func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error
 	if _, ok := s.config.Branch[provider.Branch]; !ok {
 		log.Infof("Will not perform a new release. Current %s branch is not configured in release config", provider.Branch)
 		return nil
+	}
+
+	if err := s.assets.Add(s.config.Assets...); err != nil {
+		return err
 	}
 
 	releaseVersion, err := s.GetNextVersion(provider, force)
