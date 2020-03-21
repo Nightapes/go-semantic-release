@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Nightapes/go-semantic-release/internal/assets"
 	"github.com/Nightapes/go-semantic-release/internal/releaser/util"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
@@ -78,7 +79,16 @@ func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 }
 
 // CreateRelease creates release on remote
-func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
+func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog, assets *assets.Container) error {
+	err := g.makeRelease(releaseVersion, generatedChangelog)
+	if err != nil {
+		return err
+	}
+	return g.uploadAssets(assets)
+}
+
+// CreateRelease creates release on remote
+func (g *Client) makeRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
 	tag := "v" + releaseVersion.Next.Version.String()
 	g.log.Debugf("create release with version %s", tag)
@@ -107,15 +117,14 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 }
 
 // UploadAssets uploads specified assets
-func (g *Client) UploadAssets(repoDir string, assets []config.Asset) error {
+func (g *Client) uploadAssets(assets *assets.Container) error {
 	if g.release != nil {
-		filesToUpload, err := util.PrepareAssets(repoDir, assets)
-		if err != nil {
-			return err
-		}
-		for _, f := range filesToUpload {
-
-			file, err := os.Open(*f)
+		for _, asset := range assets.All() {
+			path, err := asset.GetPath()
+			if err != nil {
+				return err
+			}
+			file, err := os.Open(path)
 			if err != nil {
 				return err
 			}

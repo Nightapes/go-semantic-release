@@ -1,4 +1,4 @@
-package github_test
+package github
 
 import (
 	"fmt"
@@ -11,7 +11,6 @@ import (
 
 	"github.com/Masterminds/semver"
 
-	"github.com/Nightapes/go-semantic-release/internal/releaser/github"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	"github.com/stretchr/testify/assert"
@@ -123,7 +122,7 @@ func TestNew(t *testing.T) {
 			os.Setenv("GITHUB_TOKEN", "XXX")
 		}
 
-		_, err := github.New(&testOject.config, true)
+		_, err := New(&testOject.config, true)
 		assert.Equal(t, testOject.valid, err == nil)
 
 		os.Unsetenv("GITHUB_TOKEN")
@@ -134,7 +133,7 @@ func TestNew(t *testing.T) {
 func TestGetCommitURL(t *testing.T) {
 	os.Setenv("GITHUB_TOKEN", "XX")
 	for _, testOject := range testNewClient {
-		client, _ := github.New(&testOject.config, false)
+		client, _ := New(&testOject.config, false)
 		actualURL := client.GetCommitURL()
 		if testOject.config.CustomURL != "" {
 			expectedURL := fmt.Sprintf("%s/%s/%s/commit/{{hash}}", testOject.config.CustomURL, testOject.config.User, testOject.config.Repo)
@@ -152,7 +151,7 @@ func TestGetCommitURL(t *testing.T) {
 func TestGetCompareURL(t *testing.T) {
 	os.Setenv("GITHUB_TOKEN", "XX")
 	for _, testOject := range testNewClient {
-		client, _ := github.New(&testOject.config, false)
+		client, _ := New(&testOject.config, false)
 		actualURL := client.GetCompareURL("1", "2")
 		if testOject.config.CustomURL != "" {
 			expectedURL := fmt.Sprintf("%s/%s/%s/compare/%s...%s", testOject.config.CustomURL, testOject.config.User, testOject.config.Repo, "1", "2")
@@ -174,9 +173,9 @@ func TestCreateRelease(t *testing.T) {
 		if testObejct.valid {
 			server := initHTTPServer(testObejct.requestResponseCode, testObejct.requestResponseBody)
 			testObejct.config.CustomURL = server.URL
-			client, _ := github.New(&testObejct.config, false)
+			client, _ := New(&testObejct.config, false)
 
-			err := client.CreateRelease(testObejct.releaseVersion, testObejct.generatedChangelog)
+			err := client.makeRelease(testObejct.releaseVersion, testObejct.generatedChangelog)
 			if err != nil {
 				t.Log(err)
 			}
@@ -186,9 +185,9 @@ func TestCreateRelease(t *testing.T) {
 
 		} else {
 			testObejct.config.CustomURL = "http://foo"
-			client, _ := github.New(&testObejct.config, false)
+			client, _ := New(&testObejct.config, false)
 
-			err := client.CreateRelease(testObejct.releaseVersion, testObejct.generatedChangelog)
+			err := client.makeRelease(testObejct.releaseVersion, testObejct.generatedChangelog)
 			if err != nil {
 				t.Log(err)
 			}

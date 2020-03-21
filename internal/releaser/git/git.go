@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Nightapes/go-semantic-release/internal/assets"
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
@@ -64,7 +65,7 @@ func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 }
 
 // CreateRelease creates release on remote
-func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
+func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog, _ *assets.Container) error {
 
 	tag := "v" + releaseVersion.Next.Version.String()
 	g.log.Infof("create release with version %s", tag)

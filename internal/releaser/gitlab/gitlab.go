@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Nightapes/go-semantic-release/internal/assets"
 	"github.com/Nightapes/go-semantic-release/internal/releaser/util"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
@@ -86,7 +87,16 @@ func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 }
 
 // CreateRelease creates release on remote
-func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
+func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog, assets *assets.Container) error {
+	err := g.makeRelease(releaseVersion, generatedChangelog)
+	if err != nil {
+		return err
+	}
+	return g.uploadAssets(assets)
+}
+
+// CreateRelease creates release on remote
+func (g *Client) makeRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
 	tag := "v" + releaseVersion.Next.Version.String()
 	g.Release = tag
@@ -126,15 +136,13 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 	return nil
 }
 
-// UploadAssets uploads specified assets
-func (g *Client) UploadAssets(repoDir string, assets []config.Asset) error {
-	filesToUpload, err := util.PrepareAssets(repoDir, assets)
-	if err != nil {
-		return err
-	}
-	for _, f := range filesToUpload {
-
-		file, err := os.Open(*f)
+func (g *Client) uploadAssets(assets *assets.Container) error {
+	for _, asset := range assets.All() {
+		path, err := asset.GetPath()
+		if err != nil {
+			return err
+		}
+		file, err := os.Open(path)
 		if err != nil {
 			return err
 		}
@@ -151,9 +159,9 @@ func (g *Client) UploadAssets(repoDir string, assets []config.Asset) error {
 
 		g.log.Infof("Uploaded file %s to gitlab can be downloaded under %s", file.Name(), downloadURL)
 
-		path := fmt.Sprintf("%s/projects/%s/releases/%s/assets/links?name=%s&url=%s", g.apiURL, util.PathEscape(g.config.Repo), g.Release, util.PathEscape(fileInfo.Name()), downloadURL)
+		uploadURL := fmt.Sprintf("%s/projects/%s/releases/%s/assets/links?name=%s&url=%s", g.apiURL, util.PathEscape(g.config.Repo), g.Release, util.PathEscape(fileInfo.Name()), downloadURL)
 
-		req, err := http.NewRequest("POST", path, nil)
+		req, err := http.NewRequest("POST", uploadURL, nil)
 		if err != nil {
 			return err
 		}

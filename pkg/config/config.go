@@ -32,7 +32,9 @@ type ChangelogNPM struct {
 
 //Asset type struct
 type Asset struct {
-	Name     string `yaml:"name"`
+	Path     string `yaml:"path"`
+	Rename   string `yaml:"rename,omitempty"`
+	Name     string `yaml:"name,omitempty"` // Deprecated
 	Compress bool   `yaml:"compress"`
 }
 
@@ -65,6 +67,11 @@ type Hooks struct {
 	PostRelease []string `yaml:"postRelease"`
 }
 
+// Checksum struct
+type Checksum struct {
+	Algorithm string `yaml:"algorithm"`
+}
+
 // ReleaseConfig struct
 type ReleaseConfig struct {
 	CommitFormat   string            `yaml:"commitFormat"`
@@ -75,6 +82,7 @@ type ReleaseConfig struct {
 	GitLabProvider GitLabProvider    `yaml:"gitlab,omitempty"`
 	GitProvider    GitProvider       `yaml:"git,omitempty"`
 	Assets         []Asset           `yaml:"assets"`
+	Checksum       Checksum          `yaml:"checksum,omitempty"`
 	Hooks          Hooks             `yaml:"hooks"`
 	ReleaseTitle   string            `yaml:"title"`
 	IsPreRelease   bool

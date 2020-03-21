@@ -3,6 +3,7 @@ package releaser
 import (
 	"fmt"
 
+	"github.com/Nightapes/go-semantic-release/internal/assets"
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
 	"github.com/Nightapes/go-semantic-release/internal/releaser/git"
 	"github.com/Nightapes/go-semantic-release/internal/releaser/github"
@@ -21,8 +22,7 @@ type Releasers struct {
 
 // Releaser interface for providers
 type Releaser interface {
-	CreateRelease(*shared.ReleaseVersion, *shared.GeneratedChangelog) error
-	UploadAssets(repoDir string, assets []config.Asset) error
+	CreateRelease(*shared.ReleaseVersion, *shared.GeneratedChangelog, *assets.Container) error
 	GetCommitURL() string
 	GetCompareURL(oldVersion, newVersion string) string
 }
