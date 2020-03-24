@@ -11,16 +11,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Container struct
-type Container struct {
+// Set struct
+type Set struct {
 	Assets     []*Asset
 	repository string
 	algorithm  string
 }
 
 //New container for assets
-func New(repository, algorithm string) *Container {
-	return &Container{
+func New(repository, algorithm string) *Set {
+	return &Set{
 		Assets:     []*Asset{},
 		repository: repository,
 		algorithm:  algorithm,
@@ -28,29 +28,29 @@ func New(repository, algorithm string) *Container {
 }
 
 // Add assets to the list
-func (a *Container) Add(assetConfigs ...config.Asset) error {
+func (s *Set) Add(assetConfigs ...config.Asset) error {
 	for _, assetConfig := range assetConfigs {
-		asset, err := NewAsset(a.repository, assetConfig, a.algorithm)
+		asset, err := NewAsset(s.repository, assetConfig, s.algorithm)
 		if err != nil {
 			return err
 		}
-		a.Assets = append(a.Assets, asset)
+		s.Assets = append(s.Assets, asset)
 	}
 	return nil
 }
 
-func (a *Container) All() []*Asset {
-	return a.Assets
+func (s *Set) All() []*Asset {
+	return s.Assets
 }
 
-func (a *Container) GenerateChecksum() error {
+func (s *Set) GenerateChecksum() error {
 	checksumFile, err := ioutil.TempFile(os.TempDir(), "checksum.*.txt")
 	if err != nil {
 		return errors.Wrap(err, "Could not generate tmp file for checksum")
 	}
 	defer checksumFile.Close()
 	lines := []string{}
-	for _, asset := range a.Assets {
+	for _, asset := range s.Assets {
 		checksum, err := asset.getChecksum()
 		if err != nil {
 			return err
@@ -68,7 +68,7 @@ func (a *Container) GenerateChecksum() error {
 		return err
 	}
 
-	a.Assets = append(a.Assets, &Asset{
+	s.Assets = append(s.Assets, &Asset{
 		path:         filePath,
 		name:         "checksum.txt",
 		isCompressed: false,
