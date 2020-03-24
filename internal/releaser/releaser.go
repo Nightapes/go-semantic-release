@@ -22,7 +22,7 @@ type Releasers struct {
 
 // Releaser interface for providers
 type Releaser interface {
-	CreateRelease(*shared.ReleaseVersion, *shared.GeneratedChangelog, *assets.Container) error
+	CreateRelease(*shared.ReleaseVersion, *shared.GeneratedChangelog, *assets.Set) error
 	GetCommitURL() string
 	GetCompareURL(oldVersion, newVersion string) string
 }

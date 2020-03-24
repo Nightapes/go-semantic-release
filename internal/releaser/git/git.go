@@ -65,7 +65,7 @@ func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 }
 
 // CreateRelease creates release on remote
-func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog, _ *assets.Container) error {
+func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog, _ *assets.Set) error {
 
 	tag := "v" + releaseVersion.Next.Version.String()
 	g.log.Infof("create release with version %s", tag)

@@ -26,7 +26,7 @@ type SemanticRelease struct {
 	analyzer    *analyzer.Analyzer
 	calculator  *calculator.Calculator
 	releaser    releaser.Releaser
-	assets      *assets.Container
+	assets      *assets.Set
 	repository  string
 	checkConfig bool
 }

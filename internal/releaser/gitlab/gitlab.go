@@ -87,7 +87,7 @@ func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 }
 
 // CreateRelease creates release on remote
-func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog, assets *assets.Container) error {
+func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog, assets *assets.Set) error {
 	err := g.makeRelease(releaseVersion, generatedChangelog)
 	if err != nil {
 		return err
@@ -136,7 +136,7 @@ func (g *Client) makeRelease(releaseVersion *shared.ReleaseVersion, generatedCha
 	return nil
 }
 
-func (g *Client) uploadAssets(assets *assets.Container) error {
+func (g *Client) uploadAssets(assets *assets.Set) error {
 	for _, asset := range assets.All() {
 		path, err := asset.GetPath()
 		if err != nil {
