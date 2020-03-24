@@ -1,7 +1,6 @@
 package util
 
 import (
-	"archive/zip"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,7 +10,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Nightapes/go-semantic-release/pkg/config"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -62,74 +60,78 @@ func GetAccessToken(envName string) (string, error) {
 	return token, nil
 }
 
-// PrepareAssets prepare all files before uploading
-func PrepareAssets(repository string, assets []config.Asset) ([]*string, error) {
-	filesToUpload := []*string{}
-	for _, asset := range assets {
-		if asset.Name == "" {
-			return nil, fmt.Errorf("asset name declaration is empty, please check your configuration file")
-		} else if asset.Compress {
-			log.Debugf("Asset %s will now be compressed", asset.Name)
-			log.Debugf("Repo url %s", repository)
-			zipNameWithPath, err := zipFile(repository, asset.Name)
-			if err != nil {
-				return filesToUpload, err
-			}
-			filesToUpload = append(filesToUpload, &zipNameWithPath)
-		} else {
-			tmpFileName := fmt.Sprintf("%s/%s", repository, asset.Name)
-			filesToUpload = append(filesToUpload, &tmpFileName)
-		}
-		log.Debugf("Add asset %s to files to upload", asset.Name)
-	}
-	return filesToUpload, nil
-}
+// // PrepareAssets prepare all files before uploading
+// func PrepareAssets(repository string, assets []config.Asset) ([]*string, error) {
+// 	filesToUpload := []*string{}
+// 	for _, asset := range assets {
+// 		if asset.Name != "" && asset.Path == "" {
+// 			log.Warn("Name is deprecated. Please update your config. See https://nightapes.github.io/go-semantic-release/")
+// 		}
 
-// ZipFile compress given file in zip format
-func zipFile(repository string, file string) (string, error) {
+// 		if asset.Path == "" {
+// 			return nil, fmt.Errorf("asset path declaration is empty, please check your configuration file")
+// 		} else if asset.Compress {
+// 			log.Debugf("Asset %s will now be compressed", asset.Name)
+// 			log.Debugf("Repo url %s", repository)
+// 			zipNameWithPath, err := zipFile(repository, asset.Name)
+// 			if err != nil {
+// 				return filesToUpload, err
+// 			}
+// 			filesToUpload = append(filesToUpload, &zipNameWithPath)
+// 		} else {
+// 			tmpFileName := fmt.Sprintf("%s/%s", repository, asset.Name)
+// 			filesToUpload = append(filesToUpload, &tmpFileName)
+// 		}
+// 		log.Debugf("Add asset %s to files to upload", asset.Name)
+// 	}
+// 	return filesToUpload, nil
+// }
 
-	fileToZip, err := os.Open(repository + "/" + file)
-	if err != nil {
-		return "", err
-	}
-	defer fileToZip.Close()
+// // ZipFile compress given file in zip format
+// func zipFile(repository string, file string) (string, error) {
 
-	zipFileName := fmt.Sprintf("%s/%s.zip", strings.TrimSuffix(repository, "/"), file)
-	zipFile, err := os.Create(zipFileName)
+// 	fileToZip, err := os.Open(repository + "/" + file)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	defer fileToZip.Close()
 
-	if err != nil {
-		return "", err
-	}
-	log.Debugf("Created zipfile %s", zipFile.Name())
+// 	zipFileName := fmt.Sprintf("%s/%s.zip", strings.TrimSuffix(repository, "/"), file)
+// 	zipFile, err := os.Create(zipFileName)
 
-	defer zipFile.Close()
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	log.Debugf("Created zipfile %s", zipFile.Name())
 
-	fileToZipInfo, err := fileToZip.Stat()
-	if err != nil {
-		return "", err
-	}
+// 	defer zipFile.Close()
 
-	zipWriter := zip.NewWriter(zipFile)
-	defer zipWriter.Close()
+// 	fileToZipInfo, err := fileToZip.Stat()
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	fileToZipHeader, err := zip.FileInfoHeader(fileToZipInfo)
-	if err != nil {
-		return "", err
-	}
+// 	zipWriter := zip.NewWriter(zipFile)
+// 	defer zipWriter.Close()
 
-	fileToZipHeader.Name = fileToZipInfo.Name()
+// 	fileToZipHeader, err := zip.FileInfoHeader(fileToZipInfo)
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	fileToZipWriter, err := zipWriter.CreateHeader(fileToZipHeader)
-	if err != nil {
-		return "", err
-	}
+// 	fileToZipHeader.Name = fileToZipInfo.Name()
 
-	if _, err = io.Copy(fileToZipWriter, fileToZip); err != nil {
-		return "", err
-	}
+// 	fileToZipWriter, err := zipWriter.CreateHeader(fileToZipHeader)
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	return zipFileName, nil
-}
+// 	if _, err = io.Copy(fileToZipWriter, fileToZip); err != nil {
+// 		return "", err
+// 	}
+
+// 	return zipFileName, nil
+// }
 
 //PathEscape to be url save
 func PathEscape(s string) string {

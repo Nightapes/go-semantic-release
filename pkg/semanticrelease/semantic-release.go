@@ -6,6 +6,7 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/Nightapes/go-semantic-release/internal/analyzer"
+	"github.com/Nightapes/go-semantic-release/internal/assets"
 	"github.com/Nightapes/go-semantic-release/internal/cache"
 	"github.com/Nightapes/go-semantic-release/internal/calculator"
 	"github.com/Nightapes/go-semantic-release/internal/changelog"
@@ -13,7 +14,6 @@ import (
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
 	"github.com/Nightapes/go-semantic-release/internal/hooks"
 	"github.com/Nightapes/go-semantic-release/internal/releaser"
-	"github.com/Nightapes/go-semantic-release/internal/releaser/util"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	log "github.com/sirupsen/logrus"
@@ -26,6 +26,7 @@ type SemanticRelease struct {
 	analyzer    *analyzer.Analyzer
 	calculator  *calculator.Calculator
 	releaser    releaser.Releaser
+	assets      *assets.Set
 	repository  string
 	checkConfig bool
 }
@@ -46,6 +47,8 @@ func New(c *config.ReleaseConfig, repository string, checkConfig bool) (*Semanti
 		log.Infof("Ignore config checks!. No guarantee to run without issues")
 	}
 
+	assets := assets.New(repository, c.Checksum.Algorithm)
+
 	releaser, err := releaser.New(c, util).GetReleaser(checkConfig)
 	if err != nil {
 		return nil, err
@@ -57,6 +60,7 @@ func New(c *config.ReleaseConfig, repository string, checkConfig bool) (*Semanti
 		releaser:    releaser,
 		analyzer:    analyzer,
 		repository:  repository,
+		assets:      assets,
 		checkConfig: checkConfig,
 		calculator:  calculator.New(),
 	}, nil
@@ -203,6 +207,10 @@ func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error
 		return nil
 	}
 
+	if err := s.assets.Add(s.config.Assets...); err != nil {
+		return err
+	}
+
 	releaseVersion, err := s.GetNextVersion(provider, force)
 	if err != nil {
 		log.Debugf("Could not get next version")
@@ -214,30 +222,27 @@ func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error
 		return nil
 	}
 
-	hook := hooks.New(s.config, releaseVersion)
-
 	generatedChangelog, err := s.GetChangelog(releaseVersion)
 	if err != nil {
 		log.Debugf("Could not get changelog")
 		return err
 	}
 
-	err = hook.PreRelease()
-	if err != nil {
+	if err := s.assets.GenerateChecksum(); err != nil {
+		return err
+	}
+
+	hook := hooks.New(s.config, releaseVersion)
+	if err := hook.PreRelease(); err != nil {
 		log.Debugf("Error during pre release hook")
 		return err
 	}
 
-	if err = s.releaser.CreateRelease(releaseVersion, generatedChangelog); err != nil {
+	if err = s.releaser.CreateRelease(releaseVersion, generatedChangelog, s.assets); err != nil {
 		return err
 	}
 
-	if err = s.releaser.UploadAssets(s.repository, s.config.Assets); err != nil {
-		return err
-	}
-
-	err = hook.PostRelease()
-	if err != nil {
+	if err := hook.PostRelease(); err != nil {
 		log.Debugf("Error during post release hook")
 		return err
 	}
@@ -247,12 +252,21 @@ func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error
 
 // ZipFiles zip files configured in release config
 func (s *SemanticRelease) ZipFiles() error {
-	for _, file := range s.config.Assets {
-		if file.Compress {
-			if _, err := util.PrepareAssets(s.repository, s.config.Assets); err != nil {
-				return err
-			}
+	assets := assets.New(s.repository, "")
+
+	if err := assets.Add(s.config.Assets...); err != nil {
+		return err
+	}
+	if err := assets.GenerateChecksum(); err != nil {
+		return err
+	}
+
+	for _, asset := range assets.All() {
+		path, err := asset.GetPath()
+		if err != nil {
+			return err
 		}
+		log.Infof("File %s under %s is zipped %t", asset.GetName(), path, asset.IsCompressed())
 	}
 	return nil
 }

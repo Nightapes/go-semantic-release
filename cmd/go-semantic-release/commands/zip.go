@@ -6,6 +6,7 @@ import (
 )
 
 func init() {
+	zipCmd.Flags().StringP("algorithm", "a", "sha256", "Algorithm for checksum (crc32,md5,sha1,sha224,sha384,sha256,sha512)")
 	rootCmd.AddCommand(zipCmd)
 }
 
