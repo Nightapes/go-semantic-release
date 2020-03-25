@@ -13,7 +13,7 @@ import (
 
 // Set struct
 type Set struct {
-	Assets     []*Asset
+	assets     []*Asset
 	repository string
 	algorithm  string
 }
@@ -21,7 +21,7 @@ type Set struct {
 //New container for assets
 func New(repository, algorithm string) *Set {
 	return &Set{
-		Assets:     []*Asset{},
+		assets:     []*Asset{},
 		repository: repository,
 		algorithm:  algorithm,
 	}
@@ -34,13 +34,13 @@ func (s *Set) Add(assetConfigs ...config.Asset) error {
 		if err != nil {
 			return err
 		}
-		s.Assets = append(s.Assets, asset)
+		s.assets = append(s.assets, asset)
 	}
 	return nil
 }
 
 func (s *Set) All() []*Asset {
-	return s.Assets
+	return s.assets
 }
 
 func (s *Set) GenerateChecksum() error {
@@ -50,7 +50,7 @@ func (s *Set) GenerateChecksum() error {
 	}
 	defer checksumFile.Close()
 	lines := []string{}
-	for _, asset := range s.Assets {
+	for _, asset := range s.assets {
 		checksum, err := asset.getChecksum()
 		if err != nil {
 			return err
@@ -68,7 +68,7 @@ func (s *Set) GenerateChecksum() error {
 		return err
 	}
 
-	s.Assets = append(s.Assets, &Asset{
+	s.assets = append(s.assets, &Asset{
 		path:         filePath,
 		name:         "checksum.txt",
 		isCompressed: false,
