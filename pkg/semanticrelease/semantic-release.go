@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/Nightapes/go-semantic-release/internal/analyzer"
 	"github.com/Nightapes/go-semantic-release/internal/assets"
 	"github.com/Nightapes/go-semantic-release/internal/cache"
@@ -16,7 +18,6 @@ import (
 	"github.com/Nightapes/go-semantic-release/internal/releaser"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
-	log "github.com/sirupsen/logrus"
 )
 
 // SemanticRelease struct
@@ -228,14 +229,24 @@ func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error
 		return err
 	}
 
-	if err := s.assets.GenerateChecksum(); err != nil {
-		return err
-	}
-
 	hook := hooks.New(s.config, releaseVersion)
 	if err := hook.PreRelease(); err != nil {
 		log.Debugf("Error during pre release hook")
 		return err
+	}
+
+	if s.config.Checksum.Algorithm != "" {
+		if err := s.assets.GenerateChecksum(); err != nil {
+			return err
+		}
+	}
+
+	for _, asset := range s.assets.All() {
+		if asset.IsCompressed() {
+			if _, err := asset.ZipFile(); err != nil {
+				return err
+			}
+		}
 	}
 
 	if err = s.releaser.CreateRelease(releaseVersion, generatedChangelog, s.assets); err != nil {

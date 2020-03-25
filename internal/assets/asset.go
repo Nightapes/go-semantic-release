@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
+	"fmt"
 	"hash"
 	"hash/crc32"
 	"io"
@@ -24,6 +25,7 @@ import (
 type Asset struct {
 	name         string
 	path         string
+	zippedPath   string
 	algorithm    string
 	isCompressed bool
 }
@@ -63,8 +65,12 @@ func NewAsset(repository string, assetConfig config.Asset, algorithm string) (*A
 }
 
 func (a *Asset) getChecksum() (string, error) {
-	log.Debugf("Calculating checksum for %s", a.path)
-	file, err := os.Open(a.path)
+	path, err := a.GetPath()
+	if err != nil {
+		return "", nil
+	}
+	log.Debugf("Calculating checksum for %s", path)
+	file, err := os.Open(path)
 	if err != nil {
 		return "", errors.Wrapf(err, "Failed to open file %s to calculate checksum", a.name)
 	}
@@ -98,13 +104,16 @@ func (a *Asset) getChecksum() (string, error) {
 // GetPath where the file is located, if zipped true, it will compress it and give you the new location
 func (a *Asset) GetPath() (string, error) {
 	if a.isCompressed {
-		return a.zipFile()
+		return a.ZipFile()
 	}
 	return a.path, nil
 }
 
 // GetName of asset
 func (a *Asset) GetName() string {
+	if a.isCompressed {
+		return fmt.Sprintf("%s.zip", a.name)
+	}
 	return a.name
 }
 
@@ -114,7 +123,11 @@ func (a *Asset) IsCompressed() bool {
 }
 
 // ZipFile compress given file in zip format
-func (a *Asset) zipFile() (string, error) {
+func (a *Asset) ZipFile() (string, error) {
+
+	if a.zippedPath != "" {
+		return a.zippedPath, nil
+	}
 
 	path := a.path
 	fileToZip, err := os.Open(path)
@@ -156,5 +169,6 @@ func (a *Asset) zipFile() (string, error) {
 	if err := zipFile.Close(); err != nil {
 		return "", errors.Wrap(err, "Could not close file")
 	}
-	return filepath.Abs(fileToZipInfo.Name())
+	a.zippedPath, err = filepath.Abs(zipFile.Name())
+	return a.zippedPath, err
 }

@@ -148,9 +148,8 @@ func (g *Client) uploadAssets(assets *assets.Set) error {
 		}
 		defer file.Close()
 
-		fileInfo, _ := file.Stat()
 
-		result, err := g.uploadFile(fileInfo.Name(), file)
+		result, err := g.uploadFile(asset.GetName(), file)
 		if err != nil {
 			return fmt.Errorf("could not upload asset %s: %s", file.Name(), err.Error())
 		}
@@ -159,7 +158,7 @@ func (g *Client) uploadAssets(assets *assets.Set) error {
 
 		g.log.Infof("Uploaded file %s to gitlab can be downloaded under %s", file.Name(), downloadURL)
 
-		uploadURL := fmt.Sprintf("%s/projects/%s/releases/%s/assets/links?name=%s&url=%s", g.apiURL, util.PathEscape(g.config.Repo), g.Release, util.PathEscape(fileInfo.Name()), downloadURL)
+		uploadURL := fmt.Sprintf("%s/projects/%s/releases/%s/assets/links?name=%s&url=%s", g.apiURL, util.PathEscape(g.config.Repo), g.Release, util.PathEscape(asset.GetName()), downloadURL)
 
 		req, err := http.NewRequest("POST", uploadURL, nil)
 		if err != nil {

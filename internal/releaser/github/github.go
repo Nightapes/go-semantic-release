@@ -128,15 +128,14 @@ func (g *Client) uploadAssets(assets *assets.Set) error {
 			if err != nil {
 				return err
 			}
-			fileInfo, _ := file.Stat()
 
-			_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.User, g.config.Repo, g.release.GetID(), &github.UploadOptions{Name: fileInfo.Name()}, file)
+			_, resp, err := g.client.Repositories.UploadReleaseAsset(g.context, g.config.User, g.config.Repo, g.release.GetID(), &github.UploadOptions{Name: asset.GetName()}, file)
 			if err != nil {
 				return err
 			}
 
 			if resp.StatusCode >= http.StatusBadRequest {
-				return fmt.Errorf("could not upload asset %s: %s", file.Name(), resp.Status)
+				return fmt.Errorf("could not upload asset %s: %s", asset.GetName(), resp.Status)
 			}
 		}
 	}
