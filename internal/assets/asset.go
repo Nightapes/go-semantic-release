@@ -149,7 +149,6 @@ func (a *Asset) ZipFile() (string, error) {
 	}
 
 	zipWriter := zip.NewWriter(zipFile)
-	defer zipWriter.Close()
 
 	fileToZipHeader, err := zip.FileInfoHeader(fileToZipInfo)
 	if err != nil {
@@ -166,9 +165,15 @@ func (a *Asset) ZipFile() (string, error) {
 	if _, err = io.Copy(fileToZipWriter, fileToZip); err != nil {
 		return "", errors.Wrap(err, "Could not zip file")
 	}
+
+	if err := zipWriter.Close(); err != nil {
+		return "", errors.Wrap(err, fmt.Sprintf("Could not close zipwriter for zip %s", a.path))
+	}
+
 	if err := zipFile.Close(); err != nil {
 		return "", errors.Wrap(err, "Could not close file")
 	}
 	a.zippedPath, err = filepath.Abs(zipFile.Name())
+
 	return a.zippedPath, err
 }
