@@ -22,7 +22,7 @@ const ANGULAR = "angular"
 
 func newAngular() *angular {
 	return &angular{
-		regex: `^(TAG)(?:\((.*)\))?: (.*)`,
+		regex: `^(TAG)(?:\((.*)\))?: (?s)(.*)`,
 		log:   log.WithField("analyzer", ANGULAR),
 		rules: []Rule{
 			{
@@ -105,8 +105,8 @@ func (a *angular) analyze(commit shared.Commit, rule Rule) (shared.AnalyzedCommi
 			}
 			breakingChange := strings.SplitN(message, "BREAKING CHANGE:", 2)
 
-			analyzed.ParsedMessage = strings.Trim(breakingChange[0], " ")
-			analyzed.ParsedBreakingChangeMessage = strings.Trim(breakingChange[1], " ")
+			analyzed.ParsedMessage = strings.TrimSpace(breakingChange[0])
+			analyzed.ParsedBreakingChangeMessage = strings.TrimSpace(breakingChange[1])
 
 			a.log.Tracef(" %s, BREAKING CHANGE found", commit.Message)
 			return analyzed, true, nil
