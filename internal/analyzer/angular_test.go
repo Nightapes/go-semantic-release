@@ -93,6 +93,53 @@ func TestAngular(t *testing.T) {
 				},
 			},
 		},
+		{	testCase: "feat breaking change footer",
+			commits: []shared.Commit{
+				 shared.Commit{
+					Message: "feat(internal/changelog): my first commit",
+					Author:  "me",
+					Hash:    "12345667",
+				 },
+				 shared.Commit{
+				        Message: "feat(internal/changelog): my first break \n\nBREAKING CHANGE: change api to v2\n",
+					Author:  "me",
+					Hash:    "12345668",
+				 },
+			},
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				 "minor": []shared.AnalyzedCommit{
+					shared.AnalyzedCommit{
+						Commit: shared.Commit{
+							Message: "feat(internal/changelog): my first commit",
+							Author:  "me",
+							Hash:    "12345667",
+						},
+						Scope:         "internal/changelog",
+						ParsedMessage: "my first commit",
+						Tag:           "feat",
+						TagString:     "Features",
+						Print:         true,
+					},
+				},
+				"major": []shared.AnalyzedCommit{
+					shared.AnalyzedCommit{
+						Commit: shared.Commit{
+							Message: "feat(internal/changelog): my first break \n\nBREAKING CHANGE: change api to v2\n",
+							Author:  "me",
+							Hash:    "12345668",
+						},
+						Scope:                       "internal/changelog",
+						ParsedMessage:               "my first break",
+						Tag:                         "feat",
+						TagString:                   "Features",
+						Print:                       true,
+						ParsedBreakingChangeMessage: "change api to v2",
+					},
+				},
+				"patch": []shared.AnalyzedCommit{},
+				"none":  []shared.AnalyzedCommit{},
+			},
+		},
 		{
 			testCase: "invalid",
 			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
