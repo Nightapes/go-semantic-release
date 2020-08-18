@@ -6,6 +6,7 @@ import (
 )
 
 func init() {
+	zipCmd.Flags().Bool("checks", false, "Check for missing values and envs")
 	zipCmd.Flags().StringP("algorithm", "a", "sha256", "Algorithm for checksum (crc32,md5,sha1,sha224,sha384,sha256,sha512)")
 	rootCmd.AddCommand(zipCmd)
 }
@@ -24,12 +25,12 @@ var zipCmd = &cobra.Command{
 			return err
 		}
 
-		ignoreConfigChecks, err := cmd.Flags().GetBool("no-checks")
+		configChecks, err := cmd.Flags().GetBool("checks")
 		if err != nil {
 			return err
 		}
 
-		s, err := semanticrelease.New(readConfig(config), repository, !ignoreConfigChecks)
+		s, err := semanticrelease.New(readConfig(config), repository, configChecks)
 		if err != nil {
 			return err
 		}

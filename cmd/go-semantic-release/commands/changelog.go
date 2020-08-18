@@ -7,6 +7,7 @@ import (
 )
 
 func init() {
+	changelogCmd.Flags().Bool("checks", false, "Check for missing values and envs")
 	changelogCmd.Flags().StringP("out", "o", "CHANGELOG.md", "Name of the file")
 	rootCmd.AddCommand(changelogCmd)
 }
@@ -35,12 +36,12 @@ var changelogCmd = &cobra.Command{
 			return err
 		}
 
-		ignoreConfigChecks, err := cmd.Flags().GetBool("no-checks")
+		configChecks, err := cmd.Flags().GetBool("checks")
 		if err != nil {
 			return err
 		}
 
-		s, err := semanticrelease.New(readConfig(config), repository, !ignoreConfigChecks)
+		s, err := semanticrelease.New(readConfig(config), repository, configChecks)
 		if err != nil {
 			return err
 		}
