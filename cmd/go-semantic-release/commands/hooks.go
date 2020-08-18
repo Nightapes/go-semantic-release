@@ -7,6 +7,7 @@ import (
 )
 
 func init() {
+	hooksCmd.Flags().Bool("checks", false, "Check for missing values and envs")
 	rootCmd.AddCommand(hooksCmd)
 }
 
@@ -29,14 +30,14 @@ var hooksCmd = &cobra.Command{
 			return err
 		}
 
-		ignoreConfigChecks, err := cmd.Flags().GetBool("no-checks")
+		configChecks, err := cmd.Flags().GetBool("checks")
 		if err != nil {
 			return err
 		}
 
 		releaseConfig := readConfig(config)
 
-		s, err := semanticrelease.New(releaseConfig, repository, !ignoreConfigChecks)
+		s, err := semanticrelease.New(releaseConfig, repository, configChecks)
 		if err != nil {
 			return err
 		}

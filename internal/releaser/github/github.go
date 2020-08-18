@@ -110,8 +110,8 @@ func (g *Client) makeRelease(releaseVersion *shared.ReleaseVersion, generatedCha
 		return fmt.Errorf("could not create release: %s", err.Error())
 	}
 	g.release = release
-	g.log.Debugf("Release repsone: %+v", *release)
-	g.log.Infof("Crated release")
+	g.log.Debugf("Release response: %+v", *release)
+	g.log.Infof("Created release")
 	return nil
 
 }

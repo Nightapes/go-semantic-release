@@ -2,13 +2,16 @@ package hooks
 
 import (
 	"bufio"
+	"io"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
-	log "github.com/sirupsen/logrus"
 )
 
 //Hooks struct
@@ -61,17 +64,29 @@ func (h *Hooks) runCommand(command string) error {
 		cmd = exec.Command("sh", "-c", cmdReplaced)
 	}
 
+	cmd.Env = os.Environ()
+ 	cmd.Env = append(cmd.Env, "RELEASE_VERSION="+h.version.Next.Version.String())
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
 	}
+	h.printOutput(cmdReader, strings.Fields(cmdReplaced)[0])
 
-	scanner := bufio.NewScanner(cmdReader)
-	go func() {
-		for scanner.Scan() {
-			log.WithField("cmd", strings.Fields(cmdReplaced)[0]).Infof("%s\n", scanner.Text())
-		}
-	}()
+	cmdErrReader, err := cmd.StderrPipe()
+	if err != nil {
+		return err
+	}
+	h.printOutput(cmdErrReader, strings.Fields(cmdReplaced)[0])
+
 
 	return cmd.Run()
+}
+
+func (h *Hooks) printOutput(read io.ReadCloser, cmd string) {
+	scanner := bufio.NewScanner(read)
+	go func() {
+		for scanner.Scan() {
+			log.WithField("cmd", cmd).Infof("%s\n", scanner.Text())
+		}
+	}()
 }

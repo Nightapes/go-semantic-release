@@ -7,6 +7,7 @@ import (
 )
 
 func init() {
+	setCmd.Flags().Bool("checks", false, "Check for missing values and envs")
 	rootCmd.AddCommand(setCmd)
 }
 
@@ -26,12 +27,12 @@ var setCmd = &cobra.Command{
 			return err
 		}
 
-		ignoreConfigChecks, err := cmd.Flags().GetBool("no-checks")
+		configChecks, err := cmd.Flags().GetBool("checks")
 		if err != nil {
 			return err
 		}
 
-		s, err := semanticrelease.New(readConfig(config), repository, !ignoreConfigChecks)
+		s, err := semanticrelease.New(readConfig(config), repository, configChecks)
 		if err != nil {
 			return err
 		}

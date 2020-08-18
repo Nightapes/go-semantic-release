@@ -6,6 +6,7 @@ import (
 )
 
 func init() {
+	releaseCmd.Flags().Bool("no-checks", false, "Ignore missing values and envs")
 	rootCmd.AddCommand(releaseCmd)
 }
 
