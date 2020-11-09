@@ -138,11 +138,13 @@ func (g *GitUtil) GetCommits(lastTagHash string) ([]shared.Commit, error) {
 	var foundEnd bool
 
 	err = cIter.ForEach(func(c *object.Commit) error {
+
 		if c.Hash.String() == lastTagHash {
 			log.Debugf("Found commit with hash %s, will stop here", c.Hash.String())
 			foundEnd = true
 			return storer.ErrStop
 		}
+
 		if !foundEnd {
 			log.Tracef("Found commit with hash %s", c.Hash.String())
 			commit := shared.Commit{
@@ -151,6 +153,22 @@ func (g *GitUtil) GetCommits(lastTagHash string) ([]shared.Commit, error) {
 				Hash:    c.Hash.String(),
 			}
 			commits = append(commits, commit)
+
+			if len(c.ParentHashes) == 2 {
+				parent, err := g.Repository.CommitObject(c.ParentHashes[1])
+				if err == nil {
+					commit := shared.Commit{
+						Message: parent.Message,
+						Author:  parent.Committer.Name,
+						Hash:    parent.Hash.String(),
+					}
+					commits = append(commits, commit)
+					log.Tracef("Found parent check for merge commits for hash %s", c.ParentHashes[1].String())
+
+					commits = append(commits, g.getParents(parent)...)
+				}
+
+			}
 		}
 		return nil
 	})
@@ -160,4 +178,24 @@ func (g *GitUtil) GetCommits(lastTagHash string) ([]shared.Commit, error) {
 	}
 
 	return commits, nil
+}
+
+func (g *GitUtil) getParents(current *object.Commit) []shared.Commit {
+	commits := make([]shared.Commit, 0)
+	for _, i2 := range current.ParentHashes {
+		parent, err := g.Repository.CommitObject(i2)
+		if err != nil {
+			continue
+		}
+		commit := shared.Commit{
+			Message: parent.Message,
+			Author:  parent.Committer.Name,
+			Hash:    parent.Hash.String(),
+		}
+		commits = append(commits, commit)
+		if len(parent.ParentHashes) == 1 {
+			commits = append(commits, g.getParents(parent)...)
+		}
+	}
+	return commits
 }
