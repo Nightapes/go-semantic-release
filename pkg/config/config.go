@@ -44,6 +44,7 @@ type GitHubProvider struct {
 	User        string `yaml:"user"`
 	CustomURL   string `yaml:"customUrl,omitempty"`
 	AccessToken string
+	SkipTagPrefix	bool `yaml:"skipTagPrefix"`
 }
 
 // GitLabProvider struct
@@ -51,6 +52,7 @@ type GitLabProvider struct {
 	Repo        string `yaml:"repo"`
 	CustomURL   string `yaml:"customUrl,omitempty"`
 	AccessToken string
+	SkipTagPrefix	bool `yaml:"skipTagPrefix"`
 }
 
 // GitProvider struct
@@ -59,6 +61,7 @@ type GitProvider struct {
 	Username string `yaml:"user"`
 	Auth     string `yaml:"auth"`
 	SSH      bool   `yaml:"ssh"`
+	SkipTagPrefix	bool `yaml:"skipTagPrefix"`
 }
 
 // Hooks struct

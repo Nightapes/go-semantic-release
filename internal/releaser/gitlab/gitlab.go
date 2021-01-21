@@ -98,7 +98,11 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 // CreateRelease creates release on remote
 func (g *Client) makeRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
-	tag := "v" + releaseVersion.Next.Version.String()
+	tagPrefix := "v"
+	if g.config.SkipTagPrefix {
+		tagPrefix = ""
+	}
+	tag := tagPrefix + releaseVersion.Next.Version.String()
 	g.Release = tag
 	g.log.Infof("create release with version %s", tag)
 	url := fmt.Sprintf("%s/projects/%s/releases", g.apiURL, util.PathEscape(g.config.Repo))
