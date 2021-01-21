@@ -90,7 +90,11 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 // CreateRelease creates release on remote
 func (g *Client) makeRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
-	tag := "v" + releaseVersion.Next.Version.String()
+	tagPrefix := config.DefaultTagPrefix
+	if g.config.TagPrefix != nil{
+		tagPrefix = *g.config.TagPrefix
+	}
+	tag := tagPrefix + releaseVersion.Next.Version.String()
 	g.log.Debugf("create release with version %s", tag)
 
 	prerelease := releaseVersion.Next.Version.Prerelease() != ""

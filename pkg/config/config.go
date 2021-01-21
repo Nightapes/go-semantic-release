@@ -9,6 +9,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	DefaultTagPrefix = "v"
+)
+
 // ChangelogConfig struct
 type ChangelogConfig struct {
 	PrintAll      bool            `yaml:"printAll,omitempty"`
@@ -44,6 +48,7 @@ type GitHubProvider struct {
 	User        string `yaml:"user"`
 	CustomURL   string `yaml:"customUrl,omitempty"`
 	AccessToken string
+	TagPrefix   *string `yaml:"tagPrefix,omitempty"`
 }
 
 // GitLabProvider struct
@@ -51,6 +56,7 @@ type GitLabProvider struct {
 	Repo        string `yaml:"repo"`
 	CustomURL   string `yaml:"customUrl,omitempty"`
 	AccessToken string
+	TagPrefix   *string `yaml:"tagPrefix,omitempty"`
 }
 
 // GitProvider struct
@@ -59,6 +65,7 @@ type GitProvider struct {
 	Username string `yaml:"user"`
 	Auth     string `yaml:"auth"`
 	SSH      bool   `yaml:"ssh"`
+	TagPrefix   *string `yaml:"tagPrefix,omitempty"`
 }
 
 // Hooks struct
