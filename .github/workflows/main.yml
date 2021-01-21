@@ -24,7 +24,7 @@ jobs:
       - name: Lint
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
-          curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.35.3
+          curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.35.2
           golangci-lint run ./...
 
       - name: Run tests
