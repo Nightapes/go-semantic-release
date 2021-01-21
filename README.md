@@ -4,7 +4,7 @@
 
 ## Release Types
 
-| Type        |    Implemendet     |      Git tag       |     Changelog      |      Release       |  Write access git  |     Api token      |
+| Type        |    Implemented     |      Git tag       |     Changelog      |      Release       |  Write access git  |     Api token      |
 | ----------- | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |
 | `github`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    | :white_check_mark: |
 | `gitlab`    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    | :white_check_mark: |
@@ -60,7 +60,7 @@ hooks:
 
 #### CommitFormat
 
-Set the commit format, at the moment we support ony [angular](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit-message-format), more coming soon.
+Set the commit format, at the moment we support only [angular](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit-message-format), more coming soon.
 
 ```yml
 commitFormat: angular
@@ -97,8 +97,10 @@ release: 'github'
 github:
   user: "<user/group"
   repo: "<repositroyname>"
-  ## Optional, if your not using github.com
+  ## Optional, if you are not using github.com
   customUrl: <https://your.github>
+  ## Optional, if you want to change the default tag prefix ("v")
+  tagPrefix: ""
 ```
 
 ##### Gitlab 
@@ -112,6 +114,8 @@ gitlab:
   repo: "<repositroyname>"  ## Example group/project
   ## Optional, if your not using gitlab.com
   customUrl: <https://your.gitlab>
+  ## Optional, if you want to change the default tag prefix ("v")
+  tagPrefix: ""
 ```
 
 ##### Git only 
@@ -125,6 +129,8 @@ git:
   email: "<email>" # Used for creating tag
   user: "<user>" : # Used for creating tag and pushing
   auth: "<token>" # Used for pushing, can be env "$GIT_TOKEN", will be replaced with env
+  ## Optional, if you want to change the default tag prefix ("v")
+  tagPrefix: ""
 ```
 
 
@@ -176,7 +182,7 @@ changelog:
 
 ### Version
 
-`go-semantic-release` has two modes for calcualting the version: automatic or manual.
+`go-semantic-release` has two modes for calculating the version: automatic or manual.
 
 #### Automatic
 
