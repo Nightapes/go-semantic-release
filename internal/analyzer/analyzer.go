@@ -38,6 +38,9 @@ func New(format string, config config.ChangelogConfig) (*Analyzer, error) {
 	case ANGULAR:
 		analyzer.analyzeCommits = newAngular()
 		log.Debugf("Commit format set to %s", ANGULAR)
+	case CONVENTIONAL:
+		analyzer.analyzeCommits = newConventional()
+		log.Debugf("Commit format set to %s", CONVENTIONAL)
 	default:
 		return nil, fmt.Errorf("invalid commit format: %s", format)
 	}

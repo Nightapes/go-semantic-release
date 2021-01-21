@@ -239,7 +239,7 @@ func TestUploadAssets(t *testing.T) {
 			valid:   true,
 			testDir: os.TempDir(),
 			assets: []config.Asset{
-				config.Asset{
+				{
 					Name:     filepath.Base(file.Name()),
 					Compress: false,
 				},
@@ -258,7 +258,7 @@ func TestUploadAssets(t *testing.T) {
 			valid:   false,
 			testDir: os.TempDir(),
 			assets: []config.Asset{
-				config.Asset{
+				{
 					Name:     filepath.Base(file.Name()),
 					Compress: false,
 				},
@@ -277,7 +277,7 @@ func TestUploadAssets(t *testing.T) {
 			valid:   false,
 			testDir: os.TempDir(),
 			assets: []config.Asset{
-				config.Asset{
+				{
 					Name:     filepath.Base(file.Name()),
 					Compress: false,
 				},

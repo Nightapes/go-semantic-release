@@ -95,7 +95,7 @@ github:
 			},
 		},
 		Assets: []config.Asset{
-			config.Asset{
+			{
 				Name:     "./build/go-semantic-release",
 				Compress: false}},
 		ReleaseTitle: "go-semantic-release release",

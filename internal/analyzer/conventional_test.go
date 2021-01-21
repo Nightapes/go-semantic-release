@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAngular(t *testing.T) {
+func TestConventional(t *testing.T) {
 
 	testConfigs := []struct {
 		testCase        string
@@ -32,6 +32,18 @@ func TestAngular(t *testing.T) {
 						TagString:     "Features",
 						Print:         true,
 					},
+					{
+						Commit: shared.Commit{
+							Message: "feat: no scope",
+							Author:  "me",
+							Hash:    "12345667",
+						},
+						Scope:         "",
+						ParsedMessage: "no scope",
+						Tag:           "feat",
+						TagString:     "Features",
+						Print:         true,
+					},
 				},
 				"major": {},
 				"patch": {},
@@ -43,6 +55,11 @@ func TestAngular(t *testing.T) {
 					Author:  "me",
 					Hash:    "12345667",
 				},
+				{
+					Message: "feat: no scope",
+					Author:  "me",
+					Hash:    "12345667",
+				},
 			},
 		},
 		{
@@ -51,11 +68,11 @@ func TestAngular(t *testing.T) {
 				"minor": {
 					{
 						Commit: shared.Commit{
-							Message: "feat(internal/changelog): my first commit",
+							Message: "feat: my first commit",
 							Author:  "me",
 							Hash:    "12345667",
 						},
-						Scope:         "internal/changelog",
+						Scope:         "",
 						ParsedMessage: "my first commit",
 						Tag:           "feat",
 						TagString:     "Features",
@@ -65,16 +82,16 @@ func TestAngular(t *testing.T) {
 				"major": {
 					{
 						Commit: shared.Commit{
-							Message: "feat(internal/changelog): my first break BREAKING CHANGE: change api to v2",
+							Message: "feat!: my first break",
 							Author:  "me",
 							Hash:    "12345668",
 						},
-						Scope:                       "internal/changelog",
-						ParsedMessage:               "my first break",
+						Scope:                       "",
+						ParsedMessage:               "",
 						Tag:                         "feat",
 						TagString:                   "Features",
 						Print:                       true,
-						ParsedBreakingChangeMessage: "change api to v2",
+						ParsedBreakingChangeMessage: "my first break",
 					},
 				},
 				"patch": {},
@@ -82,39 +99,45 @@ func TestAngular(t *testing.T) {
 			},
 			commits: []shared.Commit{
 				{
-					Message: "feat(internal/changelog): my first commit",
+					Message: "feat: my first commit",
 					Author:  "me",
 					Hash:    "12345667",
 				},
 				{
-					Message: "feat(internal/changelog): my first break BREAKING CHANGE: change api to v2",
+					Message: "feat!: my first break",
 					Author:  "me",
 					Hash:    "12345668",
 				},
 			},
 		},
-		{testCase: "feat breaking change footer",
+		{
+			testCase: "feat breaking change footer",
 			commits: []shared.Commit{
 				{
-					Message: "feat(internal/changelog): my first commit",
+					Message: "feat: my first commit",
 					Author:  "me",
 					Hash:    "12345667",
 				},
 				{
-					Message: "feat(internal/changelog): my first break \n\nBREAKING CHANGE: change api to v2\n",
+					Message: "feat: my first break \n\nBREAKING CHANGE: change api to v2\n",
 					Author:  "me",
 					Hash:    "12345668",
+				},
+				{
+					Message: "feat!: my first break \n\nBREAKING CHANGE: hey from the change",
+					Author:  "me",
+					Hash:    "12345669",
 				},
 			},
 			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
 				"minor": {
 					{
 						Commit: shared.Commit{
-							Message: "feat(internal/changelog): my first commit",
+							Message: "feat: my first commit",
 							Author:  "me",
 							Hash:    "12345667",
 						},
-						Scope:         "internal/changelog",
+						Scope:         "",
 						ParsedMessage: "my first commit",
 						Tag:           "feat",
 						TagString:     "Features",
@@ -124,16 +147,29 @@ func TestAngular(t *testing.T) {
 				"major": {
 					{
 						Commit: shared.Commit{
-							Message: "feat(internal/changelog): my first break \n\nBREAKING CHANGE: change api to v2\n",
+							Message: "feat: my first break \n\nBREAKING CHANGE: change api to v2\n",
 							Author:  "me",
 							Hash:    "12345668",
 						},
-						Scope:                       "internal/changelog",
+						Scope:                       "",
 						ParsedMessage:               "my first break",
 						Tag:                         "feat",
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "change api to v2",
+					},
+					{
+						Commit: shared.Commit{
+							Message: "feat!: my first break \n\nBREAKING CHANGE: hey from the change",
+							Author:  "me",
+							Hash:    "12345669",
+						},
+						Scope:                       "",
+						ParsedMessage:               "my first break",
+						Tag:                         "feat",
+						TagString:                   "Features",
+						Print:                       true,
+						ParsedBreakingChangeMessage: "hey from the change",
 					},
 				},
 				"patch": {},
@@ -155,7 +191,7 @@ func TestAngular(t *testing.T) {
 					Hash:    "12345667",
 				},
 				{
-					Message: "Merge feat(internal/changelog): my first commit",
+					Message: "Merge feat: my first commit",
 					Author:  "me",
 					Hash:    "12345667",
 				},
@@ -167,11 +203,11 @@ func TestAngular(t *testing.T) {
 				"minor": {
 					{
 						Commit: shared.Commit{
-							Message: "feat(internal/changelog): my first commit",
+							Message: "feat: my first commit",
 							Author:  "me",
 							Hash:    "12345667",
 						},
-						Scope:         "internal/changelog",
+						Scope:         "",
 						ParsedMessage: "my first commit",
 						Tag:           "feat",
 						TagString:     "Features",
@@ -181,11 +217,11 @@ func TestAngular(t *testing.T) {
 				"none": {
 					{
 						Commit: shared.Commit{
-							Message: "build(internal/changelog): my first build",
+							Message: "build: my first build",
 							Author:  "me",
 							Hash:    "12345668",
 						},
-						Scope:                       "internal/changelog",
+						Scope:                       "",
 						ParsedMessage:               "my first build",
 						Tag:                         "build",
 						TagString:                   "Changes to CI/CD",
@@ -198,12 +234,12 @@ func TestAngular(t *testing.T) {
 			},
 			commits: []shared.Commit{
 				{
-					Message: "feat(internal/changelog): my first commit",
+					Message: "feat: my first commit",
 					Author:  "me",
 					Hash:    "12345667",
 				},
 				{
-					Message: "build(internal/changelog): my first build",
+					Message: "build: my first build",
 					Author:  "me",
 					Hash:    "12345668",
 				},
@@ -211,11 +247,11 @@ func TestAngular(t *testing.T) {
 		},
 	}
 
-	angular, err := analyzer.New("angular", config.ChangelogConfig{})
+	conventional, err := analyzer.New("conventional", config.ChangelogConfig{})
 	assert.NoError(t, err)
 
 	for _, test := range testConfigs {
-		analyzedCommits := angular.Analyze(test.commits)
+		analyzedCommits := conventional.Analyze(test.commits)
 		assert.Equalf(t, test.analyzedCommits["major"], analyzedCommits["major"], "Testcase %s should have major commits", test.testCase)
 		assert.Equalf(t, test.analyzedCommits["minor"], analyzedCommits["minor"], "Testcase %s should have minor commits", test.testCase)
 		assert.Equalf(t, test.analyzedCommits["patch"], analyzedCommits["patch"], "Testcase %s should have patch commits", test.testCase)

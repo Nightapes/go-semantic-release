@@ -56,8 +56,8 @@ func TestWriteAndReadCache(t *testing.T) {
 		},
 		Branch: "master",
 		Commits: map[shared.Release][]shared.AnalyzedCommit{
-			"major": []shared.AnalyzedCommit{
-				shared.AnalyzedCommit{
+			"major": {
+				{
 					Commit: shared.Commit{
 						Message: "Message",
 						Author:  "Author",

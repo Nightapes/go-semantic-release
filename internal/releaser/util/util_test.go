@@ -30,8 +30,8 @@ type testDoubleToken struct {
 }
 
 var testDoubles = []testDoubleToken{
-	testDoubleToken{providerName: "test0", token: "foo", valid: true},
-	testDoubleToken{providerName: "test1", token: "", valid: false},
+	{providerName: "test0", token: "foo", valid: true},
+	{providerName: "test1", token: "", valid: false},
 }
 
 func TestGetAccessToken(t *testing.T) {

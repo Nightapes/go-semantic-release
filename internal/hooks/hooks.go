@@ -65,7 +65,7 @@ func (h *Hooks) runCommand(command string) error {
 	}
 
 	cmd.Env = os.Environ()
- 	cmd.Env = append(cmd.Env, "RELEASE_VERSION="+h.version.Next.Version.String())
+	cmd.Env = append(cmd.Env, "RELEASE_VERSION="+h.version.Next.Version.String())
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -77,7 +77,6 @@ func (h *Hooks) runCommand(command string) error {
 		return err
 	}
 	h.printOutput(cmdErrReader, strings.Fields(cmdReplaced)[0])
-
 
 	return cmd.Run()
 }
