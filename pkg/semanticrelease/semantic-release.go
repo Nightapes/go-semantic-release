@@ -190,7 +190,7 @@ func (s *SemanticRelease) GetChangelog(releaseVersion *shared.ReleaseVersion) (*
 
 // WriteChangeLog writes changelog content to the given file
 func (s *SemanticRelease) WriteChangeLog(changelogContent, file string) error {
-	return ioutil.WriteFile(file, []byte(changelogContent), 644)
+	return ioutil.WriteFile(file, []byte(changelogContent), 0644)
 }
 
 // Release publish release to provider
