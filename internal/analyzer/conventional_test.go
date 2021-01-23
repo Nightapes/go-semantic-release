@@ -10,15 +10,15 @@ import (
 )
 
 func TestConventional(t *testing.T) {
-
+	t.Parallel()
 	testConfigs := []struct {
-		testCase        string
-		commits         []shared.Commit
-		analyzedCommits map[shared.Release][]shared.AnalyzedCommit
+		testCase            string
+		commits             []shared.Commit
+		wantAnalyzedCommits map[shared.Release][]shared.AnalyzedCommit
 	}{
 		{
 			testCase: "feat",
-			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+			wantAnalyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
 				"minor": {
 					{
 						Commit: shared.Commit{
@@ -64,7 +64,7 @@ func TestConventional(t *testing.T) {
 		},
 		{
 			testCase: "feat breaking change",
-			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+			wantAnalyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
 				"minor": {
 					{
 						Commit: shared.Commit{
@@ -112,24 +112,7 @@ func TestConventional(t *testing.T) {
 		},
 		{
 			testCase: "feat breaking change footer",
-			commits: []shared.Commit{
-				{
-					Message: "feat: my first commit",
-					Author:  "me",
-					Hash:    "12345667",
-				},
-				{
-					Message: "feat: my first break \n\nBREAKING CHANGE: change api to v2\n",
-					Author:  "me",
-					Hash:    "12345668",
-				},
-				{
-					Message: "feat!: my first break \n\nBREAKING CHANGE: hey from the change",
-					Author:  "me",
-					Hash:    "12345669",
-				},
-			},
-			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+			wantAnalyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
 				"minor": {
 					{
 						Commit: shared.Commit{
@@ -175,10 +158,27 @@ func TestConventional(t *testing.T) {
 				"patch": {},
 				"none":  {},
 			},
+			commits: []shared.Commit{
+				{
+					Message: "feat: my first commit",
+					Author:  "me",
+					Hash:    "12345667",
+				},
+				{
+					Message: "feat: my first break \n\nBREAKING CHANGE: change api to v2\n",
+					Author:  "me",
+					Hash:    "12345668",
+				},
+				{
+					Message: "feat!: my first break \n\nBREAKING CHANGE: hey from the change",
+					Author:  "me",
+					Hash:    "12345669",
+				},
+			},
 		},
 		{
 			testCase: "invalid",
-			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+			wantAnalyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
 				"minor": {},
 				"major": {},
 				"patch": {},
@@ -199,7 +199,7 @@ func TestConventional(t *testing.T) {
 		},
 		{
 			testCase: "feat and build",
-			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+			wantAnalyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
 				"minor": {
 					{
 						Commit: shared.Commit{
@@ -245,6 +245,52 @@ func TestConventional(t *testing.T) {
 				},
 			},
 		},
+		{
+			testCase: "fix and build",
+			wantAnalyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"minor": {},
+				"none": {
+					{
+						Commit: shared.Commit{
+							Message: "build: my first build",
+							Author:  "me",
+							Hash:    "12345668",
+						},
+						Scope:                       "",
+						ParsedMessage:               "my first build",
+						Tag:                         "build",
+						TagString:                   "Changes to CI/CD",
+						Print:                       false,
+						ParsedBreakingChangeMessage: "",
+					},
+				},
+				"patch": {{
+					Commit: shared.Commit{
+						Message: "fix: my first commit",
+						Author:  "me",
+						Hash:    "12345667",
+					},
+					Scope:         "",
+					ParsedMessage: "my first commit",
+					Tag:           "fix",
+					TagString:     "Bug fixes",
+					Print:         true,
+				}},
+				"major": {},
+			},
+			commits: []shared.Commit{
+				{
+					Message: "fix: my first commit",
+					Author:  "me",
+					Hash:    "12345667",
+				},
+				{
+					Message: "build: my first build",
+					Author:  "me",
+					Hash:    "12345668",
+				},
+			},
+		},
 	}
 
 	conventional, err := analyzer.New("conventional", config.ChangelogConfig{})
@@ -252,10 +298,9 @@ func TestConventional(t *testing.T) {
 
 	for _, test := range testConfigs {
 		analyzedCommits := conventional.Analyze(test.commits)
-		assert.Equalf(t, test.analyzedCommits["major"], analyzedCommits["major"], "Testcase %s should have major commits", test.testCase)
-		assert.Equalf(t, test.analyzedCommits["minor"], analyzedCommits["minor"], "Testcase %s should have minor commits", test.testCase)
-		assert.Equalf(t, test.analyzedCommits["patch"], analyzedCommits["patch"], "Testcase %s should have patch commits", test.testCase)
-		assert.Equalf(t, test.analyzedCommits["none"], analyzedCommits["none"], "Testcase %s should have none commits", test.testCase)
+		assert.Equalf(t, test.wantAnalyzedCommits["major"], analyzedCommits["major"], "Testcase %s should have major commits", test.testCase)
+		assert.Equalf(t, test.wantAnalyzedCommits["minor"], analyzedCommits["minor"], "Testcase %s should have minor commits", test.testCase)
+		assert.Equalf(t, test.wantAnalyzedCommits["patch"], analyzedCommits["patch"], "Testcase %s should have patch commits", test.testCase)
+		assert.Equalf(t, test.wantAnalyzedCommits["none"], analyzedCommits["none"], "Testcase %s should have none commits", test.testCase)
 	}
-
 }

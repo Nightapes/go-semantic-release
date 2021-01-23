@@ -10,7 +10,7 @@ import (
 )
 
 func TestAngular(t *testing.T) {
-
+	t.Parallel()
 	testConfigs := []struct {
 		testCase        string
 		commits         []shared.Commit
@@ -93,7 +93,8 @@ func TestAngular(t *testing.T) {
 				},
 			},
 		},
-		{testCase: "feat breaking change footer",
+		{
+			testCase: "feat breaking change footer",
 			commits: []shared.Commit{
 				{
 					Message: "feat(internal/changelog): my first commit",
@@ -221,5 +222,4 @@ func TestAngular(t *testing.T) {
 		assert.Equalf(t, test.analyzedCommits["patch"], analyzedCommits["patch"], "Testcase %s should have patch commits", test.testCase)
 		assert.Equalf(t, test.analyzedCommits["none"], analyzedCommits["none"], "Testcase %s should have none commits", test.testCase)
 	}
-
 }
