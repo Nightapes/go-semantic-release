@@ -152,7 +152,6 @@ func (g *Client) uploadAssets(assets *assets.Set) error {
 		}
 		defer file.Close()
 
-
 		result, err := g.uploadFile(asset.GetName(), file)
 		if err != nil {
 			return fmt.Errorf("could not upload asset %s: %s", file.Name(), err.Error())

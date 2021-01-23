@@ -10,19 +10,19 @@ import (
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 )
 
-type angular struct {
+type conventional struct {
 	rules []Rule
 	regex string
 	log   *log.Entry
 }
 
-// ANGULAR identifier
-const ANGULAR = "angular"
+// CONVENTIONAL identifier
+const CONVENTIONAL = "conventional"
 
-func newAngular() *angular {
-	return &angular{
-		regex: `^(TAG)(?:\((.*)\))?: (?s)(.*)`,
-		log:   log.WithField("analyzer", ANGULAR),
+func newConventional() *conventional {
+	return &conventional{
+		regex: `^(TAG)(?:\((.*)\))?(\!)?: (?s)(.*)`,
+		log:   log.WithField("analyzer", CONVENTIONAL),
 		rules: []Rule{
 			{
 				Tag:       "feat",
@@ -82,11 +82,11 @@ func newAngular() *angular {
 	}
 }
 
-func (a *angular) getRules() []Rule {
+func (a *conventional) getRules() []Rule {
 	return a.rules
 }
 
-func (a *angular) analyze(commit shared.Commit, rule Rule) (*shared.AnalyzedCommit, bool) {
+func (a *conventional) analyze(commit shared.Commit, rule Rule) (*shared.AnalyzedCommit, bool) {
 	re := regexp.MustCompile(strings.Replace(a.regex, "TAG", rule.Tag, -1))
 	matches := re.FindStringSubmatch(commit.Message)
 	if matches == nil {
@@ -101,14 +101,14 @@ func (a *angular) analyze(commit shared.Commit, rule Rule) (*shared.AnalyzedComm
 		Scope:     shared.Scope(matches[2]),
 	}
 
-	message := strings.Join(matches[3:], "")
-	if !strings.Contains(message, "BREAKING CHANGE:") {
+	message := strings.Join(matches[4:], "")
+	if matches[3] == "" && !strings.Contains(message, "BREAKING CHANGE:") {
 		analyzed.ParsedMessage = strings.Trim(message, " ")
 		a.log.Tracef("%s: found %s", commit.Message, rule.Tag)
 		return analyzed, false
 	}
 
-	a.log.Tracef(" %s, BREAKING CHANGE found", commit.Message)
+	a.log.Infof(" %s, BREAKING CHANGE found", commit.Message)
 	breakingChange := strings.SplitN(message, "BREAKING CHANGE:", 2)
 
 	if len(breakingChange) > 1 {

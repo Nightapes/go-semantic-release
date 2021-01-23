@@ -10,7 +10,7 @@ import (
 )
 
 func TestAngular(t *testing.T) {
-
+	t.Parallel()
 	testConfigs := []struct {
 		testCase        string
 		commits         []shared.Commit
@@ -19,8 +19,8 @@ func TestAngular(t *testing.T) {
 		{
 			testCase: "feat",
 			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
-				"minor": []shared.AnalyzedCommit{
-					shared.AnalyzedCommit{
+				"minor": {
+					{
 						Commit: shared.Commit{
 							Message: "feat(internal/changelog): my first commit",
 							Author:  "me",
@@ -33,12 +33,12 @@ func TestAngular(t *testing.T) {
 						Print:         true,
 					},
 				},
-				"major": []shared.AnalyzedCommit{},
-				"patch": []shared.AnalyzedCommit{},
-				"none":  []shared.AnalyzedCommit{},
+				"major": {},
+				"patch": {},
+				"none":  {},
 			},
 			commits: []shared.Commit{
-				shared.Commit{
+				{
 					Message: "feat(internal/changelog): my first commit",
 					Author:  "me",
 					Hash:    "12345667",
@@ -48,8 +48,8 @@ func TestAngular(t *testing.T) {
 		{
 			testCase: "feat breaking change",
 			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
-				"minor": []shared.AnalyzedCommit{
-					shared.AnalyzedCommit{
+				"minor": {
+					{
 						Commit: shared.Commit{
 							Message: "feat(internal/changelog): my first commit",
 							Author:  "me",
@@ -62,8 +62,8 @@ func TestAngular(t *testing.T) {
 						Print:         true,
 					},
 				},
-				"major": []shared.AnalyzedCommit{
-					shared.AnalyzedCommit{
+				"major": {
+					{
 						Commit: shared.Commit{
 							Message: "feat(internal/changelog): my first break BREAKING CHANGE: change api to v2",
 							Author:  "me",
@@ -77,38 +77,39 @@ func TestAngular(t *testing.T) {
 						ParsedBreakingChangeMessage: "change api to v2",
 					},
 				},
-				"patch": []shared.AnalyzedCommit{},
-				"none":  []shared.AnalyzedCommit{},
+				"patch": {},
+				"none":  {},
 			},
 			commits: []shared.Commit{
-				shared.Commit{
+				{
 					Message: "feat(internal/changelog): my first commit",
 					Author:  "me",
 					Hash:    "12345667",
 				},
-				shared.Commit{
+				{
 					Message: "feat(internal/changelog): my first break BREAKING CHANGE: change api to v2",
 					Author:  "me",
 					Hash:    "12345668",
 				},
 			},
 		},
-		{	testCase: "feat breaking change footer",
+		{
+			testCase: "feat breaking change footer",
 			commits: []shared.Commit{
-				 shared.Commit{
+				{
 					Message: "feat(internal/changelog): my first commit",
 					Author:  "me",
 					Hash:    "12345667",
-				 },
-				 shared.Commit{
-				        Message: "feat(internal/changelog): my first break \n\nBREAKING CHANGE: change api to v2\n",
+				},
+				{
+					Message: "feat(internal/changelog): my first break \n\nBREAKING CHANGE: change api to v2\n",
 					Author:  "me",
 					Hash:    "12345668",
-				 },
+				},
 			},
 			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
-				 "minor": []shared.AnalyzedCommit{
-					shared.AnalyzedCommit{
+				"minor": {
+					{
 						Commit: shared.Commit{
 							Message: "feat(internal/changelog): my first commit",
 							Author:  "me",
@@ -121,8 +122,8 @@ func TestAngular(t *testing.T) {
 						Print:         true,
 					},
 				},
-				"major": []shared.AnalyzedCommit{
-					shared.AnalyzedCommit{
+				"major": {
+					{
 						Commit: shared.Commit{
 							Message: "feat(internal/changelog): my first break \n\nBREAKING CHANGE: change api to v2\n",
 							Author:  "me",
@@ -136,25 +137,25 @@ func TestAngular(t *testing.T) {
 						ParsedBreakingChangeMessage: "change api to v2",
 					},
 				},
-				"patch": []shared.AnalyzedCommit{},
-				"none":  []shared.AnalyzedCommit{},
+				"patch": {},
+				"none":  {},
 			},
 		},
 		{
 			testCase: "invalid",
 			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
-				"minor": []shared.AnalyzedCommit{},
-				"major": []shared.AnalyzedCommit{},
-				"patch": []shared.AnalyzedCommit{},
-				"none":  []shared.AnalyzedCommit{},
+				"minor": {},
+				"major": {},
+				"patch": {},
+				"none":  {},
 			},
 			commits: []shared.Commit{
-				shared.Commit{
+				{
 					Message: "internal/changelog: my first commit",
 					Author:  "me",
 					Hash:    "12345667",
 				},
-				shared.Commit{
+				{
 					Message: "Merge feat(internal/changelog): my first commit",
 					Author:  "me",
 					Hash:    "12345667",
@@ -164,8 +165,8 @@ func TestAngular(t *testing.T) {
 		{
 			testCase: "feat and build",
 			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
-				"minor": []shared.AnalyzedCommit{
-					shared.AnalyzedCommit{
+				"minor": {
+					{
 						Commit: shared.Commit{
 							Message: "feat(internal/changelog): my first commit",
 							Author:  "me",
@@ -178,8 +179,8 @@ func TestAngular(t *testing.T) {
 						Print:         true,
 					},
 				},
-				"none": []shared.AnalyzedCommit{
-					shared.AnalyzedCommit{
+				"none": {
+					{
 						Commit: shared.Commit{
 							Message: "build(internal/changelog): my first build",
 							Author:  "me",
@@ -193,16 +194,16 @@ func TestAngular(t *testing.T) {
 						ParsedBreakingChangeMessage: "",
 					},
 				},
-				"patch": []shared.AnalyzedCommit{},
-				"major": []shared.AnalyzedCommit{},
+				"patch": {},
+				"major": {},
 			},
 			commits: []shared.Commit{
-				shared.Commit{
+				{
 					Message: "feat(internal/changelog): my first commit",
 					Author:  "me",
 					Hash:    "12345667",
 				},
-				shared.Commit{
+				{
 					Message: "build(internal/changelog): my first build",
 					Author:  "me",
 					Hash:    "12345668",
@@ -221,5 +222,4 @@ func TestAngular(t *testing.T) {
 		assert.Equalf(t, test.analyzedCommits["patch"], analyzedCommits["patch"], "Testcase %s should have patch commits", test.testCase)
 		assert.Equalf(t, test.analyzedCommits["none"], analyzedCommits["none"], "Testcase %s should have none commits", test.testCase)
 	}
-
 }

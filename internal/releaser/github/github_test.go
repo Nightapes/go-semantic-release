@@ -31,14 +31,14 @@ type testReleaseStruct struct {
 }
 
 var testNewClient = []testHelperMethodStruct{
-	testHelperMethodStruct{config: config.GitHubProvider{
+	{config: config.GitHubProvider{
 		Repo: "foo",
 		User: "bar",
 	},
 		valid: true,
 	},
 
-	testHelperMethodStruct{config: config.GitHubProvider{
+	{config: config.GitHubProvider{
 		Repo:      "foo",
 		User:      "bar",
 		CustomURL: "https://test.com",
@@ -51,7 +51,7 @@ var lastVersion, _ = semver.NewVersion("1.0.0")
 var newVersion, _ = semver.NewVersion("2.0.0")
 
 var testReleases = []testReleaseStruct{
-	testReleaseStruct{
+	{
 		config: config.GitHubProvider{
 			Repo: "foo",
 			User: "bar",
@@ -75,7 +75,7 @@ var testReleases = []testReleaseStruct{
 		requestResponseCode: 200,
 		valid:               true,
 	},
-	testReleaseStruct{
+	{
 		config: config.GitHubProvider{
 			Repo: "foo",
 			User: "bar",

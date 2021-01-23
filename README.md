@@ -60,11 +60,19 @@ hooks:
 
 #### CommitFormat
 
-Set the commit format, at the moment we support only [angular](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit-message-format), more coming soon.
+Supported formats:
 
-```yml
-commitFormat: angular
-```
+* [angular](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit-message-format)
+
+    ```yml
+    commitFormat: angular
+    ```
+
+* [conventional](https://www.conventionalcommits.org/en/v1.0.0/#summaryhttps://www.conventionalcommits.org/en/v1.0.0/#summary)
+
+    ```yml
+    commitFormat: conventional
+    ```
 
 #### Branch
 
