@@ -115,7 +115,6 @@ github:
 
 You need to set the env `GITLAB_ACCESS_TOKEN` with an personal access token.
 
-
 ```yml
 release: 'gitlab'
 gitlab:
