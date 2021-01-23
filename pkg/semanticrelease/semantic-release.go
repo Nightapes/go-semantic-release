@@ -23,7 +23,7 @@ import (
 // SemanticRelease struct
 type SemanticRelease struct {
 	config      *config.ReleaseConfig
-	gitutil     *gitutil.GitUtil
+	gitUtil     *gitutil.GitUtil
 	analyzer    *analyzer.Analyzer
 	calculator  *calculator.Calculator
 	releaser    releaser.Releaser
@@ -57,7 +57,7 @@ func New(c *config.ReleaseConfig, repository string, checkConfig bool) (*Semanti
 
 	return &SemanticRelease{
 		config:      c,
-		gitutil:     util,
+		gitUtil:     util,
 		releaser:    releaser,
 		analyzer:    analyzer,
 		repository:  repository,
@@ -67,9 +67,9 @@ func New(c *config.ReleaseConfig, repository string, checkConfig bool) (*Semanti
 	}, nil
 }
 
-//GetCIProvider result with ci config
+// GetCIProvider result with ci config
 func (s *SemanticRelease) GetCIProvider() (*ci.ProviderConfig, error) {
-	return ci.GetCIProvider(s.gitutil, s.checkConfig, ci.ReadAllEnvs())
+	return ci.GetCIProvider(s.gitUtil, s.checkConfig, ci.ReadAllEnvs())
 }
 
 // GetNextVersion from .version or calculate new from commits
@@ -86,7 +86,7 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 		}
 	}
 
-	lastVersion, lastVersionHash, err := s.gitutil.GetLastVersion()
+	lastVersion, lastVersionHash, err := s.gitUtil.GetLastVersion()
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 		firstRelease = true
 	}
 
-	commits, err := s.gitutil.GetCommits(lastVersionHash)
+	commits, err := s.gitUtil.GetCommits(lastVersionHash)
 	if err != nil {
 		return nil, err
 	}
@@ -149,15 +149,14 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 	return &releaseVersion, err
 }
 
-//SetVersion for git repository
+// SetVersion for git repository
 func (s *SemanticRelease) SetVersion(provider *ci.ProviderConfig, version string) error {
-
 	newVersion, err := semver.NewVersion(version)
 	if err != nil {
 		return err
 	}
 
-	lastVersion, lastVersionHash, err := s.gitutil.GetLastVersion()
+	lastVersion, lastVersionHash, err := s.gitUtil.GetLastVersion()
 	if err != nil {
 		return err
 	}
@@ -187,17 +186,15 @@ func (s *SemanticRelease) GetChangelog(releaseVersion *shared.ReleaseVersion) (*
 		CommitURL:  s.releaser.GetCommitURL(),
 		CompareURL: s.releaser.GetCompareURL(releaseVersion.Last.Version.String(), releaseVersion.Next.Version.String()),
 	}, releaseVersion.Commits)
-
 }
 
-// WriteChangeLog wirtes changelog content to the given file
+// WriteChangeLog writes changelog content to the given file
 func (s *SemanticRelease) WriteChangeLog(changelogContent, file string) error {
 	return ioutil.WriteFile(file, []byte(changelogContent), 0644)
 }
 
 // Release publish release to provider
 func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error {
-
 	if provider.IsPR {
 		log.Infof("Will not perform a new release. This is a pull request")
 		return nil
