@@ -31,9 +31,11 @@ introduced by commit:
 {{ end -}}
 {{ end -}}
 {{ end -}}`
+const defaultCommitListSubTemplate string = `{{ define "commitList" }}` + defaultCommitList + "{{ end }}"
 const defaultChangelogTitle string = `v{{.Version}} ({{.Now.Format "2006-01-02"}})`
 const defaultChangelog string = `# v{{$.Version}} ({{.Now.Format "2006-01-02"}})
-{{ .Commits -}}
+{{ template "commitList" .CommitsContent -}}
+
 {{ if .HasDocker}}
 ## Docker image
 
@@ -51,7 +53,8 @@ or
 `
 
 type changelogContent struct {
-	Commits          string
+	Commits			 string
+	CommitsContent   commitsContent
 	Version          string
 	Now              time.Time
 	Backtick         string
@@ -130,6 +133,7 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 	}
 
 	changelogContent := changelogContent{
+		CommitsContent: commitsContent,
 		Version:          templateConfig.Version,
 		Now:              c.releaseTime,
 		Backtick:         "`",
@@ -137,7 +141,7 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 		HasDockerLatest:  c.config.Changelog.Docker.Latest,
 		DockerRepository: c.config.Changelog.Docker.Repository,
 	}
-	template := defaultChangelog
+	template := defaultCommitListSubTemplate + defaultChangelog
 	if c.config.Changelog.TemplatePath != "" {
 		content, err := ioutil.ReadFile(c.config.Changelog.TemplatePath)
 		if err != nil {
@@ -164,8 +168,8 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 	}
 
 	log.Tracef("Commits %s", renderedCommitList)
-
 	changelogContent.Commits = renderedCommitList
+
 	log.Debugf("Render changelog")
 	renderedContent, err := generateTemplate(template, changelogContent)
 
