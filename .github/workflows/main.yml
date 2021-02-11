@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - master
-  pull_request:
 jobs:
   build:
     strategy:
@@ -41,7 +40,7 @@ jobs:
           GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o build/go-semantic-release.windows_x86_64.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
           GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -o build/go-semantic-release.darwin_x86_64  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
       - name: Build Docker image
-        if: matrix.go == '1.15'
+        if: matrix.go == '1.15' && github.repository == "nightapes/go-semantic-release"
         run: |
           docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
           docker login -u nightapes -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
@@ -66,10 +65,18 @@ jobs:
           name: build
           path: build
       - name: Release
+        if: github.repository == "nightapes/go-semantic-release"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           chmod -R +x build
           docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
           docker login -u nightapes -p $GITHUB_TOKEN docker.pkg.github.com
+          ./build/go-semantic-release-temp release --loglevel trace
+      - name: Release fork
+        if: github.repository != "nightapes/go-semantic-release"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          chmod -R +x build
           ./build/go-semantic-release-temp release --loglevel trace
