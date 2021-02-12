@@ -1,5 +1,26 @@
+{{ define "commitList" }}
+{{ range $index,$commit := .BreakingChanges -}}
+{{ if eq $index 0 -}}
+## BREAKING CHANGES
+{{ end -}}
+* {{ if $commit.Scope }}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}**{{ end }} {{$commit.ParsedBreakingChangeMessage}}
+introduced by commit:
+{{$commit.ParsedMessage}} {{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
+{{ end -}}
+{{ range $key := .Order  -}}
+{{ $commits := index $.Commits $key -}}
+{{ if $commits -}}
+### {{ $key }}
+{{ range $index,$commit := $commits -}}
+* {{ if $commit.Scope }}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}** {{end}}{{$commit.ParsedMessage}}{{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
+{{ end -}}
+{{ end -}}
+{{ end -}}
+{{ end -}}
+
 # My custom release template v{{$.Version}} ({{.Now.Format "2006-01-02"}})
-{{ .Commits -}}
+{{ template "commitList" .CommitsContent -}}
+
 {{ if .HasDocker}}
 ## Docker image
 

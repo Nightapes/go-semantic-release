@@ -1,6 +1,7 @@
 package changelog
 
 import (
+	"bufio"
 	"bytes"
 	"io/ioutil"
 	"strings"
@@ -31,9 +32,11 @@ introduced by commit:
 {{ end -}}
 {{ end -}}
 {{ end -}}`
+const defaultCommitListSubTemplate string = `{{ define "commitList" }}` + defaultCommitList + "{{ end }}"
 const defaultChangelogTitle string = `v{{.Version}} ({{.Now.Format "2006-01-02"}})`
 const defaultChangelog string = `# v{{$.Version}} ({{.Now.Format "2006-01-02"}})
-{{ .Commits -}}
+{{ template "commitList" .CommitsContent -}}
+
 {{ if .HasDocker}}
 ## Docker image
 
@@ -51,7 +54,8 @@ or
 `
 
 type changelogContent struct {
-	Commits          string
+	Commits			 string
+	CommitsContent   commitsContent
 	Version          string
 	Now              time.Time
 	Backtick         string
@@ -130,6 +134,7 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 	}
 
 	changelogContent := changelogContent{
+		CommitsContent: commitsContent,
 		Version:          templateConfig.Version,
 		Now:              c.releaseTime,
 		Backtick:         "`",
@@ -137,7 +142,7 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 		HasDockerLatest:  c.config.Changelog.Docker.Latest,
 		DockerRepository: c.config.Changelog.Docker.Repository,
 	}
-	template := defaultChangelog
+	template := defaultCommitListSubTemplate + defaultChangelog
 	if c.config.Changelog.TemplatePath != "" {
 		content, err := ioutil.ReadFile(c.config.Changelog.TemplatePath)
 		if err != nil {
@@ -164,8 +169,8 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 	}
 
 	log.Tracef("Commits %s", renderedCommitList)
-
 	changelogContent.Commits = renderedCommitList
+
 	log.Debugf("Render changelog")
 	renderedContent, err := generateTemplate(template, changelogContent)
 
@@ -176,6 +181,10 @@ func generateTemplate(text string, values interface{}) (string, error) {
 
 	funcMap := template.FuncMap{
 		"replace": replace,
+		"lower": lower,
+		"upper": upper,
+		"capitalize": capitalize,
+		"addPrefixToLines": addPrefixToLines,
 	}
 
 	var tpl bytes.Buffer
@@ -192,4 +201,31 @@ func generateTemplate(text string, values interface{}) (string, error) {
 
 func replace(input, from, to string) string {
 	return strings.Replace(input, from, to, -1)
+}
+
+func lower(input string) string {
+	return strings.ToLower(input)
+}
+
+func upper(input string) string {
+	return strings.ToUpper(input)
+}
+
+func capitalize(input string) string {
+	if len(input) > 0 {
+		return strings.ToUpper(string(input[0])) + input[1:]
+	}
+	return ""
+}
+
+// Adds a prefix to each line of the given text block
+// this can be helpful in rendering correct indentation or bullets for multi-line texts
+func addPrefixToLines(input, prefix string) string {
+	output := ""
+	scanner := bufio.NewScanner(strings.NewReader(input))
+	for scanner.Scan() {
+		output += prefix + scanner.Text() + "\n"
+	}
+	output = strings.TrimRight(output, "\n")
+	return output
 }
