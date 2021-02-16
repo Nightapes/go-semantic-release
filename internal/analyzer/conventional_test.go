@@ -30,6 +30,8 @@ func TestConventional(t *testing.T) {
 						ParsedMessage: "my first commit",
 						Tag:           "feat",
 						TagString:     "Features",
+						Subject: "my first commit",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 						Print:         true,
 					},
 					{
@@ -42,6 +44,8 @@ func TestConventional(t *testing.T) {
 						ParsedMessage: "no scope",
 						Tag:           "feat",
 						TagString:     "Features",
+						Subject: "no scope",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 						Print:         true,
 					},
 				},
@@ -77,6 +81,8 @@ func TestConventional(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
+						Subject: "my first commit",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
 				"major": {
@@ -92,6 +98,9 @@ func TestConventional(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "my first break",
+						IsBreaking: true,
+						Subject: "my first break",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
 				"patch": {},
@@ -125,6 +134,8 @@ func TestConventional(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
+						Subject: "my first commit",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
 				"major": {
@@ -140,6 +151,15 @@ func TestConventional(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "change api to v2",
+						IsBreaking: true,
+						Subject: "my first break",
+						MessageBlocks: map[string][]shared.MessageBlock{
+							"body" : { shared.MessageBlock{
+								Label:   "BREAKING CHANGE",
+								Content: "change api to v2",
+								},
+							},
+						},
 					},
 					{
 						Commit: shared.Commit{
@@ -153,6 +173,15 @@ func TestConventional(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "hey from the change",
+						IsBreaking: true,
+						Subject: "my first break",
+						MessageBlocks: map[string][]shared.MessageBlock{
+							"body" : {shared.MessageBlock{
+								Label:   "BREAKING CHANGE",
+								Content: "hey from the change",
+								},
+							},
+						},
 					},
 				},
 				"patch": {},
@@ -212,6 +241,8 @@ func TestConventional(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
+						Subject:  "my first commit",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
 				"none": {
@@ -227,6 +258,8 @@ func TestConventional(t *testing.T) {
 						TagString:                   "Changes to CI/CD",
 						Print:                       false,
 						ParsedBreakingChangeMessage: "",
+						Subject:  "my first build",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
 				"patch": {},
@@ -262,6 +295,8 @@ func TestConventional(t *testing.T) {
 						TagString:                   "Changes to CI/CD",
 						Print:                       false,
 						ParsedBreakingChangeMessage: "",
+						Subject:  "my first build",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
 				"patch": {{
@@ -275,6 +310,8 @@ func TestConventional(t *testing.T) {
 					Tag:           "fix",
 					TagString:     "Bug fixes",
 					Print:         true,
+					Subject:  "my first commit",
+					MessageBlocks: map[string][]shared.MessageBlock{},
 				}},
 				"major": {},
 			},
@@ -291,9 +328,53 @@ func TestConventional(t *testing.T) {
 				},
 			},
 		},
+		{
+			testCase: "fix issue with footers",
+			wantAnalyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"patch": {{
+					Commit: shared.Commit{
+						Message: "fix: squash bug for logging\n\nNote: now the logs will not print lines twice.\n\nIssue: #123\nSeverity: medium",
+						Author:  "me",
+						Hash:    "12345667",
+					},
+					Scope:         "",
+					ParsedMessage: "squash bug for logging\n\nNote: now the logs will not print lines twice.\n\nIssue: #123\nSeverity: medium",
+					Tag:           "fix",
+					TagString:     "Bug fixes",
+					Print:         true,
+					Subject:  "squash bug for logging",
+					MessageBlocks: map[string][]shared.MessageBlock{
+						"body": { shared.MessageBlock{
+							Label:   "Note",
+							Content: "now the logs will not print lines twice.",
+						},
+						},
+						"footer": { shared.MessageBlock{
+							Label:   "Issue",
+							Content: "#123",
+						},
+						shared.MessageBlock{
+							Label:   "Severity",
+							Content: "medium",
+						},
+						},
+					},
+				}},
+				"minor": {},
+				"major": {},
+				"none": {},
+			},
+			commits: []shared.Commit{
+				{
+					Message: "fix: squash bug for logging\n\nNote: now the logs will not print lines twice.\n\nIssue: #123\nSeverity: medium",
+					Author:  "me",
+					Hash:    "12345667",
+				},
+			},
+		},
 	}
 
-	conventional, err := analyzer.New("conventional", config.ChangelogConfig{})
+	conventional, err := analyzer.New("conventional", config.AnalyzerConfig{BlockPrefixes: []string{"Note", "Issue", "Severity"}}, config.ChangelogConfig{})
 	assert.NoError(t, err)
 
 	for _, test := range testConfigs {

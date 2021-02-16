@@ -75,6 +75,7 @@ func TestAngular(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "change api to v2",
+						IsBreaking: true,
 					},
 				},
 				"patch": {},
@@ -135,6 +136,7 @@ func TestAngular(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "change api to v2",
+						IsBreaking: true,
 					},
 				},
 				"patch": {},
@@ -212,7 +214,7 @@ func TestAngular(t *testing.T) {
 		},
 	}
 
-	angular, err := analyzer.New("angular", config.ChangelogConfig{})
+	angular, err := analyzer.New("angular", config.AnalyzerConfig{}, config.ChangelogConfig{})
 	assert.NoError(t, err)
 
 	for _, test := range testConfigs {

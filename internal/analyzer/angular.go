@@ -86,12 +86,12 @@ func (a *angular) getRules() []Rule {
 	return a.rules
 }
 
-func (a *angular) analyze(commit shared.Commit, rule Rule) (*shared.AnalyzedCommit, bool) {
+func (a *angular) analyze(commit shared.Commit, rule Rule) *shared.AnalyzedCommit {
 	re := regexp.MustCompile(strings.Replace(a.regex, "TAG", rule.Tag, -1))
 	matches := re.FindStringSubmatch(commit.Message)
 	if matches == nil {
 		a.log.Tracef("%s does not match %s, skip", commit.Message, rule.Tag)
-		return nil, false
+		return nil
 	}
 
 	analyzed := &shared.AnalyzedCommit{
@@ -105,18 +105,21 @@ func (a *angular) analyze(commit shared.Commit, rule Rule) (*shared.AnalyzedComm
 	if !strings.Contains(message, "BREAKING CHANGE:") {
 		analyzed.ParsedMessage = strings.Trim(message, " ")
 		a.log.Tracef("%s: found %s", commit.Message, rule.Tag)
-		return analyzed, false
+		return analyzed
 	}
 
 	a.log.Tracef(" %s, BREAKING CHANGE found", commit.Message)
 	breakingChange := strings.SplitN(message, "BREAKING CHANGE:", 2)
 
+	analyzed.IsBreaking = true
+
 	if len(breakingChange) > 1 {
 		analyzed.ParsedMessage = strings.TrimSpace(breakingChange[0])
 		analyzed.ParsedBreakingChangeMessage = strings.TrimSpace(breakingChange[1])
-		return analyzed, true
+
+		return analyzed
 	}
 
 	analyzed.ParsedBreakingChangeMessage = breakingChange[0]
-	return analyzed, true
+	return analyzed
 }
