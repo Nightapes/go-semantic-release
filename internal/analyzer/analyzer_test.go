@@ -10,7 +10,7 @@ import (
 
 func TestAnalyzer(t *testing.T) {
 
-	_, err := analyzer.New("unknown", config.ChangelogConfig{})
+	_, err := analyzer.New("unknown", config.AnalyzerConfig{}, config.ChangelogConfig{})
 	assert.Error(t, err)
 
 }

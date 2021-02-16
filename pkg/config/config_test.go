@@ -100,6 +100,7 @@ github:
 				Compress: false}},
 		ReleaseTitle: "go-semantic-release release",
 		IsPreRelease: false,
+		Analyzer: config.AnalyzerConfig{BlockPrefixes: []string{}},
 	}, result)
 
 }

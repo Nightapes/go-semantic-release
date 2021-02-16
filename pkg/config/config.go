@@ -13,6 +13,11 @@ const (
 	DefaultTagPrefix = "v"
 )
 
+// AnalyzerConfig struct
+type AnalyzerConfig struct {
+	BlockPrefixes []string `yaml:"blockPrefixes"`
+}
+
 // ChangelogConfig struct
 type ChangelogConfig struct {
 	PrintAll      bool            `yaml:"printAll,omitempty"`
@@ -83,6 +88,7 @@ type Checksum struct {
 type ReleaseConfig struct {
 	CommitFormat   string            `yaml:"commitFormat"`
 	Branch         map[string]string `yaml:"branch"`
+	Analyzer	   AnalyzerConfig	 `yaml:"analyzer"`
 	Changelog      ChangelogConfig   `yaml:"changelog,omitempty"`
 	Release        string            `yaml:"release,omitempty"`
 	GitHubProvider GitHubProvider    `yaml:"github,omitempty"`

@@ -69,6 +69,8 @@ func TestWriteAndReadCache(t *testing.T) {
 					Tag:                         "feat",
 					TagString:                   "Features",
 					Print:                       true,
+					Subject:  "add gitlab as release option",
+					MessageBlocks: map[string][]shared.MessageBlock{},
 				},
 			},
 		},

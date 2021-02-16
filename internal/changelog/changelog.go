@@ -110,7 +110,7 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 	for _, commits := range analyzedCommits {
 		for _, commit := range commits {
 			if commit.Print {
-				if commit.ParsedBreakingChangeMessage != "" {
+				if commit.IsBreaking {
 					commitsBreakingChange = append(commitsBreakingChange, commit)
 					continue
 				}
@@ -142,6 +142,7 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 		HasDockerLatest:  c.config.Changelog.Docker.Latest,
 		DockerRepository: c.config.Changelog.Docker.Repository,
 	}
+
 	template := defaultCommitListSubTemplate + defaultChangelog
 	if c.config.Changelog.TemplatePath != "" {
 		content, err := ioutil.ReadFile(c.config.Changelog.TemplatePath)

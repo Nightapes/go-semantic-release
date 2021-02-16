@@ -39,7 +39,7 @@ func New(c *config.ReleaseConfig, repository string, checkConfig bool) (*Semanti
 		return nil, err
 	}
 
-	analyzer, err := analyzer.New(c.CommitFormat, c.Changelog)
+	analyzer, err := analyzer.New(c.CommitFormat, c.Analyzer, c.Changelog)
 	if err != nil {
 		return nil, err
 	}

@@ -41,6 +41,8 @@ func TestChangelog(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
+						Subject: "my first commit",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
 			},
@@ -64,6 +66,8 @@ func TestChangelog(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
+						Subject: "my first commit",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
 			},
@@ -88,6 +92,8 @@ func TestChangelog(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
+						Subject: "my first commit",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 					{
 						Commit: shared.Commit{
@@ -101,6 +107,15 @@ func TestChangelog(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "change api to v2",
+						IsBreaking: true,
+						Subject: "my first break",
+						MessageBlocks: map[string][]shared.MessageBlock{
+							"body" : { shared.MessageBlock{
+								Label:   "BREAKING CHANGE",
+								Content: "change api to v2",
+							},
+							},
+						},
 					},
 				},
 			},
@@ -126,6 +141,15 @@ func TestChangelog(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "hey from the change",
+						IsBreaking: true,
+						Subject: "my first break",
+						MessageBlocks: map[string][]shared.MessageBlock{
+							"body" : { shared.MessageBlock{
+								Label:   "BREAKING CHANGE",
+								Content: "hey from the change",
+							},
+							},
+						},
 					},
 					{
 						Commit: shared.Commit{
@@ -138,6 +162,8 @@ func TestChangelog(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
+						Subject: "my first commit",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 					{
 						Commit: shared.Commit{
@@ -150,10 +176,12 @@ func TestChangelog(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
+						Subject: "my second commit",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 					{
 						Commit: shared.Commit{
-							Message: "feat: my new commit \n\nmy first break: BREAKING CHANGE: change api to v2",
+							Message: "feat: my new commit \n\nBREAKING CHANGE: change api to v2",
 							Author:  "me",
 							Hash:    "12345668",
 						},
@@ -163,6 +191,14 @@ func TestChangelog(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "change api to v2",
+						IsBreaking: true,
+						Subject: "my new commit",
+						MessageBlocks: map[string][]shared.MessageBlock{
+							"body": { shared.MessageBlock{
+								Label:   "BREAKING CHANGE",
+								Content: "change api to v2",
+							}},
+						},
 					},
 					{
 						Commit: shared.Commit{
@@ -176,6 +212,9 @@ func TestChangelog(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "my next commit",
+						IsBreaking: true,
+						Subject: "my next commit",
+						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
 			},
