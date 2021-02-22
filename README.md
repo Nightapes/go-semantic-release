@@ -160,14 +160,58 @@ Hooks will run when calling `release`. Hooks run only if a release will be trigg
 
 #### Changelog
 
-Following variables can be used for templates:
-*   `Commits` string
-*	`Version` string
-* 	`Now` time.Time
-* 	`Backtick` string
-* 	`HasDocker` bool
-* 	`HasDockerLatest` bool
-* 	`DockerRepository` string
+Following variables and objects can be used for templates:
+
+__Top level__
+
+| Field                 | Type              | Description |
+| --------              | ------            | -----       |
+|   `Commits`           | string            | Fully rendered commit messages. This is left for backward compatibility. |
+|   `CommitsContent`    | commitsContent    | Raw parsed commit data. Use this if you want to customize the output. |
+|	`Version`           | string            | Next release version |
+| 	`Now`               | time.Time         | Current time of generating changelog |
+| 	`Backtick`          | string            | Backtick character |
+| 	`HasDocker`         | bool              | If a docker repository is set in the config. |
+| 	`HasDockerLatest`   | bool              | If `latest` image was uploaded |
+| 	`DockerRepository`  | string            | Docker repository |
+
+__commitsContent__
+
+| Field                 | Type                           | Description |
+| --------              | ------                         | -----       |
+|   `Commits`           | map[string][]AnalyzedCommit    | Commits grouped by commit type |
+|  	`BreakingChanges`   | []AnalyzedCommit               | Analyzed commit structure |
+|  	`Order`             | []string                       | Ordered list of types |
+|  	`HasURL`            | bool                           | If a URL is available for commits |
+|  	`URL`               | string                         | URL for to the commit with {{hash}} suffix |
+
+__AnalyzedCommit__
+
+| Field                 | Type                  | Description |
+| --------              | ------                | -----       |
+|   `Commit`            | Commit                | Original GIT commit |
+|  	`Tag`               | string                | Type of commit (e.g. feat, fix, ...) |
+|  	`TagString`         | string                | Full name of the type |
+|  	`Scope`             | bool                  | Scope value from the commit |
+|  	`Subject`           | string                | URL for to the commit with {{hash}} suffix |
+|   `MessageBlocks`     | map[string][]MessageBlock | Different sections of a message (e.g. body, footer etc.) |
+|  `IsBreaking`         | bool                  | If this commit contains a breaking change |
+|  `Print`              | bool                  | Should this commit be included in Changelog output |
+
+__Commit__
+
+| Field                 | Type                  | Description |
+| --------              | ------                | -----       |
+| `Message`             | string                | Original git commit message |
+| `Author`              | string                | Name of the author |
+| `Hash`                | string                | Commit hash value "|
+
+__MessageBlock__
+
+| Field                 | Type                  | Description |
+| --------              | ------                | -----       |
+| `Label`               | string                | Label for a block (optional). This will usually be a token used in a footer |
+| `Content`             | string                | The parsed content of a block |
 
 ```yml
 changelog:
