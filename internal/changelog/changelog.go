@@ -68,8 +68,6 @@ type commitsContent struct {
 	Commits         map[string][]shared.AnalyzedCommit
 	BreakingChanges []shared.AnalyzedCommit
 	Order           []string
-	Version         string
-	Now             time.Time
 	Backtick        string
 	HasURL          bool
 	URL             string
@@ -93,11 +91,11 @@ func New(config *config.ReleaseConfig, rules []analyzer.Rule, releaseTime time.T
 	}
 }
 
-// GenerateChanglog from given commits
-func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConfig, analyzedCommits map[shared.Release][]shared.AnalyzedCommit) (*shared.GeneratedChangelog, error) {
+// GenerateChangelog from given commits
+func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateConfig, analyzedCommits map[shared.Release][]shared.AnalyzedCommit) (*shared.GeneratedChangelog, error) {
 
 	commitsPerScope := map[string][]shared.AnalyzedCommit{}
-	commitsBreakingChange := []shared.AnalyzedCommit{}
+	var commitsBreakingChange []shared.AnalyzedCommit
 	order := make([]string, 0)
 
 	for _, rule := range c.rules {
@@ -123,9 +121,7 @@ func (c *Changelog) GenerateChanglog(templateConfig shared.ChangelogTemplateConf
 	}
 
 	commitsContent := commitsContent{
-		Version:         templateConfig.Version,
 		Commits:         commitsPerScope,
-		Now:             c.releaseTime,
 		BreakingChanges: commitsBreakingChange,
 		Backtick:        "`",
 		Order:           order,

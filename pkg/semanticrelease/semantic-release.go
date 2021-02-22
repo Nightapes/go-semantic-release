@@ -180,7 +180,7 @@ func (s *SemanticRelease) SetVersion(provider *ci.ProviderConfig, version string
 // GetChangelog from last version till now
 func (s *SemanticRelease) GetChangelog(releaseVersion *shared.ReleaseVersion) (*shared.GeneratedChangelog, error) {
 	c := changelog.New(s.config, s.analyzer.GetRules(), time.Now())
-	return c.GenerateChanglog(shared.ChangelogTemplateConfig{
+	return c.GenerateChangelog(shared.ChangelogTemplateConfig{
 		Version:    releaseVersion.Next.Version.String(),
 		Hash:       releaseVersion.Last.Commit,
 		CommitURL:  s.releaser.GetCommitURL(),
