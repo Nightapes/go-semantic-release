@@ -89,7 +89,7 @@ func (a *angular) getRules() []Rule {
 }
 
 func (a *angular) analyze(commit shared.Commit, rule Rule) *shared.AnalyzedCommit {
-	tokenSep := append(a.config.TokenSeparators, conventionalFooterTokenSep[:]...)
+	tokenSep := append(a.config.TokenSeparators, angularFooterTokenSep[:]...)
 
 	firstSplit := strings.SplitN(commit.Message, "\n", 2)
 	header := firstSplit[0]
