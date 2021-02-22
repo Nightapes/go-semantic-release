@@ -2,7 +2,7 @@
 package analyzer
 
 import (
-	"regexp"
+	"github.com/Nightapes/go-semantic-release/pkg/config"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -14,14 +14,16 @@ type angular struct {
 	rules []Rule
 	regex string
 	log   *log.Entry
+	config  config.AnalyzerConfig
 }
 
 // ANGULAR identifier
 const ANGULAR = "angular"
+var angularFooterTokenSep = defaultTokenSeparators
 
 func newAngular() *angular {
 	return &angular{
-		regex: `^(TAG)(?:\((.*)\))?: (?s)(.*)`,
+		regex: `^(?P<type>\w*)(?:\((?P<scope>.*)\))?: (?P<subject>.*)`,
 		log:   log.WithField("analyzer", ANGULAR),
 		rules: []Rule{
 			{
@@ -87,39 +89,51 @@ func (a *angular) getRules() []Rule {
 }
 
 func (a *angular) analyze(commit shared.Commit, rule Rule) *shared.AnalyzedCommit {
-	re := regexp.MustCompile(strings.Replace(a.regex, "TAG", rule.Tag, -1))
-	matches := re.FindStringSubmatch(commit.Message)
-	if matches == nil {
+	tokenSep := append(a.config.TokenSeparators, conventionalFooterTokenSep[:]...)
+
+	firstSplit := strings.SplitN(commit.Message, "\n", 2)
+	header := firstSplit[0]
+	body := ""
+	if len(firstSplit) > 1 {
+		body = firstSplit[1]
+	}
+	matches := getRegexMatchedMap(a.regex, header)
+
+	if len(matches) == 0 || matches["type"] != rule.Tag{
 		a.log.Tracef("%s does not match %s, skip", commit.Message, rule.Tag)
 		return nil
 	}
+
+	msgBlockMap := getDefaultMessageBlockMap(body, tokenSep)
 
 	analyzed := &shared.AnalyzedCommit{
 		Commit:    commit,
 		Tag:       rule.Tag,
 		TagString: rule.TagString,
-		Scope:     shared.Scope(matches[2]),
+		Scope:         shared.Scope(matches["scope"]),
+		Subject:       strings.TrimSpace(matches["subject"]),
+		MessageBlocks: msgBlockMap,
 	}
 
-	message := strings.Join(matches[3:], "")
-	if !strings.Contains(message, "BREAKING CHANGE:") {
-		analyzed.ParsedMessage = strings.Trim(message, " ")
+	isBreaking := strings.Contains(commit.Message, defaultBreakingChangePrefix)
+	analyzed.IsBreaking = isBreaking
+
+	oldFormatMessage := strings.TrimSpace(matches["subject"] + "\n" + body)
+
+	if !isBreaking {
+		analyzed.ParsedMessage = strings.Trim(oldFormatMessage, " ")
 		a.log.Tracef("%s: found %s", commit.Message, rule.Tag)
 		return analyzed
 	}
 
 	a.log.Tracef(" %s, BREAKING CHANGE found", commit.Message)
-	breakingChange := strings.SplitN(message, "BREAKING CHANGE:", 2)
-
-	analyzed.IsBreaking = true
+	breakingChange := strings.SplitN(oldFormatMessage, defaultBreakingChangePrefix, 2)
 
 	if len(breakingChange) > 1 {
 		analyzed.ParsedMessage = strings.TrimSpace(breakingChange[0])
 		analyzed.ParsedBreakingChangeMessage = strings.TrimSpace(breakingChange[1])
-
-		return analyzed
+	} else {
+		analyzed.ParsedBreakingChangeMessage = breakingChange[0]
 	}
-
-	analyzed.ParsedBreakingChangeMessage = breakingChange[0]
 	return analyzed
 }

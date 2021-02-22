@@ -2,7 +2,6 @@
 package analyzer
 
 import (
-	"bufio"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	"strings"
 
@@ -107,7 +106,7 @@ func (a *conventional) analyze(commit shared.Commit, rule Rule) *shared.Analyzed
 		return nil
 	}
 
-	msgBlockMap := getConventionalMessageBlockMap(body, tokenSep)
+	msgBlockMap := getDefaultMessageBlockMap(body, tokenSep)
 
 	analyzed := &shared.AnalyzedCommit{
 		Commit:        commit,
@@ -122,6 +121,7 @@ func (a *conventional) analyze(commit shared.Commit, rule Rule) *shared.Analyzed
 	analyzed.IsBreaking = isBreaking
 
 	oldFormatMessage := strings.TrimSpace(matches["subject"] + "\n" + body)
+
 	if !isBreaking {
 		analyzed.ParsedMessage = strings.Trim(oldFormatMessage, " ")
 		a.log.Tracef("%s: found %s", commit.Message, rule.Tag)
@@ -141,50 +141,3 @@ func (a *conventional) analyze(commit shared.Commit, rule Rule) *shared.Analyzed
 	return analyzed
 }
 
-func getConventionalMessageBlockMap(txtBlock string, tokenSep []string) map[string][]shared.MessageBlock{
-	msgBlockMap := make(map[string][]shared.MessageBlock)
-	footers := make([]string, 0)
-	body := ""
-	footerBlock := ""
-	line := ""
-	footerFound := false
-	// Look through each line
-	scanner := bufio.NewScanner(strings.NewReader(txtBlock))
-	for scanner.Scan() {
-		line = scanner.Text()
-		if token, _ := findFooterToken(line, tokenSep); len(token) > 0 {
-			// if footer was already found from before
-			if len(footerBlock) > 0{
-				footers = append(footers, strings.TrimSpace(footerBlock))
-			}
-			footerFound = true
-			footerBlock = ""
-		}
-
-		//'\n' is removed when reading from scanner
-		if !footerFound {
-			body += line + "\n"
-		}else{
-			footerBlock += line + "\n"
-		}
-	}
-	if len(footerBlock) > 0 {
-		footers = append(footers, strings.TrimSpace(footerBlock))
-	}
-
-	body = strings.TrimSpace(body)
-	if len(body) > 0{
-		msgBlockMap["body"] = []shared.MessageBlock {{
-			Label:   "",
-			Content: body,
-		} }
-	}
-
-	footerBlocks := getMessageBlocksFromTexts(footers, tokenSep)
-	if len(footerBlocks) > 0 {
-		msgBlockMap["footer"] = footerBlocks
-	}
-
-
-	return msgBlockMap
-}
