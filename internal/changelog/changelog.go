@@ -139,13 +139,13 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 		DockerRepository: c.config.Changelog.Docker.Repository,
 	}
 
-	template := defaultCommitListSubTemplate + defaultChangelog
+	chglogTemplate := defaultCommitListSubTemplate + defaultChangelog
 	if c.config.Changelog.TemplatePath != "" {
 		content, err := ioutil.ReadFile(c.config.Changelog.TemplatePath)
 		if err != nil {
 			return nil, err
 		}
-		template = string(content)
+		chglogTemplate = string(content)
 	}
 
 	templateTitle := defaultChangelogTitle
@@ -154,13 +154,13 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 	}
 
 	log.Debugf("Render title")
-	renderedTitle, err := generateTemplate(templateTitle, changelogContent)
+	renderedTitle, err := generateTemplate(templateTitle, changelogContent, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Debugf("Render commits")
-	renderedCommitList, err := generateTemplate(defaultCommitList, commitsContent)
+	renderedCommitList, err := generateTemplate(defaultCommitList, commitsContent, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -168,13 +168,16 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 	log.Tracef("Commits %s", renderedCommitList)
 	changelogContent.Commits = renderedCommitList
 
+	extraFuncMap := template.FuncMap {
+		"commitUrl": func() string {return  templateConfig.CommitURL},
+	}
 	log.Debugf("Render changelog")
-	renderedContent, err := generateTemplate(template, changelogContent)
+	renderedContent, err := generateTemplate(chglogTemplate, changelogContent, extraFuncMap)
 
 	return &shared.GeneratedChangelog{Title: renderedTitle, Content: renderedContent}, err
 }
 
-func generateTemplate(text string, values interface{}) (string, error) {
+func generateTemplate(text string, values interface{}, extraFuncMap template.FuncMap) (string, error) {
 
 	funcMap := template.FuncMap{
 		"replace": replace,
@@ -182,6 +185,10 @@ func generateTemplate(text string, values interface{}) (string, error) {
 		"upper": upper,
 		"capitalize": capitalize,
 		"addPrefixToLines": addPrefixToLines,
+	}
+
+	for k, v := range extraFuncMap {
+		funcMap[k] = v
 	}
 
 	var tpl bytes.Buffer
