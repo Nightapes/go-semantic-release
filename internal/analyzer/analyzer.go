@@ -2,6 +2,7 @@
 package analyzer
 
 import (
+	"bufio"
 	"fmt"
 	"regexp"
 	"strings"
@@ -90,21 +91,6 @@ func (a *Analyzer) Analyze(commits []shared.Commit) map[shared.Release][]shared.
 	return analyzedCommits
 }
 
-func getMessageParts(msg string) (header string, bodyBlocks []string){
-	firstSplit := strings.SplitN(msg, "\n", 2)
-	header = firstSplit[0]
-	bodyBlocks = make([]string, 0)
-
-	if len(firstSplit) < 2 {
-		return
-	}
-	// Trim and then split by a blank line
-	remaining := strings.Trim(firstSplit[1], "\n")
-	bodyBlocks = strings.Split(remaining, "\n\n")
-
-	return
-}
-
 //
 // getRegexMatchedMap will match a regex with named groups and map the matching
 //  results to corresponding group names
@@ -161,4 +147,57 @@ func findFooterToken(text string, separators []string) (token string, sep string
 		}
 	}
 	return "", ""
+}
+
+//
+// getDefaultMessageBlockMap parses a text block and splits in to different sections.
+// default logic to distinguish different parts is:
+//  - Body starts right after the header (without beginning with a token)
+//  - Body ends when a footer is discovered or text ends
+//  - A footer is detected when it starts with a token ending with a separator
+//  - A footer ends when another footer is found or text ends
+//
+func getDefaultMessageBlockMap(txtBlock string, tokenSep []string) map[string][]shared.MessageBlock{
+	msgBlockMap := make(map[string][]shared.MessageBlock)
+	footers := make([]string, 0)
+	body, footerBlock, line := "", "", ""
+	footerFound := false
+	// Look through each line
+	scanner := bufio.NewScanner(strings.NewReader(txtBlock))
+	for scanner.Scan() {
+		line = scanner.Text()
+		if token, _ := findFooterToken(line, tokenSep); len(token) > 0 {
+			// if footer was already found from before
+			if len(footerBlock) > 0{
+				footers = append(footers, strings.TrimSpace(footerBlock))
+			}
+			footerFound = true
+			footerBlock = ""
+		}
+
+		//'\n' is removed when reading from scanner
+		if !footerFound {
+			body += line + "\n"
+		}else{
+			footerBlock += line + "\n"
+		}
+	}
+	if len(footerBlock) > 0 {
+		footers = append(footers, strings.TrimSpace(footerBlock))
+	}
+
+	body = strings.TrimSpace(body)
+	if len(body) > 0{
+		msgBlockMap["body"] = []shared.MessageBlock {{
+			Label:   "",
+			Content: body,
+		} }
+	}
+
+	footerBlocks := getMessageBlocksFromTexts(footers, tokenSep)
+	if len(footerBlocks) > 0 {
+		msgBlockMap["footer"] = footerBlocks
+	}
+
+	return msgBlockMap
 }
