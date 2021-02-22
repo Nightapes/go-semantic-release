@@ -154,7 +154,7 @@ func TestConventional(t *testing.T) {
 						IsBreaking: true,
 						Subject: "my first break",
 						MessageBlocks: map[string][]shared.MessageBlock{
-							"body" : { shared.MessageBlock{
+							"footer" : { shared.MessageBlock{
 								Label:   "BREAKING CHANGE",
 								Content: "change api to v2",
 								},
@@ -176,7 +176,7 @@ func TestConventional(t *testing.T) {
 						IsBreaking: true,
 						Subject: "my first break",
 						MessageBlocks: map[string][]shared.MessageBlock{
-							"body" : {shared.MessageBlock{
+							"footer" : {shared.MessageBlock{
 								Label:   "BREAKING CHANGE",
 								Content: "hey from the change",
 								},
@@ -328,53 +328,9 @@ func TestConventional(t *testing.T) {
 				},
 			},
 		},
-		{
-			testCase: "fix issue with footers",
-			wantAnalyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
-				"patch": {{
-					Commit: shared.Commit{
-						Message: "fix: squash bug for logging\n\nNote: now the logs will not print lines twice.\n\nIssue: #123\nSeverity: medium",
-						Author:  "me",
-						Hash:    "12345667",
-					},
-					Scope:         "",
-					ParsedMessage: "squash bug for logging\n\nNote: now the logs will not print lines twice.\n\nIssue: #123\nSeverity: medium",
-					Tag:           "fix",
-					TagString:     "Bug fixes",
-					Print:         true,
-					Subject:  "squash bug for logging",
-					MessageBlocks: map[string][]shared.MessageBlock{
-						"body": { shared.MessageBlock{
-							Label:   "Note",
-							Content: "now the logs will not print lines twice.",
-						},
-						},
-						"footer": { shared.MessageBlock{
-							Label:   "Issue",
-							Content: "#123",
-						},
-						shared.MessageBlock{
-							Label:   "Severity",
-							Content: "medium",
-						},
-						},
-					},
-				}},
-				"minor": {},
-				"major": {},
-				"none": {},
-			},
-			commits: []shared.Commit{
-				{
-					Message: "fix: squash bug for logging\n\nNote: now the logs will not print lines twice.\n\nIssue: #123\nSeverity: medium",
-					Author:  "me",
-					Hash:    "12345667",
-				},
-			},
-		},
 	}
 
-	conventional, err := analyzer.New("conventional", config.AnalyzerConfig{BlockPrefixes: []string{"Note", "Issue", "Severity"}}, config.ChangelogConfig{})
+	conventional, err := analyzer.New("conventional", config.AnalyzerConfig{}, config.ChangelogConfig{})
 	assert.NoError(t, err)
 
 	for _, test := range testConfigs {
@@ -383,5 +339,158 @@ func TestConventional(t *testing.T) {
 		assert.Equalf(t, test.wantAnalyzedCommits["minor"], analyzedCommits["minor"], "Testcase %s should have minor commits", test.testCase)
 		assert.Equalf(t, test.wantAnalyzedCommits["patch"], analyzedCommits["patch"], "Testcase %s should have patch commits", test.testCase)
 		assert.Equalf(t, test.wantAnalyzedCommits["none"], analyzedCommits["none"], "Testcase %s should have none commits", test.testCase)
+	}
+}
+
+func TestConventional_BodyAndFooters(t *testing.T) {
+	t.Parallel()
+	testConfigs := []struct {
+		testCase            string
+		commits             []shared.Commit
+		expectedAnalyzedCommits map[shared.Release][]shared.AnalyzedCommit
+	}{
+		{
+			testCase: "Only body, no footer",
+			commits: []shared.Commit{
+				{
+					Message: "fix: squash bug for logging\n\nNow the logs will not print lines twice. The following changed:\n\n-Buffer -Stdout",
+					Author:  "me",
+					Hash:    "12345667",
+				},
+			},
+			expectedAnalyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"patch": {
+					{
+						Commit: shared.Commit{
+							Message: "fix: squash bug for logging\n\nNow the logs will not print lines twice. The following changed:\n\n-Buffer -Stdout",
+							Author:  "me",
+							Hash:    "12345667",
+						},
+						Scope:         "",
+						ParsedMessage: "squash bug for logging\n\nNow the logs will not print lines twice. The following changed:\n\n-Buffer -Stdout",
+						Tag:           "fix",
+						TagString:     "Bug fixes",
+						Print:         true,
+						Subject:       "squash bug for logging",
+						MessageBlocks: map[string][]shared.MessageBlock{
+							"body": {
+								shared.MessageBlock{
+									Label:   "",
+									Content: "Now the logs will not print lines twice. The following changed:\n\n-Buffer -Stdout",
+								},
+							},
+						},
+					},
+				},
+				"major": {},
+				"minor": {},
+				"none":  {},
+			},
+		},
+		{
+			testCase: "Only footers, no body",
+			commits: []shared.Commit{
+				{
+					Message: "fix: squash bug for logging\n\nNote: now the logs will not print lines twice.\n\nIssue: #123\nSeverity: medium",
+					Author:  "me",
+					Hash:    "12345667",
+				},
+			},
+			expectedAnalyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"patch": {
+					{
+						Commit: shared.Commit{
+							Message: "fix: squash bug for logging\n\nNote: now the logs will not print lines twice.\n\nIssue: #123\nSeverity: medium",
+							Author:  "me",
+							Hash:    "12345667",
+						},
+						Scope:         "",
+						ParsedMessage: "squash bug for logging\n\nNote: now the logs will not print lines twice.\n\nIssue: #123\nSeverity: medium",
+						Tag:           "fix",
+						TagString:     "Bug fixes",
+						Print:         true,
+						Subject:       "squash bug for logging",
+						MessageBlocks: map[string][]shared.MessageBlock{
+							"footer": {
+								shared.MessageBlock{
+									Label:   "Note",
+									Content: "now the logs will not print lines twice.",
+								},
+								shared.MessageBlock{
+									Label:   "Issue",
+									Content: "#123",
+								},
+								shared.MessageBlock{
+									Label:   "Severity",
+									Content: "medium",
+								},
+							},
+						},
+					},
+				},
+				"major": {},
+				"minor": {},
+				"none":  {},
+			},
+		},
+		{
+			testCase: "Body and footers",
+			commits: []shared.Commit{
+				{
+					Message: "fix: squash bug for logging\n\nNow the logs will not print lines twice. The following changed:\n\n-Buffer -Stdout\n\nIssue: #123\nSeverity: medium",
+					Author:  "me",
+					Hash:    "12345667",
+				},
+			},
+			expectedAnalyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"patch": {
+					{
+						Commit: shared.Commit{
+							Message: "fix: squash bug for logging\n\nNow the logs will not print lines twice. The following changed:\n\n-Buffer -Stdout\n\nIssue: #123\nSeverity: medium",
+							Author:  "me",
+							Hash:    "12345667",
+						},
+						Scope:         "",
+						ParsedMessage: "squash bug for logging\n\nNow the logs will not print lines twice. The following changed:\n\n-Buffer -Stdout\n\nIssue: #123\nSeverity: medium",
+						Tag:           "fix",
+						TagString:     "Bug fixes",
+						Print:         true,
+						Subject:       "squash bug for logging",
+						MessageBlocks: map[string][]shared.MessageBlock{
+							"body": {
+								shared.MessageBlock{
+									Label:   "",
+									Content: "Now the logs will not print lines twice. The following changed:\n\n-Buffer -Stdout",
+								},
+							},
+							"footer": {
+								shared.MessageBlock{
+									Label:   "Issue",
+									Content: "#123",
+								},
+								shared.MessageBlock{
+									Label:   "Severity",
+									Content: "medium",
+								},
+							},
+						},
+					},
+				},
+				"major": {},
+				"minor": {},
+				"none":  {},
+			},
+		},
+
+	}
+
+	conventional, err := analyzer.New("conventional", config.AnalyzerConfig{}, config.ChangelogConfig{})
+	assert.NoError(t, err)
+	for _, test := range testConfigs {
+		analyzedCommits := conventional.Analyze(test.commits)
+		assert.Equalf(t, test.expectedAnalyzedCommits["major"], analyzedCommits["major"], "Testcase %s should have major commits", test.testCase)
+		assert.Equalf(t, test.expectedAnalyzedCommits["minor"], analyzedCommits["minor"], "Testcase %s should have minor commits", test.testCase)
+		assert.Equalf(t, test.expectedAnalyzedCommits["patch"], analyzedCommits["patch"], "Testcase %s should have patch commits", test.testCase)
+		assert.Equalf(t, test.expectedAnalyzedCommits["none"], analyzedCommits["none"], "Testcase %s should have none commits", test.testCase)
 	}
 }

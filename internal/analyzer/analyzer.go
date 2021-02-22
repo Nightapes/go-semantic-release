@@ -11,6 +11,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const breakingChangeKeywords = "BREAKING CHANGE"
+const defaultBreakingChangePrefix =  breakingChangeKeywords + ":"
+const footerTokenRegex = "^(?P<token>[^\\s][\\w\\- ]+[^\\s])<SEP>.*"
+var defaultTokenSeparators = [2]string{ ": ", " #"}
+
 // Analyzer struct
 type Analyzer struct {
 	analyzeCommits  analyzeCommits
@@ -100,23 +105,6 @@ func getMessageParts(msg string) (header string, bodyBlocks []string){
 	return
 }
 
-func parseMessageBlock(msg string, prefixes []string) shared.MessageBlock {
-	for _, prefix := range prefixes {
-		if !strings.HasPrefix(msg, prefix + ":") {
-			continue
-		}
-		content := strings.Replace(msg, prefix+":", "", 1)
-		return shared.MessageBlock{
-			Label:   prefix,
-			Content: strings.TrimSpace(content),
-		}
-	}
-	return shared.MessageBlock{
-		Label:   "",
-		Content: msg,
-	}
-}
-
 //
 // getRegexMatchedMap will match a regex with named groups and map the matching
 //  results to corresponding group names
@@ -132,4 +120,45 @@ func getRegexMatchedMap(regEx, url string) (paramsMap map[string]string) {
 		}
 	}
 	return paramsMap
+}
+
+//
+// getMessageBlocksFromTexts converts strings to an array of MessageBlock
+//
+func getMessageBlocksFromTexts(txtArray,  separators []string) []shared.MessageBlock {
+	blocks := make([]shared.MessageBlock, len(txtArray))
+	for i, line := range txtArray{
+		blocks[i] = parseMessageBlock(line, separators)
+	}
+	return blocks
+}
+
+//
+// parseMessageBlock parses a text in to MessageBlock
+//
+func parseMessageBlock(msg string, separators []string) shared.MessageBlock {
+	msgBlock := shared.MessageBlock{
+		Label:   "",
+		Content: msg,
+	}
+	if token, sep := findFooterToken(msg, separators); len(token)  > 0{
+		msgBlock.Label = token
+		content := strings.Replace(msg, token + sep, "", 1)
+		msgBlock.Content = strings.TrimSpace(content)
+	}
+	return msgBlock
+}
+
+//
+// findFooterToken checks if given text has a token with one of the separators and returns a token
+//
+func findFooterToken(text string, separators []string) (token string, sep string) {
+	for _, sep := range separators {
+		regex := strings.Replace(footerTokenRegex, "<SEP>", sep, 1)
+		matches := getRegexMatchedMap(regex, text)
+		if token, ok := matches["token"]; ok {
+			return token, sep
+		}
+	}
+	return "", ""
 }
