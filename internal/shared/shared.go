@@ -49,7 +49,7 @@ type AnalyzedCommit struct {
 
 // MessageBlock represents a block in the body section of a commit message
 type MessageBlock struct {
-	Label string `yaml:"label""`
+	Label string `yaml:"label"`
 	Content string `yaml:"content"`
 }
 
