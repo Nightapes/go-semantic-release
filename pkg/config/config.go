@@ -15,7 +15,7 @@ const (
 
 // AnalyzerConfig struct
 type AnalyzerConfig struct {
-	BlockPrefixes []string `yaml:"blockPrefixes"`
+	TokenSeparators []string `yaml:"tokenSeparators"`
 }
 
 // ChangelogConfig struct

@@ -2,6 +2,7 @@
 package analyzer
 
 import (
+	"bufio"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	"strings"
 
@@ -19,8 +20,7 @@ type conventional struct {
 
 // CONVENTIONAL identifier
 const CONVENTIONAL = "conventional"
-const breakingChangeKeywords = "BREAKING CHANGE"
-const breakingChangePrefix =  breakingChangeKeywords + ":"
+var conventionalFooterTokenSep = defaultTokenSeparators
 
 func newConventional(config config.AnalyzerConfig) *conventional {
 	return &conventional{
@@ -91,9 +91,15 @@ func (a *conventional) getRules() []Rule {
 }
 
 func (a *conventional) analyze(commit shared.Commit, rule Rule) *shared.AnalyzedCommit {
-	prefixes := append(a.config.BlockPrefixes, breakingChangeKeywords)
+	tokenSep := append(a.config.TokenSeparators, conventionalFooterTokenSep[:]...)
 
-	header, txtBlocks := getMessageParts(commit.Message)
+	firstSplit := strings.SplitN(commit.Message, "\n", 2)
+	header := firstSplit[0]
+	body := ""
+	if len(firstSplit) > 1 {
+		body = firstSplit[1]
+	}
+
 	matches := getRegexMatchedMap(a.regex, header)
 
 	if len(matches) == 0 || matches["type"] != rule.Tag{
@@ -101,24 +107,7 @@ func (a *conventional) analyze(commit shared.Commit, rule Rule) *shared.Analyzed
 		return nil
 	}
 
-	msgBlockMap := make(map[string][]shared.MessageBlock)
-	footer := ""
-	if len(txtBlocks) > 0 {
-		bodyCount := len(txtBlocks)-1
-		if len(txtBlocks) == 1 {
-			bodyCount = 1
-		}
-		bodyTxtBlocks := txtBlocks[0:bodyCount]
-		if len(txtBlocks) > 1{
-			footer = txtBlocks[len(txtBlocks)-1]
-		}
-		msgBlockMap["body"] = getMessageBlocks(bodyTxtBlocks, prefixes)
-
-		if len(footer) > 0{
-			footerLines := strings.Split(footer, "\n")
-			msgBlockMap["footer"] = getMessageBlocks(footerLines, prefixes)
-		}
-	}
+	msgBlockMap := getConventionalMessageBlockMap(body, tokenSep)
 
 	analyzed := &shared.AnalyzedCommit{
 		Commit:        commit,
@@ -129,15 +118,10 @@ func (a *conventional) analyze(commit shared.Commit, rule Rule) *shared.Analyzed
 		MessageBlocks: msgBlockMap,
 	}
 
-	isBreaking := matches["breaking"] == "!" || strings.Contains(commit.Message, breakingChangePrefix)
+	isBreaking := matches["breaking"] == "!" || strings.Contains(commit.Message, defaultBreakingChangePrefix)
 	analyzed.IsBreaking = isBreaking
 
-	oldMsgSplit := strings.SplitN(commit.Message, "\n", 2)
-	originalBodyBlock := ""
-	if len(oldMsgSplit) > 1 {
-		originalBodyBlock = oldMsgSplit[1]
-	}
-	oldFormatMessage := strings.TrimSpace(matches["subject"] + "\n" + originalBodyBlock)
+	oldFormatMessage := strings.TrimSpace(matches["subject"] + "\n" + body)
 	if !isBreaking {
 		analyzed.ParsedMessage = strings.Trim(oldFormatMessage, " ")
 		a.log.Tracef("%s: found %s", commit.Message, rule.Tag)
@@ -145,7 +129,7 @@ func (a *conventional) analyze(commit shared.Commit, rule Rule) *shared.Analyzed
 	}
 
 	a.log.Infof(" %s, BREAKING CHANGE found", commit.Message)
-	breakingChange := strings.SplitN(oldFormatMessage, breakingChangePrefix, 2)
+	breakingChange := strings.SplitN(oldFormatMessage, defaultBreakingChangePrefix, 2)
 
 	if len(breakingChange) > 1 {
 		analyzed.ParsedMessage = strings.TrimSpace(breakingChange[0])
@@ -157,12 +141,50 @@ func (a *conventional) analyze(commit shared.Commit, rule Rule) *shared.Analyzed
 	return analyzed
 }
 
-func getMessageBlocks(txtArray,  prefixes []string) []shared.MessageBlock {
-	blocks := make([]shared.MessageBlock, len(txtArray))
-	for i, line := range txtArray{
-		blocks[i] = parseMessageBlock(line, prefixes)
+func getConventionalMessageBlockMap(txtBlock string, tokenSep []string) map[string][]shared.MessageBlock{
+	msgBlockMap := make(map[string][]shared.MessageBlock)
+	footers := make([]string, 0)
+	body := ""
+	footerBlock := ""
+	line := ""
+	footerFound := false
+	// Look through each line
+	scanner := bufio.NewScanner(strings.NewReader(txtBlock))
+	for scanner.Scan() {
+		line = scanner.Text()
+		if token, _ := findFooterToken(line, tokenSep); len(token) > 0 {
+			// if footer was already found from before
+			if len(footerBlock) > 0{
+				footers = append(footers, strings.TrimSpace(footerBlock))
+			}
+			footerFound = true
+			footerBlock = ""
+		}
+
+		//'\n' is removed when reading from scanner
+		if !footerFound {
+			body += line + "\n"
+		}else{
+			footerBlock += line + "\n"
+		}
 	}
-	return blocks
+	if len(footerBlock) > 0 {
+		footers = append(footers, strings.TrimSpace(footerBlock))
+	}
+
+	body = strings.TrimSpace(body)
+	if len(body) > 0{
+		msgBlockMap["body"] = []shared.MessageBlock {{
+			Label:   "",
+			Content: body,
+		} }
+	}
+
+	footerBlocks := getMessageBlocksFromTexts(footers, tokenSep)
+	if len(footerBlocks) > 0 {
+		msgBlockMap["footer"] = footerBlocks
+	}
+
+
+	return msgBlockMap
 }
-
-
