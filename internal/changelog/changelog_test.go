@@ -249,7 +249,7 @@ func TestChangelog(t *testing.T) {
 
 	for _, config := range testConfigs {
 		t.Run(config.testCase, func(t *testing.T) {
-			generatedChangelog, err := cl.GenerateChanglog(templateConfig, config.analyzedCommits)
+			generatedChangelog, err := cl.GenerateChangelog(templateConfig, config.analyzedCommits)
 			assert.Equalf(t, config.hasError, err != nil, "Testcase %s should have error: %t -> %s", config.testCase, config.hasError, err)
 			assert.Equalf(t, config.result, generatedChangelog, "Testcase %s should have generated changelog", config.testCase)
 		})
