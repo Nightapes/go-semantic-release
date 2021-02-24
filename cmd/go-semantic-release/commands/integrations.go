@@ -1,20 +1,21 @@
 package commands
 
 import (
+	"github.com/Nightapes/go-semantic-release/internal/integrations"
 	"github.com/Nightapes/go-semantic-release/pkg/semanticrelease"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	changelogCmd.Flags().Bool("checks", false, "Check for missing values and envs")
-	changelogCmd.Flags().StringP("out", "o", "CHANGELOG.md", "Name of the file")
-	rootCmd.AddCommand(changelogCmd)
+	integrationsCmd.Flags().Bool("checks", false, "Check for missing values and envs")
+	integrationsCmd.Flags().StringP("out", "o", "CHANGELOG.md", "Name of the file")
+	rootCmd.AddCommand(integrationsCmd)
 }
 
-var changelogCmd = &cobra.Command{
-	Use:   "changelog",
-	Short: "Generate changelog and save to file",
+var integrationsCmd = &cobra.Command{
+	Use:   "integrations",
+	Short: "Call integrations from config file manual",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := cmd.Flags().GetString("config")
 		if err != nil {
@@ -31,17 +32,14 @@ var changelogCmd = &cobra.Command{
 			return err
 		}
 
-		file, err := cmd.Flags().GetString("out")
-		if err != nil {
-			return err
-		}
-
 		configChecks, err := cmd.Flags().GetBool("checks")
 		if err != nil {
 			return err
 		}
 
-		s, err := semanticrelease.New(readConfig(config), repository, configChecks)
+		releaseConfig := readConfig(config)
+
+		s, err := semanticrelease.New(releaseConfig, repository, configChecks)
 		if err != nil {
 			return err
 		}
@@ -57,11 +55,8 @@ var changelogCmd = &cobra.Command{
 		}
 		log.Debugf("Found %d commits till last release", len(releaseVersion.Commits))
 
-		generatedChangelog, err := s.GetChangelog(releaseVersion)
-		if err != nil {
-			return err
-		}
+		i := integrations.New(&releaseConfig.Integrations, releaseVersion)
 
-		return s.WriteChangeLog(generatedChangelog.Content, file)
+		return i.Run()
 	},
 }
