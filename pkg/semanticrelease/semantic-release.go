@@ -1,6 +1,7 @@
 package semanticrelease
 
 import (
+	"github.com/Nightapes/go-semantic-release/internal/integrations"
 	"io/ioutil"
 	"time"
 
@@ -223,6 +224,12 @@ func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error
 	generatedChangelog, err := s.GetChangelog(releaseVersion)
 	if err != nil {
 		log.Debugf("Could not get changelog")
+		return err
+	}
+
+	integrations := integrations.New(&s.config.Integrations, releaseVersion)
+	if err := integrations.Run(); err != nil {
+		log.Debugf("Error during integrations run")
 		return err
 	}
 

@@ -32,9 +32,9 @@ introduced by commit:
 {{ end -}}
 {{ end -}}
 {{ end -}}`
-const defaultCommitListSubTemplate string = `{{ define "commitList" }}` + defaultCommitList + "{{ end }}"
-const defaultChangelogTitle string = `v{{.Version}} ({{.Now.Format "2006-01-02"}})`
-const defaultChangelog string = `# v{{$.Version}} ({{.Now.Format "2006-01-02"}})
+const defaultCommitListSubTemplate = `{{ define "commitList" }}` + defaultCommitList + "{{ end }}"
+const defaultChangelogTitle = `v{{.Version}} ({{.Now.Format "2006-01-02"}})`
+const defaultChangelog = `# v{{$.Version}} ({{.Now.Format "2006-01-02"}})
 {{ template "commitList" .CommitsContent -}}
 
 {{ if .HasDocker}}
@@ -51,10 +51,25 @@ or
 {{$.Backtick}}docker run {{.DockerRepository}}:latest{{$.Backtick}}
 {{ end -}}
 {{ end -}}
+
+{{ if .HasNPM}}
+## NodeJS Package
+
+New NodeJS package is released under [{{.NPMPackageName}}]({{.NPMRepository}})
+
+### Usage
+
+{{$.Backtick}}yarn add {{.NPMPackageName}}@{{.Version}}{{$.Backtick}}
+
+or
+
+{{$.Backtick}}npm install -save {{.NPMPackageName}}@{{.Version}}{{$.Backtick}}
+
+{{ end -}}
 `
 
 type changelogContent struct {
-	Commits			 string
+	Commits          string
 	CommitsContent   commitsContent
 	Version          string
 	Now              time.Time
@@ -62,6 +77,10 @@ type changelogContent struct {
 	HasDocker        bool
 	HasDockerLatest  bool
 	DockerRepository string
+	HasNPM           bool
+	IsYarn           bool
+	NPMRepository    string
+	NPMPackageName   string
 }
 
 type commitsContent struct {
@@ -130,13 +149,16 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 	}
 
 	changelogContent := changelogContent{
-		CommitsContent: commitsContent,
+		CommitsContent:   commitsContent,
 		Version:          templateConfig.Version,
 		Now:              c.releaseTime,
 		Backtick:         "`",
 		HasDocker:        c.config.Changelog.Docker.Repository != "",
 		HasDockerLatest:  c.config.Changelog.Docker.Latest,
 		DockerRepository: c.config.Changelog.Docker.Repository,
+		HasNPM:           c.config.Changelog.NPM.PackageName != "",
+		NPMPackageName:   c.config.Changelog.NPM.PackageName,
+		NPMRepository:    c.config.Changelog.NPM.Repository,
 	}
 
 	chglogTemplate := defaultCommitListSubTemplate + defaultChangelog
@@ -168,8 +190,8 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 	log.Tracef("Commits %s", renderedCommitList)
 	changelogContent.Commits = renderedCommitList
 
-	extraFuncMap := template.FuncMap {
-		"commitUrl": func() string {return  templateConfig.CommitURL},
+	extraFuncMap := template.FuncMap{
+		"commitUrl": func() string { return templateConfig.CommitURL },
 	}
 	log.Debugf("Render changelog")
 	renderedContent, err := generateTemplate(chglogTemplate, changelogContent, extraFuncMap)
@@ -180,10 +202,10 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 func generateTemplate(text string, values interface{}, extraFuncMap template.FuncMap) (string, error) {
 
 	funcMap := template.FuncMap{
-		"replace": replace,
-		"lower": lower,
-		"upper": upper,
-		"capitalize": capitalize,
+		"replace":          replace,
+		"lower":            lower,
+		"upper":            upper,
+		"capitalize":       capitalize,
 		"addPrefixToLines": addPrefixToLines,
 	}
 
