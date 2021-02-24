@@ -35,8 +35,8 @@ type ChangelogDocker struct {
 
 //ChangelogNPM type struct
 type ChangelogNPM struct {
-	YARN       bool   `yaml:"latest"`
-	Repository string `yaml:"repository"`
+	Repository  string `yaml:"repository"`
+	PackageName string `yaml:"name"`
 }
 
 //Asset type struct
@@ -66,11 +66,11 @@ type GitLabProvider struct {
 
 // GitProvider struct
 type GitProvider struct {
-	Email    string `yaml:"email"`
-	Username string `yaml:"user"`
-	Auth     string `yaml:"auth"`
-	SSH      bool   `yaml:"ssh"`
-	TagPrefix   *string `yaml:"tagPrefix,omitempty"`
+	Email     string  `yaml:"email"`
+	Username  string  `yaml:"user"`
+	Auth      string  `yaml:"auth"`
+	SSH       bool    `yaml:"ssh"`
+	TagPrefix *string `yaml:"tagPrefix,omitempty"`
 }
 
 // Hooks struct
@@ -84,11 +84,22 @@ type Checksum struct {
 	Algorithm string `yaml:"algorithm"`
 }
 
+// Checksum struct
+type Integrations struct {
+	NPM IntegrationNPM `yaml:"npm"`
+}
+
+// Checksum struct
+type IntegrationNPM struct {
+	Enabled bool   `yaml:"enabled"`
+	Path    string `yaml:"path"`
+}
+
 // ReleaseConfig struct
 type ReleaseConfig struct {
 	CommitFormat   string            `yaml:"commitFormat"`
 	Branch         map[string]string `yaml:"branch"`
-	Analyzer	   AnalyzerConfig	 `yaml:"analyzer"`
+	Analyzer       AnalyzerConfig    `yaml:"analyzer"`
 	Changelog      ChangelogConfig   `yaml:"changelog,omitempty"`
 	Release        string            `yaml:"release,omitempty"`
 	GitHubProvider GitHubProvider    `yaml:"github,omitempty"`
@@ -97,6 +108,7 @@ type ReleaseConfig struct {
 	Assets         []Asset           `yaml:"assets"`
 	Checksum       Checksum          `yaml:"checksum,omitempty"`
 	Hooks          Hooks             `yaml:"hooks"`
+	Integrations   Integrations      `yaml:"integrations"`
 	ReleaseTitle   string            `yaml:"title"`
 	IsPreRelease   bool
 }

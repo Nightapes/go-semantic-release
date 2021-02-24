@@ -8,7 +8,7 @@ jobs:
   build:
     strategy:
       matrix:
-        go: ["1.13", "1.14", "1.15"]
+        go: ["1.13", "1.14", "1.15", "1.16"]
     name: Build with go version ${{ matrix.go }}
     runs-on: ubuntu-latest
     steps:
@@ -39,8 +39,12 @@ jobs:
           GOOS=windows GOARCH=386 CGO_ENABLED=0 go build -o build/go-semantic-release.windows_i386.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
           GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o build/go-semantic-release.windows_x86_64.exe  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
           GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -o build/go-semantic-release.darwin_x86_64  -ldflags "-w -s -X main.version=`./build/go-semantic-release-temp next`" ./cmd/go-semantic-release/
-      - name: Build Docker image
-        if: matrix.go == '1.15' && github.repository == 'Nightapes/go-semantic-release'
+      - name: Build Docker image PR
+        if: github.ref != 'refs/heads/master'
+        run: |
+          docker build -t nightapes/go-semantic-release:development-${{matrix.go}} .
+      - name: Build Docker image master
+        if: github.ref == 'refs/heads/master'
         run: |
           docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
           docker login -u nightapes -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
@@ -65,7 +69,7 @@ jobs:
           name: build
           path: build
       - name: Release
-        if: github.repository == 'Nightapes/go-semantic-release'
+        if: github.ref == 'refs/heads/master'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -73,8 +77,8 @@ jobs:
           docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
           docker login -u nightapes -p $GITHUB_TOKEN docker.pkg.github.com
           ./build/go-semantic-release-temp release --loglevel trace
-      - name: Release fork
-        if: github.repository != 'Nightapes/go-semantic-release'
+      - name: Release PR
+        if:  github.ref != 'refs/heads/master'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

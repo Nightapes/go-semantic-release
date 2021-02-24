@@ -56,6 +56,9 @@ hooks:
     - name: echo $RELEASE_VERSION
   postRelease:
     - name: echo $RELEASE_VERSION
+integrations:
+  npm:
+    enabled: true
 ```
 
 #### CommitFormat
@@ -156,7 +159,27 @@ assets:
 
 #### Hooks
 
-Hooks will run when calling `release`. Hooks run only if a release will be triggered.  
+Hooks will run when calling `release`. Hooks run only if a release will be triggered. 
+You can define hooks which run before or after the release. The shell commands will run in order, you can access the current release version via 
+an environment variable `RELEASE_VERSION` 
+
+```yml
+hooks:
+  preRelease:
+  - name: echo $RELEASE_VERSION
+  postRelease:
+  - name: echo $RELEASE_VERSION
+```
+
+#### Integrations
+
+Integrations are simple helpers to make integration with existing tools easier.
+At the moment npm is supported, the integration will set the version before release to the `package.json`
+```yml
+integrations:
+  npm:
+    enabled: true
+```
 
 #### Changelog
 
@@ -230,6 +253,18 @@ changelog:
     latest: false ## If you uploaded a latest image
     repository: ## Your docker repository, which is used for docker run
 ```
+
+##### NPM
+
+You can print a help text for a npm package
+
+```yml
+changelog:
+  npm:
+    name: ## Name of the npm package
+    repository: ## Your docker repository, which is used for docker run
+```
+
 
 ### Version
 
