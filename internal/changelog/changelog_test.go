@@ -41,7 +41,7 @@ func TestChangelog(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
-						Subject: "my first commit",
+						Subject:       "my first commit",
 						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
@@ -66,7 +66,7 @@ func TestChangelog(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
-						Subject: "my first commit",
+						Subject:       "my first commit",
 						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
@@ -92,7 +92,7 @@ func TestChangelog(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
-						Subject: "my first commit",
+						Subject:       "my first commit",
 						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 					{
@@ -107,10 +107,10 @@ func TestChangelog(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "change api to v2",
-						IsBreaking: true,
-						Subject: "my first break",
+						IsBreaking:                  true,
+						Subject:                     "my first break",
 						MessageBlocks: map[string][]shared.MessageBlock{
-							"body" : { shared.MessageBlock{
+							"body": {shared.MessageBlock{
 								Label:   "BREAKING CHANGE",
 								Content: "change api to v2",
 							},
@@ -141,10 +141,10 @@ func TestChangelog(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "hey from the change",
-						IsBreaking: true,
-						Subject: "my first break",
+						IsBreaking:                  true,
+						Subject:                     "my first break",
 						MessageBlocks: map[string][]shared.MessageBlock{
-							"body" : { shared.MessageBlock{
+							"body": {shared.MessageBlock{
 								Label:   "BREAKING CHANGE",
 								Content: "hey from the change",
 							},
@@ -162,7 +162,7 @@ func TestChangelog(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
-						Subject: "my first commit",
+						Subject:       "my first commit",
 						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 					{
@@ -176,7 +176,7 @@ func TestChangelog(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
-						Subject: "my second commit",
+						Subject:       "my second commit",
 						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 					{
@@ -191,10 +191,10 @@ func TestChangelog(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "change api to v2",
-						IsBreaking: true,
-						Subject: "my new commit",
+						IsBreaking:                  true,
+						Subject:                     "my new commit",
 						MessageBlocks: map[string][]shared.MessageBlock{
-							"body": { shared.MessageBlock{
+							"body": {shared.MessageBlock{
 								Label:   "BREAKING CHANGE",
 								Content: "change api to v2",
 							}},
@@ -212,9 +212,9 @@ func TestChangelog(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "my next commit",
-						IsBreaking: true,
-						Subject: "my next commit",
-						MessageBlocks: map[string][]shared.MessageBlock{},
+						IsBreaking:                  true,
+						Subject:                     "my next commit",
+						MessageBlocks:               map[string][]shared.MessageBlock{},
 					},
 				},
 			},
@@ -251,6 +251,96 @@ func TestChangelog(t *testing.T) {
 		t.Run(config.testCase, func(t *testing.T) {
 			generatedChangelog, err := cl.GenerateChangelog(templateConfig, config.analyzedCommits)
 			assert.Equalf(t, config.hasError, err != nil, "Testcase %s should have error: %t -> %s", config.testCase, config.hasError, err)
+			assert.Equalf(t, config.result, generatedChangelog, "Testcase %s should have generated changelog", config.testCase)
+		})
+	}
+
+}
+
+func TestChangelogExtensions(t *testing.T) {
+
+	testConfigs := []struct {
+		testCase      string
+		result        *shared.GeneratedChangelog
+		releaseConfig *config.ReleaseConfig
+	}{
+		{
+			testCase: "docker",
+			releaseConfig: &config.ReleaseConfig{
+				Changelog: config.ChangelogConfig{
+					Docker: config.ChangelogDocker{
+						Latest:     true,
+						Repository: "mydocker.de",
+					},
+					NPM: config.ChangelogNPM{},
+				},
+			},
+			result: &shared.GeneratedChangelog{Title: "v1.0.0 (2019-07-19)", Content: "# v1.0.0 (2019-07-19)\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n\n## Docker image\n\nNew docker image is released under `mydocker.de:1.0.0`\n\n### Usage\n\n`docker run mydocker.de:1.0.0`\n\nor\n\n`docker run mydocker.de:latest`\n"},
+		},
+		{
+			testCase: "npm",
+			releaseConfig: &config.ReleaseConfig{
+				Changelog: config.ChangelogConfig{
+					Docker: config.ChangelogDocker{},
+					NPM: config.ChangelogNPM{
+						Repository:  "https://github.com/Nightapes/ngx-validators/packages/102720",
+						PackageName: "ngx-validators",
+					},
+				},
+			},
+			result: &shared.GeneratedChangelog{Title: "v1.0.0 (2019-07-19)", Content: "# v1.0.0 (2019-07-19)\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n\n## NodeJS Package\n\nNew NodeJS package is released under [ngx-validators](https://github.com/Nightapes/ngx-validators/packages/102720)\n\n### Usage\n\n`yarn add ngx-validators@1.0.0`\n\nor\n\n`npm install -save ngx-validators@1.0.0`\n\n"},
+		},
+	}
+
+	analyzedCommits := map[shared.Release][]shared.AnalyzedCommit{
+		"minor": {
+			{
+				Commit: shared.Commit{
+					Message: "feat(internal/changelog): my first commit",
+					Author:  "me",
+					Hash:    "12345667",
+				},
+				Scope:         "internal/changelog",
+				ParsedMessage: "my first commit",
+				Tag:           "feat",
+				TagString:     "Features",
+				Print:         true,
+				Subject:       "my first commit",
+				MessageBlocks: map[string][]shared.MessageBlock{},
+			},
+		},
+	}
+
+	for _, config := range testConfigs {
+		t.Run(config.testCase, func(t *testing.T) {
+			templateConfig := shared.ChangelogTemplateConfig{
+				CommitURL:  "https://commit.url",
+				CompareURL: "https://compare.url",
+				Hash:       "hash",
+				Version:    "1.0.0",
+			}
+			cl := changelog.New(config.releaseConfig, []analyzer.Rule{
+				{
+					Tag:       "feat",
+					TagString: "Features",
+					Release:   "minor",
+					Changelog: true,
+				},
+				{
+					Tag:       "fix",
+					TagString: "Bug fixes",
+					Release:   "patch",
+					Changelog: true,
+				},
+				{
+					Tag:       "build",
+					TagString: "Build",
+					Release:   "none",
+					Changelog: false,
+				},
+			}, time.Date(2019, 7, 19, 0, 0, 0, 0, time.UTC))
+			generatedChangelog, err := cl.GenerateChangelog(templateConfig, analyzedCommits)
+			assert.NoError(t, err)
 			assert.Equalf(t, config.result, generatedChangelog, "Testcase %s should have generated changelog", config.testCase)
 		})
 	}
