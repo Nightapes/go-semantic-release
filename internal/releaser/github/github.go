@@ -54,10 +54,13 @@ func New(c *config.GitHubProvider, checkConfig bool) (*Client, error) {
 	if c.CustomURL == "" {
 		client = github.NewClient(httpClient)
 	} else {
-		if client, err = github.NewEnterpriseClient(c.CustomURL, c.CustomURL+"/api/v3/", httpClient); err != nil {
+		// v25.0 of google github does not append prefixes for base and upload URLs
+		if client, err = github.NewEnterpriseClient(c.CustomURL+"/api/v3", c.CustomURL+"/api/uploads/", httpClient); err != nil {
 			return &Client{}, err
 		}
-		baseURL = c.CustomURL
+		// NewEnterpriseClient(newest versions) adds prefix /api/v3 to base URL and /api/uploads to upload URL
+		// So save the new base url here
+		baseURL = client.BaseURL.String()
 	}
 	return &Client{
 		config:  c,
@@ -91,7 +94,7 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 func (g *Client) makeRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
 	tagPrefix := config.DefaultTagPrefix
-	if g.config.TagPrefix != nil{
+	if g.config.TagPrefix != nil {
 		tagPrefix = *g.config.TagPrefix
 	}
 	tag := tagPrefix + releaseVersion.Next.Version.String()
