@@ -55,12 +55,12 @@ func New(c *config.GitHubProvider, checkConfig bool) (*Client, error) {
 		client = github.NewClient(httpClient)
 	} else {
 		// v25.0 of google github does not append prefixes for base and upload URLs
-		if client, err = github.NewEnterpriseClient(c.CustomURL+"/api/v3", c.CustomURL+"/api/uploads/", httpClient); err != nil {
+		if client, err = github.NewEnterpriseClient(c.CustomURL+"/api/v3/", c.CustomURL+"/api/uploads/", httpClient); err != nil {
 			return &Client{}, err
 		}
-		// NewEnterpriseClient(newest versions) adds prefix /api/v3 to base URL and /api/uploads to upload URL
-		// So save the new base url here
-		baseURL = client.BaseURL.String()
+		// note: do not append find / to end of the url since all the url constructions using this
+		// assume no trailing /
+		baseURL = c.CustomURL + "/api/v3"
 	}
 	return &Client{
 		config:  c,
