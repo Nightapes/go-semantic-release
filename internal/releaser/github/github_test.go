@@ -136,7 +136,7 @@ func TestGetCommitURL(t *testing.T) {
 		client, _ := New(&testOject.config, false)
 		actualURL := client.GetCommitURL()
 		if testOject.config.CustomURL != "" {
-			expectedURL := fmt.Sprintf("%s/%s/%s/commit/{{hash}}", testOject.config.CustomURL, testOject.config.User, testOject.config.Repo)
+			expectedURL := fmt.Sprintf("%s/api/v3/%s/%s/commit/{{hash}}", testOject.config.CustomURL, testOject.config.User, testOject.config.Repo)
 			assert.EqualValues(t, expectedURL, actualURL)
 
 		} else {
@@ -154,7 +154,7 @@ func TestGetCompareURL(t *testing.T) {
 		client, _ := New(&testOject.config, false)
 		actualURL := client.GetCompareURL("1", "2")
 		if testOject.config.CustomURL != "" {
-			expectedURL := fmt.Sprintf("%s/%s/%s/compare/%s...%s", testOject.config.CustomURL, testOject.config.User, testOject.config.Repo, "1", "2")
+			expectedURL := fmt.Sprintf("%s/api/v3/%s/%s/compare/%s...%s", testOject.config.CustomURL, testOject.config.User, testOject.config.Repo, "1", "2")
 			assert.EqualValues(t, expectedURL, actualURL)
 
 		} else {
