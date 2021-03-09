@@ -58,7 +58,7 @@ func New(c *config.GitHubProvider, checkConfig bool) (*Client, error) {
 		if client, err = github.NewEnterpriseClient(c.CustomURL+"/api/v3/", c.CustomURL+"/api/uploads/", httpClient); err != nil {
 			return &Client{}, err
 		}
-		// note: do not append find / to end of the url since all the url constructions using this
+		// note: do not append / to end of the url since all the url constructions using this
 		// assume no trailing /
 		baseURL = c.CustomURL + "/api/v3"
 	}
