@@ -8,7 +8,7 @@ jobs:
   build:
     strategy:
       matrix:
-        go: ["1.13", "1.14", "1.15", "1.16"]
+        go: ["1.15", "1.16"]
     name: Build with go version ${{ matrix.go }}
     runs-on: ubuntu-latest
     steps:
@@ -53,7 +53,7 @@ jobs:
           docker tag nightapes/go-semantic-release:development-${{matrix.go}} docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{matrix.go}}
           docker push docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{matrix.go}}
       - uses: actions/upload-artifact@v1
-        if: matrix.go == '1.15'
+        if: matrix.go == '1.16'
         with:
           name: build
           path: build
