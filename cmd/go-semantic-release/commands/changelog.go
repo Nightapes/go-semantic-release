@@ -8,6 +8,7 @@ import (
 
 func init() {
 	changelogCmd.Flags().Bool("checks", false, "Check for missing values and envs")
+	changelogCmd.Flags().Bool("overwrite", false, "Overwrite the content of the changelog. Default is to prepend the new changelog to the existing file.")
 	changelogCmd.Flags().StringP("out", "o", "CHANGELOG.md", "Name of the file")
 	rootCmd.AddCommand(changelogCmd)
 }
@@ -27,6 +28,11 @@ var changelogCmd = &cobra.Command{
 		}
 
 		force, err := cmd.Flags().GetBool("no-cache")
+		if err != nil {
+			return err
+		}
+
+		overwrite, err := cmd.Flags().GetBool("overwrite")
 		if err != nil {
 			return err
 		}
@@ -61,7 +67,6 @@ var changelogCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-
-		return s.WriteChangeLog(generatedChangelog.Content, file)
+		return s.WriteChangeLog(generatedChangelog.Content, file, overwrite)
 	},
 }

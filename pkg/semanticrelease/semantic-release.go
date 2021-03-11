@@ -2,9 +2,10 @@ package semanticrelease
 
 import (
 	"fmt"
-	"github.com/Nightapes/go-semantic-release/internal/integrations"
-	"io/ioutil"
+	"os"
 	"time"
+
+	"github.com/Nightapes/go-semantic-release/internal/integrations"
 
 	"github.com/Masterminds/semver"
 	log "github.com/sirupsen/logrus"
@@ -194,8 +195,21 @@ func (s *SemanticRelease) GetChangelog(releaseVersion *shared.ReleaseVersion) (*
 }
 
 // WriteChangeLog writes changelog content to the given file
-func (s *SemanticRelease) WriteChangeLog(changelogContent, file string) error {
-	return ioutil.WriteFile(file, []byte(changelogContent), 0644)
+func (s *SemanticRelease) WriteChangeLog(changelogContent, file string, overwrite bool) error {
+	newContent := make([]byte, 0)
+	newContent = append(newContent, []byte(changelogContent)...)
+
+	// only prepend the new changelog content if the the given file already exists
+	_, err := os.Stat(file)
+	if !overwrite && err == nil {
+		content, err := os.ReadFile(file)
+		if err != nil {
+			return err
+		}
+		newContent = append(newContent, []byte("\n---\n\n")...)
+		newContent = append(newContent, content...)
+	}
+	return os.WriteFile(file, newContent, 0644)
 }
 
 // Release publish release to provider
