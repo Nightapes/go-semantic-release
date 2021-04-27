@@ -11,7 +11,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/go-git/go-git/v5/plumbing/storer"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -77,14 +76,14 @@ func (g *GitUtil) GetBranch() (string, error) {
 }
 
 // GetLastVersion from git tags
-func (g *GitUtil) GetLastVersion() (*semver.Version, string, error) {
+func (g *GitUtil) GetLastVersion() (*semver.Version, *plumbing.Reference, error) {
 
 	var tags []*semver.Version
 
 	gitTags, err := g.Repository.Tags()
 
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
 	err = gitTags.ForEach(func(p *plumbing.Reference) error {
@@ -100,59 +99,69 @@ func (g *GitUtil) GetLastVersion() (*semver.Version, string, error) {
 	})
 
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
 	sort.Sort(sort.Reverse(semver.Collection(tags)))
 
 	if len(tags) == 0 {
 		log.Debugf("Found no tags")
-		return nil, "", nil
+		return nil, nil, nil
 	}
 
 	log.Debugf("Found old version %s", tags[0].String())
 
 	tag, err := g.Repository.Tag(tags[0].Original())
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
 	log.Debugf("Found old hash %s", tag.Hash().String())
-	return tags[0], tag.Hash().String(), nil
+	return tags[0], tag, nil
 }
 
 // GetCommits from git hash to HEAD
-func (g *GitUtil) GetCommits(lastTagHash string) ([]shared.Commit, error) {
+func (g *GitUtil) GetCommits(lastTagHash *plumbing.Reference) ([]shared.Commit, error) {
 
 	ref, err := g.Repository.Head()
 	if err != nil {
 		return nil, err
 	}
 
-	cIter, err := g.Repository.Log(&git.LogOptions{From: ref.Hash(), Order: git.LogOrderCommitterTime})
+	excludeIter, err := g.Repository.Log(&git.LogOptions{From: lastTagHash.Hash()})
 	if err != nil {
 		return nil, err
 	}
 
+	startCommit, err := g.Repository.CommitObject(ref.Hash())
+	if err != nil {
+		return nil, err
+	}
+	seen := map[plumbing.Hash]struct{}{}
+
+	err = excludeIter.ForEach(func(c *object.Commit) error {
+		seen[c.Hash] = struct{}{}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var isValid object.CommitFilter = func(commit *object.Commit) bool {
+		_, ok := seen[commit.Hash]
+		return !ok && len(commit.ParentHashes) < 2
+	}
+
+	cIter := object.NewFilterCommitIter(startCommit, &isValid, nil)
+
 	commits := make(map[string]shared.Commit)
-	var foundEnd bool
 
 	err = cIter.ForEach(func(c *object.Commit) error {
-
-		if c.Hash.String() == lastTagHash {
-			log.Debugf("Found commit with hash %s, will stop here", c.Hash.String())
-			foundEnd = true
-			return storer.ErrStop
-		}
-
-		if !foundEnd {
-			log.Tracef("Found commit with hash %s", c.Hash.String())
-			commits[c.Hash.String()] = shared.Commit{
-				Message: c.Message,
-				Author:  c.Committer.Name,
-				Hash:    c.Hash.String(),
-			}
-
+		log.Debugf("Found commit with hash %s", c.Hash.String())
+		commits[c.Hash.String()] = shared.Commit{
+			Message: c.Message,
+			Author:  c.Committer.Name,
+			Hash:    c.Hash.String(),
 		}
 		return nil
 	})
