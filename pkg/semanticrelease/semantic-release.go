@@ -131,7 +131,7 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 			Version: &newVersion,
 		},
 		Last: shared.ReleaseVersionEntry{
-			Commit:  lastVersionHash,
+			Commit:  lastVersionHash.Hash().String(),
 			Version: lastVersion,
 		},
 		Branch:  provider.Branch,
@@ -171,7 +171,7 @@ func (s *SemanticRelease) SetVersion(provider *ci.ProviderConfig, version string
 			Version: newVersion,
 		},
 		Last: shared.ReleaseVersionEntry{
-			Commit:  lastVersionHash,
+			Commit:  lastVersionHash.Hash().String(),
 			Version: lastVersion,
 		},
 		Branch: provider.Branch,
