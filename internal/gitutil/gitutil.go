@@ -123,22 +123,12 @@ func (g *GitUtil) GetLastVersion() (*semver.Version, *plumbing.Reference, error)
 // GetCommits from git hash to HEAD
 func (g *GitUtil) GetCommits(lastTagHash *plumbing.Reference) ([]shared.Commit, error) {
 
-	ref, err := g.Repository.Head()
-	if err != nil {
-		return nil, err
-	}
-
 	excludeIter, err := g.Repository.Log(&git.LogOptions{From: lastTagHash.Hash()})
 	if err != nil {
 		return nil, err
 	}
 
-	startCommit, err := g.Repository.CommitObject(ref.Hash())
-	if err != nil {
-		return nil, err
-	}
 	seen := map[plumbing.Hash]struct{}{}
-
 	err = excludeIter.ForEach(func(c *object.Commit) error {
 		seen[c.Hash] = struct{}{}
 		return nil
@@ -152,6 +142,14 @@ func (g *GitUtil) GetCommits(lastTagHash *plumbing.Reference) ([]shared.Commit, 
 		return !ok && len(commit.ParentHashes) < 2
 	}
 
+	ref, err := g.Repository.Head()
+	if err != nil {
+		return nil, err
+	}
+	startCommit, err := g.Repository.CommitObject(ref.Hash())
+	if err != nil {
+		return nil, err
+	}
 	cIter := object.NewFilterCommitIter(startCommit, &isValid, nil)
 
 	commits := make(map[string]shared.Commit)
@@ -165,7 +163,6 @@ func (g *GitUtil) GetCommits(lastTagHash *plumbing.Reference) ([]shared.Commit, 
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not read commits, check git clone depth in your ci")
 	}
