@@ -1,6 +1,7 @@
 package semanticrelease
 
 import (
+	"fmt"
 	"github.com/Nightapes/go-semantic-release/internal/integrations"
 	"io/ioutil"
 	"time"
@@ -102,7 +103,7 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 
 	commits, err := s.gitUtil.GetCommits(lastVersionHash)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get commits %w", err)
 	}
 
 	log.Debugf("Found %d commits till last release", len(commits))
@@ -131,11 +132,14 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 			Version: &newVersion,
 		},
 		Last: shared.ReleaseVersionEntry{
-			Commit:  lastVersionHash.Hash().String(),
+			Commit:  "",
 			Version: lastVersion,
 		},
 		Branch:  provider.Branch,
 		Commits: analyzedCommits,
+	}
+	if lastVersionHash != nil {
+		releaseVersion.Last.Commit = lastVersionHash.Hash().String()
 	}
 
 	if firstRelease {
