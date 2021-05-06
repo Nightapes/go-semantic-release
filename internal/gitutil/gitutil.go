@@ -123,9 +123,18 @@ func (g *GitUtil) GetLastVersion() (*semver.Version, *plumbing.Reference, error)
 // GetCommits from git hash to HEAD
 func (g *GitUtil) GetCommits(lastTagHash *plumbing.Reference) ([]shared.Commit, error) {
 
-	excludeIter, err := g.Repository.Log(&git.LogOptions{From: lastTagHash.Hash()})
+	ref, err := g.Repository.Head()
 	if err != nil {
 		return nil, err
+	}
+	logOptions := &git.LogOptions{From: ref.Hash()}
+
+	if lastTagHash != nil {
+		logOptions = &git.LogOptions{From: lastTagHash.Hash()}
+	}
+	excludeIter, err := g.Repository.Log(logOptions)
+	if err != nil {
+		return nil, fmt.Errorf("could not get git log %w", err)
 	}
 
 	seen := map[plumbing.Hash]struct{}{}
@@ -142,10 +151,6 @@ func (g *GitUtil) GetCommits(lastTagHash *plumbing.Reference) ([]shared.Commit, 
 		return !ok && len(commit.ParentHashes) < 2
 	}
 
-	ref, err := g.Repository.Head()
-	if err != nil {
-		return nil, err
-	}
 	startCommit, err := g.Repository.CommitObject(ref.Hash())
 	if err != nil {
 		return nil, err
