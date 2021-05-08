@@ -196,16 +196,16 @@ func (s *SemanticRelease) GetChangelog(releaseVersion *shared.ReleaseVersion) (*
 	}, releaseVersion.Commits)
 }
 
-// Todo add maxMB paratemter
 // WriteChangeLog writes changelog content to the given file
-func (s *SemanticRelease) WriteChangeLog(changelogContent, file string, overwrite bool) error {
+func (s *SemanticRelease) WriteChangeLog(changelogContent, file string, overwrite bool, maxChangelogFileSize int64) error {
 	info, err := os.Stat(file)
 	if overwrite || err != nil {
 		return os.WriteFile(file, []byte(changelogContent), 0644)
 	}
 
-	// TODO: add input of max mb and calculate correct with bytes
-	if info.Size() >= 1000000 {
+	fileSizeMB := info.Size() / 1024 / 1024 / 1024
+
+	if fileSizeMB >= maxChangelogFileSize {
 		err := moveExistingChangelogFile(file)
 		if err != nil {
 			return err
