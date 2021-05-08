@@ -303,6 +303,24 @@ go build -ldflags "--X main.version=`./go-semantic-release next`"
 ./go-semantic-release release 
 ```
 
+### Write changelog to file
+
+This will write all changes beginning from the last git tag til HEAD to a changelog file. 
+Default changelog file name if nothing is given via `--file`: `CHANGELOG.md`.
+Note that per default the new changelog will be prepended to the existing file.
+With `--max-file-size` a maximum sizes of the changelog file in megabytes can be specified.
+If the size exceeds the limit, the current changelog file will be moved to a new file called `<filename>-<1-n>.<file extension>`. The new changelog will be written to the `<filename>`.
+The default maximum file size limit is `10 megabytes`.
+
+```bash
+./go-semantic-release changelog --max-file-size 10
+```
+
+This will overwrite the given changelog file if its existing, if not it will be created.
+```bash
+./go-semantic-release changelog --overwrite
+```
+
 
 
 ## Build from source

@@ -2,9 +2,12 @@ package semanticrelease
 
 import (
 	"fmt"
-	"github.com/Nightapes/go-semantic-release/internal/integrations"
-	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/Nightapes/go-semantic-release/internal/integrations"
 
 	"github.com/Masterminds/semver"
 	log "github.com/sirupsen/logrus"
@@ -194,8 +197,81 @@ func (s *SemanticRelease) GetChangelog(releaseVersion *shared.ReleaseVersion) (*
 }
 
 // WriteChangeLog writes changelog content to the given file
-func (s *SemanticRelease) WriteChangeLog(changelogContent, file string) error {
-	return ioutil.WriteFile(file, []byte(changelogContent), 0644)
+func (s *SemanticRelease) WriteChangeLog(changelogContent, file string, overwrite bool, maxChangelogFileSize int64) error {
+	info, err := os.Stat(file)
+	if overwrite || err != nil {
+		return os.WriteFile(file, []byte(changelogContent), 0644)
+	}
+
+	if bytesToMB(info.Size()) >= float64(maxChangelogFileSize) {
+		err := moveExistingChangelogFile(file)
+		if err != nil {
+			return err
+		}
+	}
+	return prependToFile(changelogContent, file)
+}
+
+func bytesToMB(bytes int64) float64 {
+	return float64(bytes) / 1024 / 1024 / 1024
+}
+
+func moveExistingChangelogFile(file string) error {
+	filenameSeparated := strings.Split(filepath.Base(file), ".")
+
+	// check if file had several "." included.
+	// if yes the filename will be separated like this: "my.file.name", ".md"
+	if len(filenameSeparated) > 2 {
+		separatedFilenameWithExtension := make([]string, 0)
+		separatedFilenameWithExtension = append(separatedFilenameWithExtension, strings.Join(filenameSeparated[:len(filenameSeparated)-1], "."))
+		separatedFilenameWithExtension = append(separatedFilenameWithExtension, filenameSeparated[len(filenameSeparated)-1])
+		filenameSeparated = separatedFilenameWithExtension
+	}
+
+	var newFileName string
+	counter := 1
+	for {
+		newFileName = buildNewFileName(filenameSeparated, counter)
+		if _, err := os.Stat(newFileName); err != nil {
+			break
+		}
+		counter++
+	}
+
+	content, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(newFileName, content, 0666)
+	if err != nil {
+		return err
+	}
+	_, err = os.Create(file)
+	return err
+}
+
+func buildNewFileName(currentFileNameSeparated []string, counter int) string {
+	if len(currentFileNameSeparated) == 1 {
+		return fmt.Sprintf("%s-%d", currentFileNameSeparated[0], counter)
+	}
+
+	fileNameWithoutExtension := strings.Join(currentFileNameSeparated[:len(currentFileNameSeparated)-1], ".")
+	fileExtension := currentFileNameSeparated[len(currentFileNameSeparated)-1]
+	return fmt.Sprintf("%s-%d.%s", fileNameWithoutExtension, counter, fileExtension)
+}
+
+func prependToFile(newChangelogContent, file string) error {
+	currentContent, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
+
+	content := make([]byte, 0)
+	content = append(content, []byte(newChangelogContent)...)
+	content = append(content, []byte("\n---\n\n")...)
+	content = append(content, currentContent...)
+	return os.WriteFile(file, content, 0644)
 }
 
 // Release publish release to provider
