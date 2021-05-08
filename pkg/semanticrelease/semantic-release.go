@@ -203,15 +203,17 @@ func (s *SemanticRelease) WriteChangeLog(changelogContent, file string, overwrit
 		return os.WriteFile(file, []byte(changelogContent), 0644)
 	}
 
-	fileSizeMB := info.Size() / 1024 / 1024 / 1024
-
-	if fileSizeMB >= maxChangelogFileSize {
+	if bytesToMB(info.Size()) >= float64(maxChangelogFileSize) {
 		err := moveExistingChangelogFile(file)
 		if err != nil {
 			return err
 		}
 	}
 	return prependToFile(changelogContent, file)
+}
+
+func bytesToMB(bytes int64) float64 {
+	return float64(bytes) / 1024 / 1024 / 1024
 }
 
 func moveExistingChangelogFile(file string) error {
@@ -221,7 +223,7 @@ func moveExistingChangelogFile(file string) error {
 	// if yes the filename will be separated like this: "my.file.name", ".md"
 	if len(filenameSeparated) > 2 {
 		separatedFilenameWithExtension := make([]string, 0)
-		separatedFilenameWithExtension = append(separatedFilenameWithExtension, strings.Join(filenameSeparated[:len(filenameSeparated)-2], "."))
+		separatedFilenameWithExtension = append(separatedFilenameWithExtension, strings.Join(filenameSeparated[:len(filenameSeparated)-1], "."))
 		separatedFilenameWithExtension = append(separatedFilenameWithExtension, filenameSeparated[len(filenameSeparated)-1])
 		filenameSeparated = separatedFilenameWithExtension
 	}
@@ -253,7 +255,8 @@ func buildNewFileName(currentFileNameSeparated []string, counter int) string {
 	if len(currentFileNameSeparated) == 1 {
 		return fmt.Sprintf("%s-%d", currentFileNameSeparated[0], counter)
 	}
-	fileNameWithoutExtension := strings.Join(currentFileNameSeparated[:len(currentFileNameSeparated)-2], ".")
+
+	fileNameWithoutExtension := strings.Join(currentFileNameSeparated[:len(currentFileNameSeparated)-1], ".")
 	fileExtension := currentFileNameSeparated[len(currentFileNameSeparated)-1]
 	return fmt.Sprintf("%s-%d.%s", fileNameWithoutExtension, counter, fileExtension)
 }
