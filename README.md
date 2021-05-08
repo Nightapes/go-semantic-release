@@ -341,3 +341,13 @@ go test ./...
 curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
 golangci-lint run ./...
 ```
+
+### Git Hooks
+
+The `.githooks` folder contains a pre-commit script which has to be run before each commit.
+To enable the hooks please add the `.githooks` folder to your core hooksPath via: `git config core.hooksPath .githooks`.
+The following will be run in the pre-commit script:
+
+- Formats all `*.go` files which are staged with `go fmt`
+- Runs `go test` for the whole project
+- Runs `golangci-lint` to check for linting errors
