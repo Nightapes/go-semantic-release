@@ -1,0 +1,11 @@
+stages:
+  - release
+
+release:
+  stage: release
+  image:
+    name: nightapes/go-semantic-release:latest
+  script:
+    - go-semantic-release next
+  only:
+    - master

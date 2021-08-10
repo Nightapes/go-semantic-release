@@ -128,6 +128,8 @@ gitlab:
   tagPrefix: ""
 ```
 
+You can find an example `.gitlab-ci.yml` in the [examples](examples/.gitlab-ci.yml) folder.
+
 ##### Git only 
 
 Only via https at the moment. You need write access to your git repository
