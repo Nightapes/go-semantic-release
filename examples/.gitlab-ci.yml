@@ -5,6 +5,7 @@ release:
   stage: release
   image:
     name: nightapes/go-semantic-release:latest
+    entrypoint: [""]
   script:
     - go-semantic-release next
   only:
