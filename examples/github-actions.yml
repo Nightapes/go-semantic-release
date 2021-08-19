@@ -1,0 +1,29 @@
+name: Go
+on: [ push, pull_request ]
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+
+      - name: Init go-semantic-release
+        run: |
+          wget https://github.com/Nightapes/go-semantic-release/releases/download/v2.0.1/go-semantic-release.linux_x86_64.zip
+          unzip go-semantic-release.linux_x86_64.zip
+          chmod +x go-semantic-release.linux_x86_64
+
+      - name: Build binary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o <your-build-name>.linux_x86_64
+          GOOS=windows GOARCH=386 CGO_ENABLED=0 go build -o <your-build-name>.windows_i386.exe
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o <your-build-name>.windows_x86_64.exe
+          GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -o <your-build-name>.darwin_x86_64
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./go-semantic-release.linux_x86_64 release --loglevel trace
