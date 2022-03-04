@@ -22,29 +22,29 @@ func TestGetCommitURL(t *testing.T) {
 	os.Setenv("GITLAB_ACCESS_TOKEN", "XXX")
 	defer os.Unsetenv("GITLAB_ACCESS_TOKEN")
 	client, err := New(&config.GitLabProvider{
-		CustomURL: "https://localhost/",
+		CustomURL: "https://127.0.0.1/",
 		Repo:      "test/test",
 	}, true)
 	assert.NoError(t, err)
-	assert.Equal(t, "https://localhost/test/test/commit/{{hash}}", client.GetCommitURL())
+	assert.Equal(t, "https://127.0.0.1/test/test/commit/{{hash}}", client.GetCommitURL())
 }
 
 func TestGetCompareURL(t *testing.T) {
 	os.Setenv("GITLAB_ACCESS_TOKEN", "XXX")
 	defer os.Unsetenv("GITLAB_ACCESS_TOKEN")
 	client, err := New(&config.GitLabProvider{
-		CustomURL: "https://localhost/",
+		CustomURL: "https://127.0.0.1/",
 		Repo:      "test/test",
 	}, true)
 	assert.NoError(t, err)
-	assert.Equal(t, "https://localhost/test/test/compare/1.0.0...1.0.1", client.GetCompareURL("1.0.0", "1.0.1"))
+	assert.Equal(t, "https://127.0.0.1/test/test/compare/1.0.0...1.0.1", client.GetCompareURL("1.0.0", "1.0.1"))
 }
 
 func TestValidateConfig_EmptyRepro(t *testing.T) {
 	os.Setenv("GITLAB_ACCESS_TOKEN", "XXX")
 	defer os.Unsetenv("GITLAB_ACCESS_TOKEN")
 	_, err := New(&config.GitLabProvider{
-		CustomURL: "https://localhost/",
+		CustomURL: "https://127.0.0.1/",
 	}, true)
 	assert.Error(t, err)
 }
@@ -53,7 +53,7 @@ func TestValidateConfig_DefaultURL(t *testing.T) {
 	os.Setenv("GITLAB_ACCESS_TOKEN", "XXX")
 	defer os.Unsetenv("GITLAB_ACCESS_TOKEN")
 	config := &config.GitLabProvider{
-		Repo: "localhost/test",
+		Repo: "127.0.0.1/test",
 	}
 	_, err := New(config, true)
 	assert.NoError(t, err)
@@ -64,13 +64,13 @@ func TestValidateConfig_CustomURL(t *testing.T) {
 	os.Setenv("GITLAB_ACCESS_TOKEN", "XXX")
 	defer os.Unsetenv("GITLAB_ACCESS_TOKEN")
 	config := &config.GitLabProvider{
-		Repo:      "/localhost/test/",
-		CustomURL: "https://localhost/",
+		Repo:      "/127.0.0.1/test/",
+		CustomURL: "https://127.0.0.1/",
 	}
 	_, err := New(config, true)
 	assert.NoError(t, err)
-	assert.Equal(t, "https://localhost", config.CustomURL)
-	assert.Equal(t, "localhost/test", config.Repo)
+	assert.Equal(t, "https://127.0.0.1", config.CustomURL)
+	assert.Equal(t, "127.0.0.1/test", config.Repo)
 }
 
 func TestCreateRelease(t *testing.T) {

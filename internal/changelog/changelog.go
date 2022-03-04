@@ -21,14 +21,19 @@ const defaultCommitList string = `{{ range $index,$commit := .BreakingChanges -}
 {{ end -}}
 * {{ if $commit.Scope }}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}**{{ end }} {{$commit.ParsedBreakingChangeMessage}}  
 introduced by commit: 
-{{$commit.ParsedMessage}} {{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
+{{$commit.Subject}} {{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
 {{ end -}}
 {{ range $key := .Order  -}}
 {{ $commits := index $.Commits $key -}}
 {{ if $commits -}}
 ### {{ $key }}
 {{ range $index,$commit := $commits -}}
-* {{ if $commit.Scope }}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}** {{end}}{{$commit.ParsedMessage}}{{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
+* {{ if $commit.Scope }}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}** {{end}}{{$commit.Subject}}{{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
+{{ if $commit.MessageBlocks.body -}}
+{{ range $indexBlock,$bodyBlock := $commit.MessageBlocks.body -}}
+{{ addPrefixToLines  $bodyBlock.Content "  > "}}
+{{ end -}}
+{{ end -}}
 {{ end -}}
 {{ end -}}
 {{ end -}}`

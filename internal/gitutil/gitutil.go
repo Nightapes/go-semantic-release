@@ -76,6 +76,22 @@ func (g *GitUtil) GetBranch() (string, error) {
 }
 
 // GetLastVersion from git tags
+func (g *GitUtil) GetVersion(version string) (*semver.Version, *plumbing.Reference, error) {
+
+	v, err := semver.NewVersion(version)
+	if err != nil {
+		return nil, nil, err
+	}
+	tag, err := g.Repository.Tag(version)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	log.Debugf("Found old hash %s", tag.Hash().String())
+	return v, tag, nil
+}
+
+// GetLastVersion from git tags
 func (g *GitUtil) GetLastVersion() (*semver.Version, *plumbing.Reference, error) {
 
 	var tags []*semver.Version

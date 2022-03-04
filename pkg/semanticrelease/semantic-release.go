@@ -2,6 +2,7 @@ package semanticrelease
 
 import (
 	"fmt"
+	"github.com/go-git/go-git/v5/plumbing"
 	"os"
 	"path/filepath"
 	"strings"
@@ -78,9 +79,9 @@ func (s *SemanticRelease) GetCIProvider() (*ci.ProviderConfig, error) {
 }
 
 // GetNextVersion from .version or calculate new from commits
-func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool) (*shared.ReleaseVersion, error) {
+func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool, from string) (*shared.ReleaseVersion, error) {
 	log.Debugf("Ignore .version file if exits, %t", force)
-	if !force {
+	if !force && from == "" {
 		releaseVersion, err := cache.Read(s.repository)
 		if err != nil {
 			return nil, err
@@ -91,9 +92,20 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 		}
 	}
 
-	lastVersion, lastVersionHash, err := s.gitUtil.GetLastVersion()
-	if err != nil {
-		return nil, err
+	var lastVersion *semver.Version
+	var lastVersionHash *plumbing.Reference
+	var err error
+
+	if from == "" {
+		lastVersion, lastVersionHash, err = s.gitUtil.GetLastVersion()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		lastVersion, lastVersionHash, err = s.gitUtil.GetVersion(from)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	firstRelease := false
@@ -290,7 +302,7 @@ func (s *SemanticRelease) Release(provider *ci.ProviderConfig, force bool) error
 		return err
 	}
 
-	releaseVersion, err := s.GetNextVersion(provider, force)
+	releaseVersion, err := s.GetNextVersion(provider, force, "")
 	if err != nil {
 		log.Debugf("Could not get next version")
 		return err

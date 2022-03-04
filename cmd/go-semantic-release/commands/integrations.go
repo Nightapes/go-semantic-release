@@ -49,7 +49,7 @@ var integrationsCmd = &cobra.Command{
 			return err
 		}
 
-		releaseVersion, err := s.GetNextVersion(provider, force)
+		releaseVersion, err := s.GetNextVersion(provider, force, "")
 		if err != nil {
 			return err
 		}

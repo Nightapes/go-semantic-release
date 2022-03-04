@@ -181,7 +181,7 @@ func TestChangelog(t *testing.T) {
 					},
 					{
 						Commit: shared.Commit{
-							Message: "feat: my new commit \n\nBREAKING CHANGE: change api to v2",
+							Message: "feat: my first break \n\nBREAKING CHANGE: change api to v2",
 							Author:  "me",
 							Hash:    "12345668",
 						},
@@ -192,7 +192,7 @@ func TestChangelog(t *testing.T) {
 						Print:                       true,
 						ParsedBreakingChangeMessage: "change api to v2",
 						IsBreaking:                  true,
-						Subject:                     "my new commit",
+						Subject:                     "my first break",
 						MessageBlocks: map[string][]shared.MessageBlock{
 							"body": {shared.MessageBlock{
 								Label:   "BREAKING CHANGE",
@@ -220,8 +220,7 @@ func TestChangelog(t *testing.T) {
 			},
 			result: &shared.GeneratedChangelog{
 				Title:   "v1.0.0 (2019-07-19)",
-				Content: "# v1.0.0 (2019-07-19)\n## BREAKING CHANGES\n*  hey from the change  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n*  change api to v2  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n*  my next commit  \nintroduced by commit: \n  ([1234566](https://commit.url))\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n* my first commit ([1234566](https://commit.url))\n",
-			},
+				Content: "# v1.0.0 (2019-07-19)\n## BREAKING CHANGES\n*  hey from the change  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n*  change api to v2  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n*  my next commit  \nintroduced by commit: \nmy next commit  ([1234566](https://commit.url))\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n* my second commit ([1234566](https://commit.url))\n"},
 			hasError: false,
 		},
 	}
