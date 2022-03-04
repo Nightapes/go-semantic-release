@@ -59,7 +59,7 @@ func TestIsValidResult(t *testing.T) {
 	assert.NoError(t, util.IsValidResult(&http.Response{StatusCode: 202}))
 	assert.NoError(t, util.IsValidResult(&http.Response{StatusCode: 204}))
 
-	u, err := url.Parse("https://localhost")
+	u, err := url.Parse("https://127.0.0.1")
 	assert.NoError(t, err)
 	assert.Error(t, util.IsValidResult(&http.Response{StatusCode: 500, Request: &http.Request{
 		Method: "POST",
