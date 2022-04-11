@@ -25,6 +25,7 @@ func TestChangelog(t *testing.T) {
 		analyzedCommits map[shared.Release][]shared.AnalyzedCommit
 		result          *shared.GeneratedChangelog
 		hasError        bool
+		showAuthors     bool
 	}{
 		{
 			testCase: "feat",
@@ -50,6 +51,48 @@ func TestChangelog(t *testing.T) {
 				Title:   "v1.0.0 (2019-07-19)",
 				Content: "# v1.0.0 (2019-07-19)\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n",
 			},
+			hasError: false,
+		},
+		{
+			testCase:    "feat with authors",
+			showAuthors: true,
+			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
+				"minor": {
+					{
+						Author: "me",
+						Commit: shared.Commit{
+							Message: "feat(internal/changelog): my first commit",
+							Author:  "me",
+							Hash:    "12345667",
+						},
+						Scope:         "internal/changelog",
+						ParsedMessage: "my first commit",
+						Tag:           "feat",
+						TagString:     "Features",
+						Print:         true,
+						Subject:       "my first commit",
+						MessageBlocks: map[string][]shared.MessageBlock{},
+					},
+					{
+						Author: "secondAuthor",
+						Commit: shared.Commit{
+							Message: "feat(internal/changelog): my second commit",
+							Author:  "secondAuthor",
+							Hash:    "12345667",
+						},
+						Scope:         "internal/changelog",
+						ParsedMessage: "my second commit",
+						Tag:           "feat",
+						TagString:     "Features",
+						Print:         true,
+						Subject:       "my second commit",
+						MessageBlocks: map[string][]shared.MessageBlock{},
+					},
+				},
+			},
+			result: &shared.GeneratedChangelog{
+				Title:   "v1.0.0 (2019-07-19)",
+				Content: "# v1.0.0 (2019-07-19)\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n* **`internal/changelog`** my second commit ([1234566](https://commit.url))\n# Special Thanks\n\nme, secondAuthor\n"},
 			hasError: false,
 		},
 		{
@@ -202,6 +245,27 @@ func TestChangelog(t *testing.T) {
 					},
 					{
 						Commit: shared.Commit{
+							Message: "feat: my awesome features \n\n * Feature1: Lists in changelog \n* Feature2: Lists in changelog2",
+							Author:  "me",
+							Hash:    "12345668",
+						},
+						Scope:                       "",
+						ParsedMessage:               "my awesome features",
+						Tag:                         "feat",
+						TagString:                   "Features",
+						Print:                       true,
+						ParsedBreakingChangeMessage: "",
+						IsBreaking:                  false,
+						Subject:                     "my awesome features",
+						MessageBlocks: map[string][]shared.MessageBlock{
+							"body": {shared.MessageBlock{
+								Label:   "",
+								Content: "* Feature1: Lists in changelog \n* Feature2: Lists in changelog2",
+							}},
+						},
+					},
+					{
+						Commit: shared.Commit{
 							Message: "feat!: my next commit",
 							Author:  "me",
 							Hash:    "12345668",
@@ -220,37 +284,42 @@ func TestChangelog(t *testing.T) {
 			},
 			result: &shared.GeneratedChangelog{
 				Title:   "v1.0.0 (2019-07-19)",
-				Content: "# v1.0.0 (2019-07-19)\n## BREAKING CHANGES\n*  hey from the change  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n*  change api to v2  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n*  my next commit  \nintroduced by commit: \nmy next commit  ([1234566](https://commit.url))\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n* my second commit ([1234566](https://commit.url))\n"},
+				Content: "# v1.0.0 (2019-07-19)\n## BREAKING CHANGES\n*  hey from the change  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n*  change api to v2  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n*  my next commit  \nintroduced by commit: \nmy next commit  ([1234566](https://commit.url))\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n* my second commit ([1234566](https://commit.url))\n* my awesome features ([1234566](https://commit.url))\n  > * Feature1: Lists in changelog \n  > * Feature2: Lists in changelog2\n"},
 			hasError: false,
 		},
 	}
 
-	cl := changelog.New(&config.ReleaseConfig{}, []analyzer.Rule{
-		{
-			Tag:       "feat",
-			TagString: "Features",
-			Release:   "minor",
-			Changelog: true,
-		},
-		{
-			Tag:       "fix",
-			TagString: "Bug fixes",
-			Release:   "patch",
-			Changelog: true,
-		},
-		{
-			Tag:       "build",
-			TagString: "Build",
-			Release:   "none",
-			Changelog: false,
-		},
-	}, time.Date(2019, 7, 19, 0, 0, 0, 0, time.UTC))
+	for _, testConfig := range testConfigs {
+		t.Run(testConfig.testCase, func(t *testing.T) {
+			cl := changelog.New(&config.ReleaseConfig{
+				Changelog: config.ChangelogConfig{
+					ShowBodyAsHeader: false,
+					ShowAuthors:      testConfig.showAuthors,
+				},
+			}, []analyzer.Rule{
+				{
+					Tag:       "feat",
+					TagString: "Features",
+					Release:   "minor",
+					Changelog: true,
+				},
+				{
+					Tag:       "fix",
+					TagString: "Bug fixes",
+					Release:   "patch",
+					Changelog: true,
+				},
+				{
+					Tag:       "build",
+					TagString: "Build",
+					Release:   "none",
+					Changelog: false,
+				},
+			}, time.Date(2019, 7, 19, 0, 0, 0, 0, time.UTC))
 
-	for _, config := range testConfigs {
-		t.Run(config.testCase, func(t *testing.T) {
-			generatedChangelog, err := cl.GenerateChangelog(templateConfig, config.analyzedCommits)
-			assert.Equalf(t, config.hasError, err != nil, "Testcase %s should have error: %t -> %s", config.testCase, config.hasError, err)
-			assert.Equalf(t, config.result, generatedChangelog, "Testcase %s should have generated changelog", config.testCase)
+			generatedChangelog, err := cl.GenerateChangelog(templateConfig, testConfig.analyzedCommits)
+			assert.Equalf(t, testConfig.hasError, err != nil, "Testcase %s should have error: %t -> %s", testConfig.testCase, testConfig.hasError, err)
+			assert.Equalf(t, testConfig.result, generatedChangelog, "Testcase %s should have generated changelog", testConfig.testCase)
 		})
 	}
 

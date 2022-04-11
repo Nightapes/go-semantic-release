@@ -22,7 +22,7 @@ var defaultTokenSeparators = [2]string{": ", " #"}
 type Analyzer struct {
 	analyzeCommits  analyzeCommits
 	ChangelogConfig config.ChangelogConfig
-	AnalyzerConfig config.AnalyzerConfig
+	AnalyzerConfig  config.AnalyzerConfig
 }
 
 // Rule for commits
@@ -41,7 +41,7 @@ type analyzeCommits interface {
 // New Analyzer struct for given commit format
 func New(format string, analyzerConfig config.AnalyzerConfig, chglogConfig config.ChangelogConfig) (*Analyzer, error) {
 	analyzer := &Analyzer{
-		AnalyzerConfig: analyzerConfig,
+		AnalyzerConfig:  analyzerConfig,
 		ChangelogConfig: chglogConfig,
 	}
 
@@ -112,9 +112,9 @@ func getRegexMatchedMap(regEx, url string) (paramsMap map[string]string) {
 //
 // getMessageBlocksFromTexts converts strings to an array of MessageBlock
 //
-func getMessageBlocksFromTexts(txtArray,  separators []string) []shared.MessageBlock {
+func getMessageBlocksFromTexts(txtArray, separators []string) []shared.MessageBlock {
 	blocks := make([]shared.MessageBlock, len(txtArray))
-	for i, line := range txtArray{
+	for i, line := range txtArray {
 		blocks[i] = parseMessageBlock(line, separators)
 	}
 	return blocks
@@ -128,9 +128,9 @@ func parseMessageBlock(msg string, separators []string) shared.MessageBlock {
 		Label:   "",
 		Content: msg,
 	}
-	if token, sep := findFooterToken(msg, separators); len(token)  > 0{
+	if token, sep := findFooterToken(msg, separators); len(token) > 0 {
 		msgBlock.Label = token
-		content := strings.Replace(msg, token + sep, "", 1)
+		content := strings.Replace(msg, token+sep, "", 1)
 		msgBlock.Content = strings.TrimSpace(content)
 	}
 	return msgBlock
@@ -158,7 +158,7 @@ func findFooterToken(text string, separators []string) (token string, sep string
 //  - A footer is detected when it starts with a token ending with a separator
 //  - A footer ends when another footer is found or text ends
 //
-func getDefaultMessageBlockMap(txtBlock string, tokenSep []string) map[string][]shared.MessageBlock{
+func getDefaultMessageBlockMap(txtBlock string, tokenSep []string) map[string][]shared.MessageBlock {
 	msgBlockMap := make(map[string][]shared.MessageBlock)
 	footers := make([]string, 0)
 	body, footerBlock, line := "", "", ""
@@ -169,7 +169,7 @@ func getDefaultMessageBlockMap(txtBlock string, tokenSep []string) map[string][]
 		line = scanner.Text()
 		if token, _ := findFooterToken(line, tokenSep); len(token) > 0 {
 			// if footer was already found from before
-			if len(footerBlock) > 0{
+			if len(footerBlock) > 0 {
 				footers = append(footers, strings.TrimSpace(footerBlock))
 			}
 			footerFound = true
@@ -179,7 +179,7 @@ func getDefaultMessageBlockMap(txtBlock string, tokenSep []string) map[string][]
 		//'\n' is removed when reading from scanner
 		if !footerFound {
 			body += line + "\n"
-		}else{
+		} else {
 			footerBlock += line + "\n"
 		}
 	}
@@ -188,11 +188,11 @@ func getDefaultMessageBlockMap(txtBlock string, tokenSep []string) map[string][]
 	}
 
 	body = strings.TrimSpace(body)
-	if len(body) > 0{
-		msgBlockMap["body"] = []shared.MessageBlock {{
+	if len(body) > 0 {
+		msgBlockMap["body"] = []shared.MessageBlock{{
 			Label:   "",
 			Content: body,
-		} }
+		}}
 	}
 
 	footerBlocks := getMessageBlocksFromTexts(footers, tokenSep)

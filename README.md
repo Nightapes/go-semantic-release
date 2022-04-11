@@ -243,6 +243,9 @@ changelog:
   printAll: false ## Print all valid commits to changelog
   title: "v{{.Version}} ({{.Now.Format "2006-01-02"}})" ## Used for releases (go template)
   templatePath: "./examples/changelog.tmpl"    ## Path to a template file (go template)
+  showAuthors: false  ## Show authors in changelog
+  showBodyAsHeader: false  ## Show all bodies of the commits as header of changelog (useful for squash commit flow to show long text in release)
+
 ```
 
 ##### Docker 

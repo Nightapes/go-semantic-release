@@ -29,9 +29,11 @@ introduced by commit:
 ### {{ $key }}
 {{ range $index,$commit := $commits -}}
 * {{ if $commit.Scope }}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}** {{end}}{{$commit.Subject}}{{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
+{{ if not $.ShowBodyAsHeader -}}
 {{ if $commit.MessageBlocks.body -}}
 {{ range $indexBlock,$bodyBlock := $commit.MessageBlocks.body -}}
 {{ addPrefixToLines  $bodyBlock.Content "  > "}}
+{{ end -}}
 {{ end -}}
 {{ end -}}
 {{ end -}}
@@ -40,6 +42,22 @@ introduced by commit:
 const defaultCommitListSubTemplate = `{{ define "commitList" }}` + defaultCommitList + "{{ end }}"
 const defaultChangelogTitle = `v{{.Version}} ({{.Now.Format "2006-01-02"}})`
 const defaultChangelog = `# v{{$.Version}} ({{.Now.Format "2006-01-02"}})
+{{ if .ShowBodyAsHeader -}}
+
+{{ range $key := .CommitsContent.Order  -}}
+{{ $commits := index $.CommitsContent.Commits $key -}}
+{{ if $commits -}}
+{{ range $index,$commit := $commits -}}
+{{ if $commit.MessageBlocks.body -}}
+{{ range $indexBlock,$bodyBlock := $commit.MessageBlocks.body -}}
+{{ $bodyBlock.Content }}
+{{ end -}}
+{{ end -}}
+{{ end -}}
+{{ end -}}
+{{ end -}}
+{{ end -}}
+
 {{ template "commitList" .CommitsContent -}}
 
 {{ if .HasDocker}}
@@ -71,6 +89,12 @@ or
 {{$.Backtick}}npm install -save {{.NPMPackageName}}@{{.Version}}{{$.Backtick}}
 
 {{ end -}}
+
+{{ if .ShowAuthors -}}
+# Special Thanks
+
+{{range $i,$a := .Authors}}{{if gt $i 0 }}, {{end}}{{$a}}{{end}}
+{{ end -}}
 `
 
 type changelogContent struct {
@@ -79,6 +103,7 @@ type changelogContent struct {
 	Version          string
 	Now              time.Time
 	Backtick         string
+	ShowBodyAsHeader bool
 	HasDocker        bool
 	HasDockerLatest  bool
 	DockerRepository string
@@ -86,15 +111,18 @@ type changelogContent struct {
 	IsYarn           bool
 	NPMRepository    string
 	NPMPackageName   string
+	Authors          []string
+	ShowAuthors      bool
 }
 
 type commitsContent struct {
-	Commits         map[string][]shared.AnalyzedCommit
-	BreakingChanges []shared.AnalyzedCommit
-	Order           []string
-	Backtick        string
-	HasURL          bool
-	URL             string
+	Commits          map[string][]shared.AnalyzedCommit
+	BreakingChanges  []shared.AnalyzedCommit
+	Order            []string
+	ShowBodyAsHeader bool
+	Backtick         string
+	HasURL           bool
+	URL              string
 }
 
 //Changelog struct
@@ -129,8 +157,17 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 		}
 	}
 
+	authors := map[string]int{}
+
 	for _, commits := range analyzedCommits {
 		for _, commit := range commits {
+
+			_, ok := authors[commit.Author]
+			if !ok {
+				authors[commit.Author] = 0
+			}
+			authors[commit.Author] = authors[commit.Author] + 1
+
 			if commit.Print {
 				if commit.IsBreaking {
 					commitsBreakingChange = append(commitsBreakingChange, commit)
@@ -145,12 +182,20 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 	}
 
 	commitsContent := commitsContent{
-		Commits:         commitsPerScope,
-		BreakingChanges: commitsBreakingChange,
-		Backtick:        "`",
-		Order:           order,
-		HasURL:          templateConfig.CommitURL != "",
-		URL:             templateConfig.CommitURL,
+		Commits:          commitsPerScope,
+		BreakingChanges:  commitsBreakingChange,
+		Backtick:         "`",
+		Order:            order,
+		ShowBodyAsHeader: c.config.Changelog.ShowBodyAsHeader,
+		HasURL:           templateConfig.CommitURL != "",
+		URL:              templateConfig.CommitURL,
+	}
+
+	authorsNames := make([]string, len(authors))
+	i := 0
+	for k := range authors {
+		authorsNames[i] = k
+		i++
 	}
 
 	changelogContent := changelogContent{
@@ -164,6 +209,9 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 		HasNPM:           c.config.Changelog.NPM.PackageName != "",
 		NPMPackageName:   c.config.Changelog.NPM.PackageName,
 		NPMRepository:    c.config.Changelog.NPM.Repository,
+		ShowBodyAsHeader: c.config.Changelog.ShowBodyAsHeader,
+		ShowAuthors:      c.config.Changelog.ShowAuthors && len(authors) > 0,
+		Authors:          authorsNames,
 	}
 
 	chglogTemplate := defaultCommitListSubTemplate + defaultChangelog
