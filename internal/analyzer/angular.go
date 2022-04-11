@@ -11,14 +11,15 @@ import (
 )
 
 type angular struct {
-	rules []Rule
-	regex string
-	log   *log.Entry
-	config  config.AnalyzerConfig
+	rules  []Rule
+	regex  string
+	log    *log.Entry
+	config config.AnalyzerConfig
 }
 
 // ANGULAR identifier
 const ANGULAR = "angular"
+
 var angularFooterTokenSep = defaultTokenSeparators
 
 func newAngular() *angular {
@@ -99,17 +100,20 @@ func (a *angular) analyze(commit shared.Commit, rule Rule) *shared.AnalyzedCommi
 	}
 	matches := getRegexMatchedMap(a.regex, header)
 
-	if len(matches) == 0 || matches["type"] != rule.Tag{
+	if len(matches) == 0 || matches["type"] != rule.Tag {
 		a.log.Tracef("%s does not match %s, skip", commit.Message, rule.Tag)
 		return nil
 	}
 
 	msgBlockMap := getDefaultMessageBlockMap(body, tokenSep)
 
+	log.Debugf("Found commit from Author %s", commit.Author)
+
 	analyzed := &shared.AnalyzedCommit{
-		Commit:    commit,
-		Tag:       rule.Tag,
-		TagString: rule.TagString,
+		Commit:        commit,
+		Author:        commit.Author,
+		Tag:           rule.Tag,
+		TagString:     rule.TagString,
 		Scope:         shared.Scope(matches["scope"]),
 		Subject:       strings.TrimSpace(matches["subject"]),
 		MessageBlocks: msgBlockMap,

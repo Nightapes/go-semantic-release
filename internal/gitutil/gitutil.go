@@ -3,8 +3,9 @@ package gitutil
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"sort"
+
+	"github.com/pkg/errors"
 
 	"github.com/Masterminds/semver"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
@@ -176,10 +177,10 @@ func (g *GitUtil) GetCommits(lastTagHash *plumbing.Reference) ([]shared.Commit, 
 	commits := make(map[string]shared.Commit)
 
 	err = cIter.ForEach(func(c *object.Commit) error {
-		log.Debugf("Found commit with hash %s", c.Hash.String())
+		log.Debugf("Found commit with hash %s from %s", c.Hash.String(), c.Author.Name)
 		commits[c.Hash.String()] = shared.Commit{
 			Message: c.Message,
-			Author:  c.Committer.Name,
+			Author:  c.Author.Name,
 			Hash:    c.Hash.String(),
 		}
 		return nil

@@ -19,6 +19,8 @@ changelog:
   docker:
     latest: true
     repository: "nightapes/go-semantic-release"
+  showAuthors: true
+
 hooks:
   preRelease:
     - docker build -t nightapes/go-semantic-release:latest .

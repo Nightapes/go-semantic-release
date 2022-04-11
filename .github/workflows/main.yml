@@ -8,7 +8,9 @@ jobs:
   build:
     strategy:
       matrix:
-        go: ["1.16", "1.17"]
+        go: ["1.17", "1.18"]
+    env:
+      DEFAULT_GO: "1.18"
     name: Build with go version ${{ matrix.go }}
     runs-on: ubuntu-latest
     steps:
@@ -53,7 +55,7 @@ jobs:
           docker tag nightapes/go-semantic-release:development-${{matrix.go}} docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{matrix.go}}
           docker push docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{matrix.go}}
       - uses: actions/upload-artifact@v1
-        if: matrix.go == '1.17'
+        if: matrix.go == env.DEFAULT_GO
         with:
           name: build
           path: build

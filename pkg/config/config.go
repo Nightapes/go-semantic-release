@@ -20,11 +20,13 @@ type AnalyzerConfig struct {
 
 // ChangelogConfig struct
 type ChangelogConfig struct {
-	PrintAll      bool            `yaml:"printAll,omitempty"`
-	TemplateTitle string          `yaml:"title,omitempty"`
-	TemplatePath  string          `yaml:"templatePath,omitempty"`
-	Docker        ChangelogDocker `yaml:"docker,omitempty"`
-	NPM           ChangelogNPM    `yaml:"npm,omitempty"`
+	PrintAll         bool            `yaml:"printAll,omitempty"`
+	TemplateTitle    string          `yaml:"title,omitempty"`
+	TemplatePath     string          `yaml:"templatePath,omitempty"`
+	ShowBodyAsHeader bool            `yaml:"showBodyAsHeader,omitempty"`
+	ShowAuthors      bool            `yaml:"showAuthors,omitempty"`
+	Docker           ChangelogDocker `yaml:"docker,omitempty"`
+	NPM              ChangelogNPM    `yaml:"npm,omitempty"`
 }
 
 //ChangelogDocker type struct

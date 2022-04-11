@@ -35,21 +35,22 @@ type ChangelogTemplateConfig struct {
 
 //AnalyzedCommit struct
 type AnalyzedCommit struct {
-	Commit                      Commit `yaml:"commit"`
-	ParsedMessage               string `yaml:"parsedMessage"`
-	ParsedBreakingChangeMessage string `yaml:"parsedBreakingChangeMessage"`
-	Tag                         string `yaml:"tag"`
-	TagString                   string `yaml:"tagString"`
-	Scope                       Scope  `yaml:"scope"`
-	Subject                     string `yaml:"subject"`
-	MessageBlocks			    map[string][]MessageBlock `yaml:"messageBlocks"`
-	IsBreaking                  bool   `yaml:"isBreaking"`
-	Print                       bool   `yaml:"print"`
+	Commit                      Commit                    `yaml:"commit"`
+	ParsedMessage               string                    `yaml:"parsedMessage"`
+	Author                      string                    `yaml:"author"`
+	ParsedBreakingChangeMessage string                    `yaml:"parsedBreakingChangeMessage"`
+	Tag                         string                    `yaml:"tag"`
+	TagString                   string                    `yaml:"tagString"`
+	Scope                       Scope                     `yaml:"scope"`
+	Subject                     string                    `yaml:"subject"`
+	MessageBlocks               map[string][]MessageBlock `yaml:"messageBlocks"`
+	IsBreaking                  bool                      `yaml:"isBreaking"`
+	Print                       bool                      `yaml:"print"`
 }
 
 // MessageBlock represents a block in the body section of a commit message
 type MessageBlock struct {
-	Label string `yaml:"label"`
+	Label   string `yaml:"label"`
 	Content string `yaml:"content"`
 }
 

@@ -11,21 +11,22 @@ import (
 )
 
 type conventional struct {
-	rules []Rule
-	regex string
-	log   *log.Entry
-	config  config.AnalyzerConfig
+	rules  []Rule
+	regex  string
+	log    *log.Entry
+	config config.AnalyzerConfig
 }
 
 // CONVENTIONAL identifier
 const CONVENTIONAL = "conventional"
+
 var conventionalFooterTokenSep = defaultTokenSeparators
 
 func newConventional(config config.AnalyzerConfig) *conventional {
 	return &conventional{
 		config: config,
-		regex: `^(?P<type>\w*)(?:\((?P<scope>.*)\))?(?P<breaking>\!)?: (?P<subject>.*)`,
-		log:   log.WithField("analyzer", CONVENTIONAL),
+		regex:  `^(?P<type>\w*)(?:\((?P<scope>.*)\))?(?P<breaking>\!)?: (?P<subject>.*)`,
+		log:    log.WithField("analyzer", CONVENTIONAL),
 		rules: []Rule{
 			{
 				Tag:       "feat",
@@ -101,7 +102,7 @@ func (a *conventional) analyze(commit shared.Commit, rule Rule) *shared.Analyzed
 
 	matches := getRegexMatchedMap(a.regex, header)
 
-	if len(matches) == 0 || matches["type"] != rule.Tag{
+	if len(matches) == 0 || matches["type"] != rule.Tag {
 		a.log.Tracef("%s does not match %s, skip", commit.Message, rule.Tag)
 		return nil
 	}
@@ -110,6 +111,7 @@ func (a *conventional) analyze(commit shared.Commit, rule Rule) *shared.Analyzed
 
 	analyzed := &shared.AnalyzedCommit{
 		Commit:        commit,
+		Author:        commit.Author,
 		Tag:           rule.Tag,
 		TagString:     rule.TagString,
 		Scope:         shared.Scope(matches["scope"]),
@@ -140,4 +142,3 @@ func (a *conventional) analyze(commit shared.Commit, rule Rule) *shared.Analyzed
 
 	return analyzed
 }
-
