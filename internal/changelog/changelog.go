@@ -157,17 +157,11 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 		}
 	}
 
-	authors := map[string]int{}
+	authors := map[string]bool{}
 
 	for _, commits := range analyzedCommits {
 		for _, commit := range commits {
-
-			_, ok := authors[commit.Commit.Author]
-			if !ok {
-				authors[commit.Commit.Author] = 0
-			}
-			authors[commit.Commit.Author] = authors[commit.Commit.Author] + 1
-
+			authors[commit.Commit.Author] = true
 			if commit.Print {
 				if commit.IsBreaking {
 					commitsBreakingChange = append(commitsBreakingChange, commit)
