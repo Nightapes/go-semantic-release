@@ -13,9 +13,10 @@ import (
 )
 
 const breakingChangeKeywords = "BREAKING CHANGE"
-const defaultBreakingChangePrefix =  breakingChangeKeywords + ":"
-const footerTokenRegex = "^(?P<token>[^\\s][\\w\\- ]+[^\\s])<SEP>.*"
-var defaultTokenSeparators = [2]string{ ": ", " #"}
+const defaultBreakingChangePrefix = breakingChangeKeywords + ":"
+const footerTokenRegex = "^(?P<token>[^\\s*-][\\w\\- ]+[^\\s])<SEP>.*"
+
+var defaultTokenSeparators = [2]string{": ", " #"}
 
 // Analyzer struct
 type Analyzer struct {
