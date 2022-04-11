@@ -162,11 +162,11 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 	for _, commits := range analyzedCommits {
 		for _, commit := range commits {
 
-			_, ok := authors[commit.Author]
+			_, ok := authors[commit.Commit.Author]
 			if !ok {
-				authors[commit.Author] = 0
+				authors[commit.Commit.Author] = 0
 			}
-			authors[commit.Author] = authors[commit.Author] + 1
+			authors[commit.Commit.Author] = authors[commit.Commit.Author] + 1
 
 			if commit.Print {
 				if commit.IsBreaking {

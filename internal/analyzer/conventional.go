@@ -111,7 +111,6 @@ func (a *conventional) analyze(commit shared.Commit, rule Rule) *shared.Analyzed
 
 	analyzed := &shared.AnalyzedCommit{
 		Commit:        commit,
-		Author:        commit.Author,
 		Tag:           rule.Tag,
 		TagString:     rule.TagString,
 		Scope:         shared.Scope(matches["scope"]),
