@@ -37,7 +37,6 @@ type ChangelogTemplateConfig struct {
 type AnalyzedCommit struct {
 	Commit                      Commit                    `yaml:"commit"`
 	ParsedMessage               string                    `yaml:"parsedMessage"`
-	Author                      string                    `yaml:"author"`
 	ParsedBreakingChangeMessage string                    `yaml:"parsedBreakingChangeMessage"`
 	Tag                         string                    `yaml:"tag"`
 	TagString                   string                    `yaml:"tagString"`

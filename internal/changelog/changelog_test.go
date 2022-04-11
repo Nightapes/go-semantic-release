@@ -59,7 +59,6 @@ func TestChangelog(t *testing.T) {
 			analyzedCommits: map[shared.Release][]shared.AnalyzedCommit{
 				"minor": {
 					{
-						Author: "me",
 						Commit: shared.Commit{
 							Message: "feat(internal/changelog): my first commit",
 							Author:  "me",
@@ -74,7 +73,6 @@ func TestChangelog(t *testing.T) {
 						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 					{
-						Author: "secondAuthor",
 						Commit: shared.Commit{
 							Message: "feat(internal/changelog): my second commit",
 							Author:  "secondAuthor",
