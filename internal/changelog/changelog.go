@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io/ioutil"
+	"sort"
 	"strings"
 	"text/template"
 	"time"
@@ -191,6 +192,8 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 		authorsNames[i] = k
 		i++
 	}
+
+	sort.Sort(sort.StringSlice(authorsNames))
 
 	changelogContent := changelogContent{
 		CommitsContent:   commitsContent,
