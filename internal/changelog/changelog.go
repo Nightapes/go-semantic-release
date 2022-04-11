@@ -193,7 +193,7 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 		i++
 	}
 
-	sort.Sort(sort.StringSlice(authorsNames))
+	sort.Strings(authorsNames)
 
 	changelogContent := changelogContent{
 		CommitsContent:   commitsContent,
