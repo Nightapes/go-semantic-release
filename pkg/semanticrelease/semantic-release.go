@@ -2,11 +2,12 @@ package semanticrelease
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5/plumbing"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/go-git/go-git/v5/plumbing"
 
 	"github.com/Nightapes/go-semantic-release/internal/integrations"
 
@@ -116,9 +117,13 @@ func (s *SemanticRelease) GetNextVersion(provider *ci.ProviderConfig, force bool
 		firstRelease = true
 	}
 
-	commits, err := s.gitUtil.GetCommits(lastVersionHash)
-	if err != nil {
-		return nil, fmt.Errorf("could not get commits %w", err)
+	var commits []shared.Commit
+
+	if lastVersionHash != nil {
+		commits, err = s.gitUtil.GetCommits(lastVersionHash)
+		if err != nil {
+			return nil, fmt.Errorf("could not get commits %w", err)
+		}
 	}
 
 	log.Debugf("Found %d commits till last release", len(commits))
