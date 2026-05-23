@@ -3,7 +3,6 @@ package assets
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -18,7 +17,7 @@ type Set struct {
 	algorithm  string
 }
 
-//New container for assets
+// New container for assets
 func New(repository, algorithm string) *Set {
 	return &Set{
 		assets:     []*Asset{},
@@ -44,7 +43,7 @@ func (s *Set) All() []*Asset {
 }
 
 func (s *Set) GenerateChecksum() error {
-	checksumFile, err := ioutil.TempFile(os.TempDir(), "checksum.*.txt")
+	checksumFile, err := os.CreateTemp(os.TempDir(), "checksum.*.txt")
 	if err != nil {
 		return errors.Wrap(err, "Could not generate tmp file for checksum")
 	}

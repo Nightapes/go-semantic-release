@@ -22,7 +22,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-//Execute rootCmd
+// Execute rootCmd
 func Execute(version string) {
 	rootCmd.Version = version
 	if err := rootCmd.Execute(); err != nil {

@@ -18,7 +18,7 @@ func New() *Calculator {
 	return &Calculator{}
 }
 
-//IncPrerelease increase prerelease by one
+// IncPrerelease increase prerelease by one
 func (c *Calculator) IncPrerelease(preReleaseType string, version semver.Version) (semver.Version, error) {
 	defaultPrerelease := preReleaseType + ".0"
 	if !c.hasPrerelease(version, preReleaseType) {
@@ -46,7 +46,7 @@ func (c *Calculator) hasPrerelease(version semver.Version, preReleaseType string
 	return true
 }
 
-//CalculateNewVersion from given commits and lastversion
+// CalculateNewVersion from given commits and lastversion
 func (c *Calculator) CalculateNewVersion(commits map[shared.Release][]shared.AnalyzedCommit, lastVersion *semver.Version, releaseType string, firstRelease bool) semver.Version {
 	switch releaseType {
 	case "beta", "alpha", "rc":

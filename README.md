@@ -53,9 +53,9 @@ assets:
     compress: false
 hooks:
   preRelease:
-    - name: echo $RELEASE_VERSION
+    - echo $RELEASE_VERSION
   postRelease:
-    - name: echo $RELEASE_VERSION
+    - echo $RELEASE_VERSION
 integrations:
   npm:
     enabled: true
@@ -168,9 +168,9 @@ an environment variable `RELEASE_VERSION`
 ```yml
 hooks:
   preRelease:
-  - name: echo $RELEASE_VERSION
+  - echo $RELEASE_VERSION
   postRelease:
-  - name: echo $RELEASE_VERSION
+  - echo $RELEASE_VERSION
 ```
 
 #### Integrations

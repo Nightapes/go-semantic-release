@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -76,12 +75,12 @@ func New(config *config.GitLabProvider, checkConfig bool) (*Client, error) {
 	}, nil
 }
 
-//GetCommitURL for gitlab
+// GetCommitURL for gitlab
 func (g *Client) GetCommitURL() string {
 	return fmt.Sprintf("%s/%s/commit/{{hash}}", g.baseURL, g.config.Repo)
 }
 
-//GetCompareURL for gitlab
+// GetCompareURL for gitlab
 func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 	return fmt.Sprintf("%s/%s/compare/%s...%s", g.baseURL, g.config.Repo, oldVersion, newVersion)
 }
@@ -99,7 +98,7 @@ func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedC
 func (g *Client) makeRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog) error {
 
 	tagPrefix := config.DefaultTagPrefix
-	if g.config.TagPrefix != nil{
+	if g.config.TagPrefix != nil {
 		tagPrefix = *g.config.TagPrefix
 	}
 	tag := tagPrefix + releaseVersion.Next.Version.String()
@@ -207,7 +206,7 @@ func (g *Client) uploadFile(fileName string, file *os.File) (*ProjectFile, error
 		return nil, err
 	}
 
-	req.Body = ioutil.NopCloser(b)
+	req.Body = io.NopCloser(b)
 	req.ContentLength = int64(b.Len())
 	req.Header.Set("Content-Type", w.FormDataContentType())
 

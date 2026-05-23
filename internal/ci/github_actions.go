@@ -7,10 +7,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//GithubActions struct
+// GithubActions struct
 type GithubActions struct{}
 
-//Detect if on GithubActions
+// Detect if on GithubActions
 func (t GithubActions) detect(envs map[string]string) (*ProviderConfig, error) {
 
 	if _, exists := envs["GITHUB_ACTION"]; !exists {

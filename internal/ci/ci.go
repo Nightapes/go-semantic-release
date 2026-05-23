@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//ProviderConfig struct
+// ProviderConfig struct
 type ProviderConfig struct {
 	IsPR     bool
 	PR       string
@@ -23,12 +23,12 @@ type ProviderConfig struct {
 	Name     string
 }
 
-//Service interface
+// Service interface
 type Service interface {
 	detect(envs map[string]string) (*ProviderConfig, error)
 }
 
-//ReadAllEnvs as a map
+// ReadAllEnvs as a map
 func ReadAllEnvs() map[string]string {
 	envs := map[string]string{}
 	for _, pair := range os.Environ() {
@@ -38,7 +38,7 @@ func ReadAllEnvs() map[string]string {
 	return envs
 }
 
-//GetCIProvider get provider
+// GetCIProvider get provider
 func GetCIProvider(gitUtil *gitutil.GitUtil, configCheck bool, envs map[string]string) (*ProviderConfig, error) {
 
 	services := []Service{

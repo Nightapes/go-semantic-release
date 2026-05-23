@@ -14,7 +14,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//CreateBearerHTTPClient with given token
+// CreateBearerHTTPClient with given token
 func CreateBearerHTTPClient(ctx context.Context, token string) *http.Client {
 	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: token},
@@ -38,7 +38,7 @@ func (adt *AddHeaderTransport) RoundTrip(req *http.Request) (*http.Response, err
 	return adt.T.RoundTrip(req)
 }
 
-//NewAddHeaderTransport to add default header
+// NewAddHeaderTransport to add default header
 func NewAddHeaderTransport(T http.RoundTripper, key, value string) *AddHeaderTransport {
 	if T == nil {
 		T = http.DefaultTransport
@@ -133,9 +133,9 @@ func GetAccessToken(envName string) (string, error) {
 // 	return zipFileName, nil
 // }
 
-//PathEscape to be url save
+// PathEscape to be url save
 func PathEscape(s string) string {
-	return strings.Replace(url.PathEscape(s), ".", "%2E", -1)
+	return strings.ReplaceAll(url.PathEscape(s), ".", "%2E")
 }
 
 // Do request for client

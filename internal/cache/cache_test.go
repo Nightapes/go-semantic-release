@@ -3,7 +3,6 @@ package cache_test
 import (
 	"testing"
 
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -23,13 +22,13 @@ func TestReadCacheNotFound(t *testing.T) {
 
 func TestReadCacheInvalidContent(t *testing.T) {
 
-	dir, err := ioutil.TempDir("", "prefix")
+	dir, err := os.MkdirTemp("", "prefix")
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
 
 	completePath := path.Join(path.Dir(dir), ".version")
 	brokenContent := []byte("hello broken\ngo: lang\n")
-	err = ioutil.WriteFile(completePath, brokenContent, 0644)
+	err = os.WriteFile(completePath, brokenContent, 0644)
 	assert.NoError(t, err)
 
 	_, readError := cache.Read(dir)
@@ -39,7 +38,7 @@ func TestReadCacheInvalidContent(t *testing.T) {
 
 func TestWriteAndReadCache(t *testing.T) {
 
-	dir, err := ioutil.TempDir("", "prefix")
+	dir, err := os.MkdirTemp("", "prefix")
 
 	assert.NoError(t, err)
 
@@ -69,8 +68,8 @@ func TestWriteAndReadCache(t *testing.T) {
 					Tag:                         "feat",
 					TagString:                   "Features",
 					Print:                       true,
-					Subject:  "add gitlab as release option",
-					MessageBlocks: map[string][]shared.MessageBlock{},
+					Subject:                     "add gitlab as release option",
+					MessageBlocks:               map[string][]shared.MessageBlock{},
 				},
 			},
 		},

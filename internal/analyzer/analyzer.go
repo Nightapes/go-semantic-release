@@ -92,10 +92,9 @@ func (a *Analyzer) Analyze(commits []shared.Commit) map[shared.Release][]shared.
 	return analyzedCommits
 }
 
-//
 // getRegexMatchedMap will match a regex with named groups and map the matching
-//  results to corresponding group names
 //
+//	results to corresponding group names
 func getRegexMatchedMap(regEx, url string) (paramsMap map[string]string) {
 	var compRegEx = regexp.MustCompile(regEx)
 	match := compRegEx.FindStringSubmatch(url)
@@ -109,9 +108,7 @@ func getRegexMatchedMap(regEx, url string) (paramsMap map[string]string) {
 	return paramsMap
 }
 
-//
 // getMessageBlocksFromTexts converts strings to an array of MessageBlock
-//
 func getMessageBlocksFromTexts(txtArray, separators []string) []shared.MessageBlock {
 	blocks := make([]shared.MessageBlock, len(txtArray))
 	for i, line := range txtArray {
@@ -120,9 +117,7 @@ func getMessageBlocksFromTexts(txtArray, separators []string) []shared.MessageBl
 	return blocks
 }
 
-//
 // parseMessageBlock parses a text in to MessageBlock
-//
 func parseMessageBlock(msg string, separators []string) shared.MessageBlock {
 	msgBlock := shared.MessageBlock{
 		Label:   "",
@@ -136,9 +131,7 @@ func parseMessageBlock(msg string, separators []string) shared.MessageBlock {
 	return msgBlock
 }
 
-//
 // findFooterToken checks if given text has a token with one of the separators and returns a token
-//
 func findFooterToken(text string, separators []string) (token string, sep string) {
 	for _, sep := range separators {
 		regex := strings.Replace(footerTokenRegex, "<SEP>", sep, 1)
@@ -150,14 +143,12 @@ func findFooterToken(text string, separators []string) (token string, sep string
 	return "", ""
 }
 
-//
 // getDefaultMessageBlockMap parses a text block and splits in to different sections.
 // default logic to distinguish different parts is:
-//  - Body starts right after the header (without beginning with a token)
-//  - Body ends when a footer is discovered or text ends
-//  - A footer is detected when it starts with a token ending with a separator
-//  - A footer ends when another footer is found or text ends
-//
+//   - Body starts right after the header (without beginning with a token)
+//   - Body ends when a footer is discovered or text ends
+//   - A footer is detected when it starts with a token ending with a separator
+//   - A footer ends when another footer is found or text ends
 func getDefaultMessageBlockMap(txtBlock string, tokenSep []string) map[string][]shared.MessageBlock {
 	msgBlockMap := make(map[string][]shared.MessageBlock)
 	footers := make([]string, 0)

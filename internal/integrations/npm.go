@@ -1,9 +1,10 @@
 package integrations
 
 import (
+	"os"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/sjson"
-	"io/ioutil"
 )
 
 func (i *Integrations) updateNPM() error {
@@ -14,7 +15,7 @@ func (i *Integrations) updateNPM() error {
 	}
 
 	log.Debugf("Set version %s to %s", i.version.Next.Version, npmConfig.Path)
-	data, err := ioutil.ReadFile(npmConfig.Path)
+	data, err := os.ReadFile(npmConfig.Path)
 	if err != nil {
 		return err
 	}
@@ -24,5 +25,5 @@ func (i *Integrations) updateNPM() error {
 		return err
 	}
 
-	return ioutil.WriteFile(npmConfig.Path, []byte(newData), 0777)
+	return os.WriteFile(npmConfig.Path, []byte(newData), 0777)
 }
