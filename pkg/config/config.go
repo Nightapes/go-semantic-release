@@ -2,7 +2,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -29,19 +28,19 @@ type ChangelogConfig struct {
 	NPM              ChangelogNPM    `yaml:"npm,omitempty"`
 }
 
-//ChangelogDocker type struct
+// ChangelogDocker type struct
 type ChangelogDocker struct {
 	Latest     bool   `yaml:"latest"`
 	Repository string `yaml:"repository"`
 }
 
-//ChangelogNPM type struct
+// ChangelogNPM type struct
 type ChangelogNPM struct {
 	Repository  string `yaml:"repository"`
 	PackageName string `yaml:"name"`
 }
 
-//Asset type struct
+// Asset type struct
 type Asset struct {
 	Path     string `yaml:"path"`
 	Rename   string `yaml:"rename,omitempty"`
@@ -118,7 +117,7 @@ type ReleaseConfig struct {
 // Read ReleaseConfig
 func Read(configPath string) (*ReleaseConfig, error) {
 
-	content, err := ioutil.ReadFile(configPath)
+	content, err := os.ReadFile(configPath)
 	if err != nil {
 		return &ReleaseConfig{}, err
 	}

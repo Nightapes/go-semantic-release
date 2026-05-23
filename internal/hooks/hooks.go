@@ -14,7 +14,7 @@ import (
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 )
 
-//Hooks struct
+// Hooks struct
 type Hooks struct {
 	version *shared.ReleaseVersion
 	config  *config.ReleaseConfig

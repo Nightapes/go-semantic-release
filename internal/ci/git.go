@@ -5,12 +5,12 @@ import (
 	"github.com/Nightapes/go-semantic-release/internal/gitutil"
 )
 
-//Git struct
+// Git struct
 type Git struct {
 	gitUtil *gitutil.GitUtil
 }
 
-//Detect if on Git
+// Detect if on Git
 func (t Git) detect(envs map[string]string) (*ProviderConfig, error) {
 
 	if _, exists := envs["CI"]; !exists {

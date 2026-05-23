@@ -5,10 +5,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//Travis struct
+// Travis struct
 type Travis struct{}
 
-//Detect if on travis
+// Detect if on travis
 func (t Travis) detect(envs map[string]string) (*ProviderConfig, error) {
 
 	if _, exists := envs["TRAVIS"]; !exists {

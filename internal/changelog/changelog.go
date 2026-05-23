@@ -3,7 +3,7 @@ package changelog
 import (
 	"bufio"
 	"bytes"
-	"io/ioutil"
+	"os"
 	"sort"
 	"strings"
 	"text/template"
@@ -20,8 +20,8 @@ const defaultCommitList string = `{{ range $index,$commit := .BreakingChanges -}
 {{ if eq $index 0 -}}
 ## BREAKING CHANGES
 {{ end -}}
-* {{ if $commit.Scope }}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}**{{ end }} {{$commit.ParsedBreakingChangeMessage}}  
-introduced by commit: 
+* {{ if $commit.Scope }}**{{$.Backtick}}{{$commit.Scope}}{{$.Backtick}}**{{ end }} {{$commit.ParsedBreakingChangeMessage}}
+introduced by commit:
 {{$commit.Subject}} {{if $.HasURL}} ([{{ printf "%.7s" $commit.Commit.Hash}}]({{ replace $.URL "{{hash}}" $commit.Commit.Hash}})){{end}}
 {{ end -}}
 {{ range $key := .Order  -}}
@@ -126,7 +126,7 @@ type commitsContent struct {
 	URL              string
 }
 
-//Changelog struct
+// Changelog struct
 type Changelog struct {
 	config      *config.ReleaseConfig
 	rules       []analyzer.Rule
@@ -134,7 +134,7 @@ type Changelog struct {
 	log         *log.Entry
 }
 
-//New Changelog struct for generating changelog from commits
+// New Changelog struct for generating changelog from commits
 func New(config *config.ReleaseConfig, rules []analyzer.Rule, releaseTime time.Time) *Changelog {
 	return &Changelog{
 		config:      config,
@@ -213,7 +213,7 @@ func (c *Changelog) GenerateChangelog(templateConfig shared.ChangelogTemplateCon
 
 	chglogTemplate := defaultCommitListSubTemplate + defaultChangelog
 	if c.config.Changelog.TemplatePath != "" {
-		content, err := ioutil.ReadFile(c.config.Changelog.TemplatePath)
+		content, err := os.ReadFile(c.config.Changelog.TemplatePath)
 		if err != nil {
 			return nil, err
 		}
@@ -276,7 +276,7 @@ func generateTemplate(text string, values interface{}, extraFuncMap template.Fun
 }
 
 func replace(input, from, to string) string {
-	return strings.Replace(input, from, to, -1)
+	return strings.ReplaceAll(input, from, to)
 }
 
 func lower(input string) string {

@@ -30,7 +30,7 @@ func TestConventional(t *testing.T) {
 						ParsedMessage: "my first commit",
 						Tag:           "feat",
 						TagString:     "Features",
-						Subject: "my first commit",
+						Subject:       "my first commit",
 						MessageBlocks: map[string][]shared.MessageBlock{},
 						Print:         true,
 					},
@@ -44,7 +44,7 @@ func TestConventional(t *testing.T) {
 						ParsedMessage: "no scope",
 						Tag:           "feat",
 						TagString:     "Features",
-						Subject: "no scope",
+						Subject:       "no scope",
 						MessageBlocks: map[string][]shared.MessageBlock{},
 						Print:         true,
 					},
@@ -81,7 +81,7 @@ func TestConventional(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
-						Subject: "my first commit",
+						Subject:       "my first commit",
 						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
@@ -98,9 +98,9 @@ func TestConventional(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "my first break",
-						IsBreaking: true,
-						Subject: "my first break",
-						MessageBlocks: map[string][]shared.MessageBlock{},
+						IsBreaking:                  true,
+						Subject:                     "my first break",
+						MessageBlocks:               map[string][]shared.MessageBlock{},
 					},
 				},
 				"patch": {},
@@ -134,7 +134,7 @@ func TestConventional(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
-						Subject: "my first commit",
+						Subject:       "my first commit",
 						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
@@ -151,13 +151,13 @@ func TestConventional(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "change api to v2",
-						IsBreaking: true,
-						Subject: "my first break",
+						IsBreaking:                  true,
+						Subject:                     "my first break",
 						MessageBlocks: map[string][]shared.MessageBlock{
-							"footer" : { shared.MessageBlock{
+							"footer": {shared.MessageBlock{
 								Label:   "BREAKING CHANGE",
 								Content: "change api to v2",
-								},
+							},
 							},
 						},
 					},
@@ -173,13 +173,13 @@ func TestConventional(t *testing.T) {
 						TagString:                   "Features",
 						Print:                       true,
 						ParsedBreakingChangeMessage: "hey from the change",
-						IsBreaking: true,
-						Subject: "my first break",
+						IsBreaking:                  true,
+						Subject:                     "my first break",
 						MessageBlocks: map[string][]shared.MessageBlock{
-							"footer" : {shared.MessageBlock{
+							"footer": {shared.MessageBlock{
 								Label:   "BREAKING CHANGE",
 								Content: "hey from the change",
-								},
+							},
 							},
 						},
 					},
@@ -241,7 +241,7 @@ func TestConventional(t *testing.T) {
 						Tag:           "feat",
 						TagString:     "Features",
 						Print:         true,
-						Subject:  "my first commit",
+						Subject:       "my first commit",
 						MessageBlocks: map[string][]shared.MessageBlock{},
 					},
 				},
@@ -258,8 +258,8 @@ func TestConventional(t *testing.T) {
 						TagString:                   "Changes to CI/CD",
 						Print:                       false,
 						ParsedBreakingChangeMessage: "",
-						Subject:  "my first build",
-						MessageBlocks: map[string][]shared.MessageBlock{},
+						Subject:                     "my first build",
+						MessageBlocks:               map[string][]shared.MessageBlock{},
 					},
 				},
 				"patch": {},
@@ -295,8 +295,8 @@ func TestConventional(t *testing.T) {
 						TagString:                   "Changes to CI/CD",
 						Print:                       false,
 						ParsedBreakingChangeMessage: "",
-						Subject:  "my first build",
-						MessageBlocks: map[string][]shared.MessageBlock{},
+						Subject:                     "my first build",
+						MessageBlocks:               map[string][]shared.MessageBlock{},
 					},
 				},
 				"patch": {{
@@ -310,7 +310,7 @@ func TestConventional(t *testing.T) {
 					Tag:           "fix",
 					TagString:     "Bug fixes",
 					Print:         true,
-					Subject:  "my first commit",
+					Subject:       "my first commit",
 					MessageBlocks: map[string][]shared.MessageBlock{},
 				}},
 				"major": {},
@@ -345,8 +345,8 @@ func TestConventional(t *testing.T) {
 func TestConventional_BodyAndFooters(t *testing.T) {
 	t.Parallel()
 	testConfigs := []struct {
-		testCase            string
-		commits             []shared.Commit
+		testCase                string
+		commits                 []shared.Commit
 		expectedAnalyzedCommits map[shared.Release][]shared.AnalyzedCommit
 	}{
 		{
@@ -481,7 +481,6 @@ func TestConventional_BodyAndFooters(t *testing.T) {
 				"none":  {},
 			},
 		},
-
 	}
 
 	conventional, err := analyzer.New("conventional", config.AnalyzerConfig{}, config.ChangelogConfig{})

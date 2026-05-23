@@ -54,12 +54,12 @@ func New(config *config.GitProvider, git *gitutil.GitUtil, checkConfig bool) (*C
 	}, nil
 }
 
-//GetCommitURL for git
+// GetCommitURL for git
 func (g *Client) GetCommitURL() string {
 	return ""
 }
 
-//GetCompareURL for git
+// GetCompareURL for git
 func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 	return ""
 }
@@ -68,7 +68,7 @@ func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 func (g *Client) CreateRelease(releaseVersion *shared.ReleaseVersion, generatedChangelog *shared.GeneratedChangelog, _ *assets.Set) error {
 
 	tagPrefix := config.DefaultTagPrefix
-	if g.config.TagPrefix != nil{
+	if g.config.TagPrefix != nil {
 		tagPrefix = *g.config.TagPrefix
 	}
 	tag := tagPrefix + releaseVersion.Next.Version.String()

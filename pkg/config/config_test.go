@@ -3,7 +3,6 @@ package config_test
 import (
 	"testing"
 
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -20,13 +19,13 @@ func TestReadCacheNotFound(t *testing.T) {
 
 func TestReadCacheInvalidContent(t *testing.T) {
 
-	dir, err := ioutil.TempDir("", "prefix")
+	dir, err := os.MkdirTemp("", "prefix")
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
 
 	completePath := path.Join(path.Dir(dir), ".release.yml")
 	brokenContent := []byte("hello broken\ngo: lang\n")
-	err = ioutil.WriteFile(completePath, brokenContent, 0644)
+	err = os.WriteFile(completePath, brokenContent, 0644)
 	assert.NoError(t, err)
 
 	_, readError := config.Read(completePath)
@@ -36,7 +35,7 @@ func TestReadCacheInvalidContent(t *testing.T) {
 
 func TestWriteAndReadCache(t *testing.T) {
 
-	dir, err := ioutil.TempDir("", "prefix")
+	dir, err := os.MkdirTemp("", "prefix")
 
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
@@ -70,7 +69,7 @@ github:
   user: "nightapes"
   customUrl: ""
 `)
-	err = ioutil.WriteFile(completePath, content, 0644)
+	err = os.WriteFile(completePath, content, 0644)
 	assert.NoError(t, err)
 
 	result, readError := config.Read(completePath)
@@ -100,7 +99,7 @@ github:
 				Compress: false}},
 		ReleaseTitle: "go-semantic-release release",
 		IsPreRelease: false,
-		Analyzer: config.AnalyzerConfig{TokenSeparators: []string{}},
+		Analyzer:     config.AnalyzerConfig{TokenSeparators: []string{}},
 	}, result)
 
 }

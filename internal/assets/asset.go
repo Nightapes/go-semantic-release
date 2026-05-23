@@ -11,7 +11,6 @@ import (
 	"hash"
 	"hash/crc32"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -30,7 +29,7 @@ type Asset struct {
 	isCompressed bool
 }
 
-//NewAsset from a config
+// NewAsset from a config
 func NewAsset(repository string, assetConfig config.Asset, algorithm string) (*Asset, error) {
 
 	filePath := assetConfig.Path
@@ -136,7 +135,7 @@ func (a *Asset) ZipFile() (string, error) {
 	}
 	defer fileToZip.Close()
 
-	zipFile, err := ioutil.TempFile(os.TempDir(), "asset.*.zip")
+	zipFile, err := os.CreateTemp(os.TempDir(), "asset.*.zip")
 
 	if err != nil {
 		return "", errors.Wrap(err, "Could not generate tmp file")

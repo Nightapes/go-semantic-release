@@ -1,23 +1,23 @@
 package integrations
 
 import (
+	"os"
+	"testing"
+
 	"github.com/Masterminds/semver"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"os"
-	"testing"
 )
 
 func TestIntegrations_updateNPM(t *testing.T) {
-	file, err := ioutil.TempFile("", "package")
+	file, err := os.CreateTemp("", "package")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(file.Name())
 
-	err = ioutil.WriteFile(file.Name(), []byte(`{
+	err = os.WriteFile(file.Name(), []byte(`{
 "name": "test",
 "version": "0.0.0",
 "license": "MIT",
@@ -45,7 +45,7 @@ func TestIntegrations_updateNPM(t *testing.T) {
 	})
 
 	assert.NoError(t, i.updateNPM())
-	updatedFile, err := ioutil.ReadFile(file.Name())
+	updatedFile, err := os.ReadFile(file.Name())
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 
-	"github.com/google/go-github/v25/github"
+	"github.com/google/go-github/v88/github"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -38,7 +38,6 @@ func New(c *config.GitHubProvider, checkConfig bool) (*Client, error) {
 	}
 	c.AccessToken = token
 	ctx := context.Background()
-	httpClient := util.CreateBearerHTTPClient(ctx, c.AccessToken)
 
 	var client *github.Client
 	baseURL := "https://github.com"
@@ -52,12 +51,18 @@ func New(c *config.GitHubProvider, checkConfig bool) (*Client, error) {
 	}
 
 	if c.CustomURL == "" {
-		client = github.NewClient(httpClient)
-	} else {
-		// v25.0 of google github does not append prefixes for base and upload URLs
-		if client, err = github.NewEnterpriseClient(c.CustomURL+"/api/v3/", c.CustomURL+"/api/uploads/", httpClient); err != nil {
-			return &Client{}, err
+		client, err = github.NewClient(github.WithAuthToken(c.AccessToken))
+		if err != nil {
+			return nil, err
 		}
+
+	} else {
+		// v88.0 of google github does not append prefixes for base and upload URLs
+		client, err = github.NewClient(github.WithAuthToken(c.AccessToken), github.WithEnterpriseURLs(c.CustomURL+"/api/v3/", c.CustomURL+"/api/uploads/"))
+		if err != nil {
+			return nil, err
+		}
+
 		// note: do not append / to end of the url since all the url constructions using this
 		// assume no trailing /
 		baseURL = c.CustomURL + "/api/v3"
@@ -71,12 +76,12 @@ func New(c *config.GitHubProvider, checkConfig bool) (*Client, error) {
 	}, nil
 }
 
-//GetCommitURL for github
+// GetCommitURL for github
 func (g *Client) GetCommitURL() string {
 	return fmt.Sprintf("%s/%s/%s/commit/{{hash}}", g.baseURL, g.config.User, g.config.Repo)
 }
 
-//GetCompareURL for github
+// GetCompareURL for github
 func (g *Client) GetCompareURL(oldVersion, newVersion string) string {
 	return fmt.Sprintf("%s/%s/%s/compare/%s...%s", g.baseURL, g.config.User, g.config.Repo, oldVersion, newVersion)
 }

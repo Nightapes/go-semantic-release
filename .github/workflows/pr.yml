@@ -1,8 +1,6 @@
 name: Go
 on:
-  push:
-    branches:
-      - master
+  pull_request:
 jobs:
   build:
     strategy:
@@ -44,44 +42,3 @@ jobs:
         if: github.ref != 'refs/heads/master'
         run: |
           docker build -t nightapes/go-semantic-release:development-${{matrix.go}} .
-      - name: Build Docker image master
-        if: github.ref == 'refs/heads/master'
-        run: |
-          docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
-          docker login -u nightapes -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
-          docker build -t nightapes/go-semantic-release:development-${{matrix.go}} .
-          docker push nightapes/go-semantic-release:development-${{matrix.go}}
-          docker tag nightapes/go-semantic-release:development-${{matrix.go}} docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{matrix.go}}
-          docker push docker.pkg.github.com/nightapes/go-semantic-release/go-semantic-release:development-${{matrix.go}}
-      - uses: actions/upload-artifact@v8
-        if: matrix.go == env.DEFAULT_GO
-        with:
-          name: build
-          path: build
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v6
-      - uses: actions/download-artifact@v8
-        with:
-          name: build
-          path: build
-      - name: Release
-        if: github.ref == 'refs/heads/master'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          chmod -R +x build
-          docker login -u nightapes -p ${{ secrets.DOCKER_PASSWORD }}
-          docker login -u nightapes -p $GITHUB_TOKEN docker.pkg.github.com
-          ./build/go-semantic-release-temp release --loglevel trace
-      - name: Release PR
-        if: github.ref != 'refs/heads/master'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          chmod -R +x build
-          ./build/go-semantic-release-temp release --loglevel trace

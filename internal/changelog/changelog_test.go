@@ -3,12 +3,13 @@ package changelog_test
 import (
 	"testing"
 
+	"time"
+
 	"github.com/Nightapes/go-semantic-release/internal/analyzer"
 	"github.com/Nightapes/go-semantic-release/internal/changelog"
 	"github.com/Nightapes/go-semantic-release/internal/shared"
 	"github.com/Nightapes/go-semantic-release/pkg/config"
 	"github.com/stretchr/testify/assert"
-	"time"
 )
 
 func TestChangelog(t *testing.T) {
@@ -162,7 +163,7 @@ func TestChangelog(t *testing.T) {
 			},
 			result: &shared.GeneratedChangelog{
 				Title:   "v1.0.0 (2019-07-19)",
-				Content: "# v1.0.0 (2019-07-19)\n## BREAKING CHANGES\n* **`internal/changelog`** change api to v2  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n",
+				Content: "# v1.0.0 (2019-07-19)\n## BREAKING CHANGES\n* **`internal/changelog`** change api to v2\nintroduced by commit:\nmy first break  ([1234566](https://commit.url))\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n",
 			},
 			hasError: false,
 		},
@@ -282,7 +283,7 @@ func TestChangelog(t *testing.T) {
 			},
 			result: &shared.GeneratedChangelog{
 				Title:   "v1.0.0 (2019-07-19)",
-				Content: "# v1.0.0 (2019-07-19)\n## BREAKING CHANGES\n*  hey from the change  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n*  change api to v2  \nintroduced by commit: \nmy first break  ([1234566](https://commit.url))\n*  my next commit  \nintroduced by commit: \nmy next commit  ([1234566](https://commit.url))\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n* my second commit ([1234566](https://commit.url))\n* my awesome features ([1234566](https://commit.url))\n  > * Feature1: Lists in changelog \n  > * Feature2: Lists in changelog2\n"},
+				Content: "# v1.0.0 (2019-07-19)\n## BREAKING CHANGES\n*  hey from the change\nintroduced by commit:\nmy first break  ([1234566](https://commit.url))\n*  change api to v2\nintroduced by commit:\nmy first break  ([1234566](https://commit.url))\n*  my next commit\nintroduced by commit:\nmy next commit  ([1234566](https://commit.url))\n### Features\n* **`internal/changelog`** my first commit ([1234566](https://commit.url))\n* my second commit ([1234566](https://commit.url))\n* my awesome features ([1234566](https://commit.url))\n  > * Feature1: Lists in changelog \n  > * Feature2: Lists in changelog2\n"},
 			hasError: false,
 		},
 	}

@@ -35,7 +35,7 @@ func New(c *config.ReleaseConfig, git *gitutil.GitUtil) *Releasers {
 	}
 }
 
-//GetReleaser returns an initialized releaser
+// GetReleaser returns an initialized releaser
 func (r *Releasers) GetReleaser(checkConfig bool) (Releaser, error) {
 	switch r.config.Release {
 	case github.GITHUB:

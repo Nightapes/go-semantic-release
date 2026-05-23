@@ -2,7 +2,7 @@
 package cache
 
 import (
-	"io/ioutil"
+	"os"
 	"path"
 
 	log "github.com/sirupsen/logrus"
@@ -31,14 +31,14 @@ func Write(repository string, releaseVersion shared.ReleaseVersion) error {
 	}
 
 	log.Infof("Save %s with hash %s to cache %s", releaseVersion.Next.Version.String(), releaseVersion.Next.Commit, completePath)
-	return ioutil.WriteFile(completePath, data, 0644)
+	return os.WriteFile(completePath, data, 0644)
 }
 
 // Read version into .version
 func Read(repository string) (*shared.ReleaseVersion, error) {
 	completePath := path.Join(path.Dir(repository), ".version")
 
-	content, err := ioutil.ReadFile(completePath)
+	content, err := os.ReadFile(completePath)
 	if err != nil {
 		log.Warnf("Could not read cache %s, will ignore cache", completePath)
 		return &shared.ReleaseVersion{}, nil

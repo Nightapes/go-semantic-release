@@ -4,10 +4,10 @@ import (
 	"fmt"
 )
 
-//GitlabCI struct
+// GitlabCI struct
 type GitlabCI struct{}
 
-//Detect if on GitlabCI
+// Detect if on GitlabCI
 func (t GitlabCI) detect(envs map[string]string) (*ProviderConfig, error) {
 
 	if _, exists := envs["GITLAB_CI"]; !exists {

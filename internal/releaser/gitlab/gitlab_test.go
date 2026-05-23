@@ -1,7 +1,7 @@
 package gitlab
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -170,7 +170,7 @@ func TestCreateRelease(t *testing.T) {
 			assert.Equal(t, req.Header.Get("PRIVATE-TOKEN"), "aToken")
 			assert.Equal(t, req.Header.Get("Accept"), "application/json")
 
-			bodyBytes, err := ioutil.ReadAll(req.Body)
+			bodyBytes, err := io.ReadAll(req.Body)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -206,7 +206,7 @@ func TestCreateRelease(t *testing.T) {
 
 func TestUploadAssets(t *testing.T) {
 
-	file, err := ioutil.TempFile("", "prefix")
+	file, err := os.CreateTemp("", "prefix")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -297,7 +297,7 @@ func TestUploadAssets(t *testing.T) {
 			assert.Equal(t, req.Header.Get("PRIVATE-TOKEN"), "aToken")
 			assert.Equal(t, req.Header.Get("Accept"), "application/json")
 
-			bodyBytes, err := ioutil.ReadAll(req.Body)
+			bodyBytes, err := io.ReadAll(req.Body)
 			if err != nil {
 				log.Fatal(err)
 			}

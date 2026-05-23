@@ -1,0 +1,8 @@
+run:
+  tests: true
+
+issues:
+  exclude-use-default: true
+linters:
+  enable:
+    - golint
